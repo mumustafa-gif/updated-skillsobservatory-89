@@ -66,47 +66,74 @@ serve(async (req) => {
     // Generate charts with improved prompt for multiple charts
     const chartSystemPrompt = `You are an expert chart generation assistant for UAE workforce skills analysis.
 
-CRITICAL: You must return ONLY valid JSON with properly quoted property names. No code blocks, no explanations.
-
-You MUST generate exactly ${numberOfCharts} DIFFERENT charts. Each chart should show different aspects of UAE workforce skills.
+CRITICAL INSTRUCTIONS:
+1. Return ONLY valid JSON with properly quoted property names
+2. Do NOT use markdown code blocks or explanations
+3. Replace ALL "&" symbols with "and" in text content
+4. Use only double quotes for strings
+5. Generate exactly ${numberOfCharts} DIFFERENT charts with unique data
 
 Return this exact JSON structure:
 {
   "charts": [
     {
-      "title": {"text": "Chart 1 Title", "subtext": "Chart 1 subtitle"},
-      "tooltip": {"trigger": "item"},
-      "legend": {"data": ["Series1", "Series2"]},
-      "xAxis": {"type": "category", "data": ["Item1", "Item2", "Item3"]},
-      "yAxis": {"type": "value", "name": "Value"},
-      "series": [{"name": "Series1", "type": "bar", "data": [10, 20, 30]}]
-    }${numberOfCharts > 1 ? ',\n    {\n      "title": {"text": "Chart 2 Title", "subtext": "Chart 2 subtitle"},\n      "tooltip": {"trigger": "item"},\n      "legend": {"data": ["Different Series"]},\n      "series": [{"name": "Different Series", "type": "pie", "radius": "50%", "data": [{"value": 40, "name": "Category A"}, {"value": 60, "name": "Category B"}]}]\n    }' : ''}${numberOfCharts > 2 ? ',\n    {\n      "title": {"text": "Chart 3 Title"},\n      "tooltip": {"trigger": "axis"},\n      "xAxis": {"type": "category", "data": ["2023", "2024", "2025"]},\n      "yAxis": {"type": "value"},\n      "series": [{"name": "Trend", "type": "line", "data": [100, 120, 140]}]\n    }' : ''}
+      "title": {"text": "UAE Skills Gap Analysis", "subtext": "Demand vs Supply by Sector"},
+      "tooltip": {"trigger": "axis"},
+      "legend": {"data": ["Demand", "Supply"]},
+      "xAxis": {"type": "category", "data": ["Technology", "Healthcare", "Finance", "Tourism"]},
+      "yAxis": {"type": "value", "name": "Number of Professionals"},
+      "series": [
+        {"name": "Demand", "type": "bar", "data": [8500, 6200, 5800, 4200]},
+        {"name": "Supply", "type": "bar", "data": [4200, 5100, 4800, 3800]}
+      ]
+    }${numberOfCharts > 1 ? `,
+    {
+      "title": {"text": "Skills Distribution by Sector", "subtext": "UAE Workforce 2024"},
+      "tooltip": {"trigger": "item", "formatter": "{a} <br/>{b}: {c} ({d}%)"},
+      "legend": {"data": ["Technology", "Healthcare", "Finance", "Tourism", "Government"]},
+      "series": [{
+        "name": "Sector Distribution",
+        "type": "pie",
+        "radius": "65%",
+        "data": [
+          {"value": 32, "name": "Technology"},
+          {"value": 24, "name": "Healthcare"},
+          {"value": 22, "name": "Finance"},
+          {"value": 14, "name": "Tourism"},
+          {"value": 8, "name": "Government"}
+        ]
+      }]
+    }` : ''}${numberOfCharts > 2 ? `,
+    {
+      "title": {"text": "Skills Trends 2024-2028", "subtext": "Projected Growth in Key Areas"},
+      "tooltip": {"trigger": "axis"},
+      "legend": {"data": ["AI and Data Science", "Cybersecurity", "Digital Health"]},
+      "xAxis": {"type": "category", "data": ["2024", "2025", "2026", "2027", "2028"]},
+      "yAxis": {"type": "value", "name": "Growth Percentage"},
+      "series": [
+        {"name": "AI and Data Science", "type": "line", "smooth": true, "data": [25, 40, 58, 72, 85]},
+        {"name": "Cybersecurity", "type": "line", "smooth": true, "data": [20, 32, 48, 60, 75]},
+        {"name": "Digital Health", "type": "line", "smooth": true, "data": [15, 28, 42, 55, 68]}
+      ]
+    }` : ''}
   ],
   "diagnostics": {
     "chartTypes": ["bar"${numberOfCharts > 1 ? ', "pie"' : ''}${numberOfCharts > 2 ? ', "line"' : ''}],
-    "dimensions": ["Skills", "Categories", "Time"],
+    "dimensions": ["Skills", "Sectors", "Time"],
     "notes": "Generated ${numberOfCharts} charts for UAE workforce analysis",
-    "sources": ["UAE Skills Data"]
+    "sources": ["UAE Skills Database", "Labor Market Reports 2024"]
   }
 }
 
 MANDATORY REQUIREMENTS:
-- Generate exactly ${numberOfCharts} charts (not ${numberOfCharts - 1}, not ${numberOfCharts + 1}, exactly ${numberOfCharts})
-- Each chart must be completely different with unique data and purpose
-- Chart 1: Skills gap analysis (bar/column chart)
-- Chart 2: Skills distribution (pie chart) ${numberOfCharts > 2 ? '\n- Chart 3: Skills trends over time (line chart)' : ''}${numberOfCharts > 3 ? '\n- Chart 4: Sector comparison (area chart)' : ''}
-- Use realistic UAE workforce data for tech, healthcare, finance, tourism sectors
-- ALL property names must be in double quotes
-- Focus on UAE Skills Observatory goals
+- Generate exactly ${numberOfCharts} unique charts
+- Each chart must show different UAE workforce skills data
+- Use realistic data for UAE sectors: Technology, Healthcare, Finance, Tourism
+- Replace any "&" symbols with "and" in all text
+- NO special characters that break JSON parsing
+- Focus on Skills Observatory goals for UAE Vision 2071
 
-Chart topics to use:
-1. Current skills gaps in UAE market
-2. Skills demand by industry sector
-3. Future skills requirements (2024-2028)
-4. Regional skills distribution (Dubai, Abu Dhabi, etc.)
-5. Education vs industry skill alignment
-
-${knowledgeBaseContext ? `Use this data context:\n${knowledgeBaseContext.slice(0, 800)}` : ''}`;
+${knowledgeBaseContext ? `Use this data context for realistic numbers:\n${knowledgeBaseContext.slice(0, 800)}` : ''}`;
 
     const chartResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -151,20 +178,27 @@ Each chart must have unique data, different chart type, and focus on different U
       console.log('Raw AI response length:', responseContent.length);
       console.log('First 200 chars:', responseContent.substring(0, 200));
       
-      // Remove any markdown code blocks
-      let cleanContent = responseContent
-        .replace(/```json\s*/g, '')
-        .replace(/```\s*/g, '')
-        .replace(/^[^{]*/, '') // Remove anything before first {
-        .replace(/[^}]*$/, ''); // Remove anything after last }
+      // Remove any markdown code blocks and find JSON
+      let cleanContent = responseContent;
       
-      // Fix common JSON issues
+      // Remove markdown code blocks
+      cleanContent = cleanContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+      
+      // Find the JSON object by looking for the first { and last }
+      const firstBrace = cleanContent.indexOf('{');
+      const lastBrace = cleanContent.lastIndexOf('}');
+      
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        cleanContent = cleanContent.substring(firstBrace, lastBrace + 1);
+      }
+      
+      // Fix common JSON issues without being too aggressive
       cleanContent = cleanContent
-        .replace(/(\w+)(\s*):/g, '"$1"$2:') // Quote unquoted keys
-        .replace(/'/g, '"') // Replace single quotes
+        .replace(/&/g, 'and') // Replace & with 'and' to avoid JSON issues
+        .replace(/'/g, '"') // Replace single quotes with double quotes
         .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
-        .replace(/\n/g, ' ') // Remove newlines
-        .replace(/\s+/g, ' '); // Normalize spaces
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .trim();
       
       console.log('Cleaned content first 300 chars:', cleanContent.substring(0, 300));
       
