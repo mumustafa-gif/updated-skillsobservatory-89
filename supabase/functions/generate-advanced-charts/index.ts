@@ -64,18 +64,33 @@ serve(async (req) => {
     }
 
     // Generate charts
-    const chartSystemPrompt = `You are an advanced chart generation assistant. Generate multiple charts based on user requirements.
+    const chartSystemPrompt = `You are an advanced chart generation assistant specializing in ECharts configurations for workforce skills analysis in the UAE.
 
-IMPORTANT: Return ONLY a JSON object with this exact structure:
+CRITICAL INSTRUCTIONS:
+1. Return ONLY valid JSON with properly quoted property names
+2. All object properties MUST be in double quotes
+3. Do not use JavaScript object notation - use strict JSON format
+
+Return ONLY a JSON object with this exact structure:
 {
   "charts": [
     {
-      // Valid ECharts option configuration for chart 1
-    },
-    {
-      // Valid ECharts option configuration for chart 2
+      "title": {
+        "text": "Chart Title",
+        "subtext": "Chart Subtitle"
+      },
+      "tooltip": {
+        "trigger": "item"
+      },
+      "legend": {
+        "data": ["Series 1", "Series 2"]
+      },
+      "series": [{
+        "name": "Series Name",
+        "type": "bar",
+        "data": [10, 20, 30, 40, 50]
+      }]
     }
-    // ... more charts as needed
   ],
   "diagnostics": {
     "chartTypes": ["array of chart types used"],
@@ -85,14 +100,15 @@ IMPORTANT: Return ONLY a JSON object with this exact structure:
   }
 }
 
-Requirements:
+REQUIREMENTS:
 - Generate exactly ${numberOfCharts} chart${numberOfCharts > 1 ? 's' : ''}
 - Chart types requested: ${chartTypes.join(', ')} (use 'auto' to select best type)
-- Support: bar, line, pie, scatter, radar, area, gauge, funnel, sankey, treemap
+- Focus on UAE workforce and skills data
+- Support: bar, line, pie, scatter, area charts
 - Include proper titles, tooltips, legends, and axis labels
-- Use diverse, appealing color schemes
-- Create realistic sample data if no data provided
-- Make each chart unique and informative
+- Use UAE-themed colors and professional styling
+- Create realistic workforce/skills sample data if no data provided
+- Make each chart unique and informative for Skills Observatory
 
 ${knowledgeBaseContext ? `Knowledge Base Context:\n${knowledgeBaseContext}` : ''}`;
 
@@ -103,13 +119,18 @@ ${knowledgeBaseContext ? `Knowledge Base Context:\n${knowledgeBaseContext}` : ''
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
-          { role: 'system', content: chartSystemPrompt },
-          { role: 'user', content: prompt }
+          { 
+            role: 'system', 
+            content: chartSystemPrompt 
+          },
+          { 
+            role: 'user', 
+            content: `Generate ${numberOfCharts} workforce skills analysis chart${numberOfCharts > 1 ? 's' : ''} for: ${prompt}. Focus on UAE market data, skills mapping, and employment trends.` 
+          }
         ],
-        temperature: 0.7,
-        max_tokens: 4000,
+        max_completion_tokens: 4000,
       }),
     });
 
@@ -122,24 +143,50 @@ ${knowledgeBaseContext ? `Knowledge Base Context:\n${knowledgeBaseContext}` : ''
     let parsedChartData;
     
     try {
-      parsedChartData = JSON.parse(chartData.choices[0].message.content);
+      const responseContent = chartData.choices[0].message.content;
+      console.log('Raw AI response:', responseContent);
+      
+      // Clean up common JSON formatting issues
+      let cleanedContent = responseContent
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .replace(/^\s*/, '')
+        .replace(/\s*$/, '');
+      
+      // Fix common JavaScript object notation issues
+      cleanedContent = cleanedContent
+        .replace(/(\w+):/g, '"$1":')  // Add quotes to unquoted keys
+        .replace(/'/g, '"')           // Replace single quotes with double quotes
+        .replace(/,\s*}/g, '}')       // Remove trailing commas
+        .replace(/,\s*]/g, ']');      // Remove trailing commas in arrays
+      
+      console.log('Cleaned content:', cleanedContent);
+      parsedChartData = JSON.parse(cleanedContent);
+      
+      // Validate chart structure
+      if (!parsedChartData.charts || !Array.isArray(parsedChartData.charts)) {
+        throw new Error('Invalid chart structure: missing charts array');
+      }
+      
     } catch (parseError) {
-      console.error('Failed to parse chart response:', chartData.choices[0].message.content);
-      throw new Error('Invalid chart configuration generated');
+      console.error('Failed to parse chart response:', parseError);
+      console.error('Original content:', chartData.choices[0].message.content);
+      throw new Error(`Invalid chart configuration generated: ${parseError.message}`);
     }
 
-    // Generate data insights
-    const insightSystemPrompt = `You are a data analysis expert. Based on the chart generation request, provide 5-10 bullet points explaining key insights and data patterns.
+    // Generate data insights focused on skills and workforce
+    const insightSystemPrompt = `You are a UAE workforce analytics expert. Based on the skills analysis request, provide exactly 5-6 bullet points explaining key insights and patterns.
 
 Return ONLY a JSON array of strings:
-["insight 1", "insight 2", "insight 3", ...]
+["insight 1", "insight 2", "insight 3", "insight 4", "insight 5"]
 
-Focus on:
-- Key trends and patterns
-- Statistical significance
-- Business implications
-- Data quality observations
-- Actionable recommendations`;
+Focus on UAE-specific workforce insights:
+- Skills gap analysis and market demand
+- Employment trends in key sectors (tech, finance, healthcare, tourism)
+- Education-to-employment pipeline effectiveness
+- Emerging skills requirements for UAE Vision 2071
+- Regional workforce development opportunities
+- Strategic recommendations for policy makers`;
 
     const insightResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -148,13 +195,12 @@ Focus on:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { role: 'system', content: insightSystemPrompt },
-          { role: 'user', content: `Analyze this request: ${prompt}${knowledgeBaseContext ? '\n\nWith data from: ' + knowledgeBaseContext.slice(0, 1000) : ''}` }
+          { role: 'user', content: `Analyze UAE workforce skills for: ${prompt}${knowledgeBaseContext ? '\n\nWith data from: ' + knowledgeBaseContext.slice(0, 1000) : ''}` }
         ],
-        temperature: 0.3,
-        max_tokens: 1000,
+        max_completion_tokens: 1000,
       }),
     });
 
@@ -168,21 +214,26 @@ Focus on:
       }
     }
 
-    // Generate policy analysis with web search
-    const policySystemPrompt = `You are a policy research expert with access to current regulations and policies. Based on the user's request, research and provide:
-
-1. Current policies and regulations for the specific topic/industry mentioned
-2. AI-suggested policy improvements and recommendations
+    // Generate UAE-specific policy analysis
+    const policySystemPrompt = `You are a UAE policy research expert specializing in workforce development and skills policies. Based on the user's request, provide UAE-specific analysis:
 
 Return ONLY a JSON object:
 {
-  "currentPolicies": ["policy 1", "policy 2", ...],
-  "suggestedImprovements": ["suggestion 1", "suggestion 2", ...],
-  "region": "detected region or 'Global'",
-  "country": "detected country or 'Multiple'"
+  "currentPolicies": ["UAE policy 1", "UAE policy 2", "UAE policy 3", "UAE policy 4"],
+  "suggestedImprovements": ["improvement 1", "improvement 2", "improvement 3", "improvement 4"],
+  "region": "UAE",
+  "country": "United Arab Emirates"
 }
 
-Use your knowledge of current policies, regulations, and best practices. Focus on actionable, specific policies rather than generic statements.`;
+Focus on actual UAE policies and initiatives such as:
+- UAE Vision 2071 and workforce development goals
+- Emirates Skills Framework initiatives
+- National Skills Strategy implementation
+- UAE Strategy for the Fourth Industrial Revolution
+- Federal Authority for Government Human Resources policies
+- Mohammed bin Rashid Centre for Leadership Development programs
+
+Provide specific, actionable policy recommendations aligned with UAE's strategic vision.`;
 
     const policyResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -191,13 +242,12 @@ Use your knowledge of current policies, regulations, and best practices. Focus o
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { role: 'system', content: policySystemPrompt },
-          { role: 'user', content: `Research policies for: ${prompt}` }
+          { role: 'user', content: `Research UAE workforce and skills policies for: ${prompt}` }
         ],
-        temperature: 0.4,
-        max_tokens: 1500,
+        max_completion_tokens: 1500,
       }),
     });
 
