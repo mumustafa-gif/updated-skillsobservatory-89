@@ -420,7 +420,7 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <Textarea
-                    placeholder="Modify your requirements..."
+                    placeholder="Modify your workforce analysis requirements..."
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     rows={3}
