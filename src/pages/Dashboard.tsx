@@ -197,19 +197,6 @@ const Dashboard = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <motion.div
-              animate={{ rotate: hasGenerated ? 360 : 0 }}
-              transition={{ duration: 0.8, ease: "easeInOut" }}
-              className="p-2 rounded-lg bg-gradient-to-r from-primary to-secondary"
-            >
-              <BarChart3 className="h-6 w-6 text-primary-foreground" />
-            </motion.div>
-            <div>
-              <h1 className="text-2xl font-bold text-primary">
-                Skills Observatory
-              </h1>
-              <p className="text-xs text-muted-foreground">UAE Workforce Analytics</p>
-            </div>
           </motion.div>
           <motion.div 
             className="flex items-center space-x-4"
