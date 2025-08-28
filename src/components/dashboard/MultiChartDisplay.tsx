@@ -68,12 +68,12 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
       ...chartOption,
       animation: false, // Disable animation for better performance
       
-      // Grid configuration for proper spacing
+      // Grid configuration for proper spacing (adjusted for bottom-right legend)
       grid: {
         left: isMobile ? '12%' : '10%',
-        right: isMobile ? '12%' : '8%',
-        top: chartOption.legend ? (isMobile ? '25%' : '20%') : (isMobile ? '15%' : '12%'),
-        bottom: isMobile ? '20%' : '15%',
+        right: isMobile ? '25%' : '22%', // More space for bottom-right legend
+        top: chartOption.title ? (isMobile ? '15%' : '12%') : (isMobile ? '8%' : '6%'), // Less top space since legend moved
+        bottom: isMobile ? '25%' : '22%', // More bottom space for legend
         containLabel: true,
         ...chartOption.grid
       },
@@ -100,20 +100,21 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         top: 8
       },
 
-      // Legend configuration
+      // Legend configuration - positioned at bottom right
       legend: {
         ...chartOption.legend,
         type: 'scroll',
-        orient: isMobile ? 'horizontal' : (chartOption.legend?.orient || 'horizontal'),
-        left: 'center',
-        top: chartOption.title ? (isMobile ? 45 : 35) : 10,
+        orient: 'vertical',
+        right: isMobile ? 8 : 12,
+        bottom: isMobile ? 8 : 12,
         itemWidth: isMobile ? 12 : 14,
         itemHeight: isMobile ? 8 : 10,
-        itemGap: isMobile ? 8 : 10,
+        itemGap: isMobile ? 6 : 8,
         textStyle: {
           fontSize: legendFontSize,
           color: '#374151',
           overflow: 'truncate',
+          width: isMobile ? 60 : 80,
           ...chartOption.legend?.textStyle
         },
         pageIconColor: '#6b7280',
@@ -121,7 +122,15 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         pageTextStyle: {
           fontSize: legendFontSize - 1,
           color: '#6b7280'
-        }
+        },
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        borderColor: '#e5e7eb',
+        borderWidth: 1,
+        borderRadius: 4,
+        padding: [6, 8],
+        shadowColor: 'rgba(0, 0, 0, 0.1)',
+        shadowBlur: 4,
+        shadowOffsetY: 2
       },
 
       // Tooltip configuration
