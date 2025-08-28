@@ -4,6 +4,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -317,11 +318,35 @@ const Dashboard = () => {
                         />
                       </div>
 
+                      {/* Knowledge Base Toggle */}
+                      {uploadedFiles.length > 0 && (
+                        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-muted/30 to-muted/50 rounded-lg border border-muted-foreground/20">
+                          <div className="space-y-1">
+                            <Label className="text-base font-medium flex items-center gap-2">
+                              <FileText className="h-4 w-4" />
+                              Use Knowledge Base
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                              Analyze {uploadedFiles.length} uploaded file{uploadedFiles.length > 1 ? 's' : ''} for enhanced insights
+                            </p>
+                          </div>
+                          <Switch
+                            checked={useKnowledgeBase}
+                            onCheckedChange={setUseKnowledgeBase}
+                            className="data-[state=checked]:bg-primary"
+                          />
+                        </div>
+                      )}
+
                       <Button 
                         onClick={handleGenerate} 
                         disabled={generating}
                         size="lg"
-                        className="w-full h-12 text-base font-medium bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 transition-all duration-300"
+                        className={`w-full h-12 text-base font-medium transition-all duration-300 ${
+                          useKnowledgeBase && uploadedFiles.length > 0
+                            ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700'
+                            : 'bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90'
+                        }`}
                       >
                         {generating ? (
                           <>
@@ -330,12 +355,24 @@ const Dashboard = () => {
                               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                               className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-3"
                             />
-                            Generating Skills Analysis...
+                            {useKnowledgeBase && uploadedFiles.length > 0
+                              ? 'Generating Skill Analysis with Knowledge Base...'
+                              : 'Generating Skills Analysis...'
+                            }
                           </>
                         ) : (
                           <>
-                            <Sparkles className="h-5 w-5 mr-3" />
-                            Generate Skills Analysis
+                            {useKnowledgeBase && uploadedFiles.length > 0 ? (
+                              <>
+                                <Brain className="h-5 w-5 mr-3" />
+                                Generate Skill Analysis (with Knowledge Base)
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="h-5 w-5 mr-3" />
+                                Generate Skills Analysis
+                              </>
+                            )}
                           </>
                         )}
                       </Button>
@@ -434,10 +471,36 @@ const Dashboard = () => {
                     onClick={handleGenerate} 
                     disabled={generating}
                     size="sm"
-                    className="w-full bg-gradient-to-r from-secondary to-accent hover:from-secondary/90 hover:to-accent/90"
+                    className={`w-full transition-all duration-300 ${
+                      useKnowledgeBase && uploadedFiles.length > 0
+                        ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700'
+                        : 'bg-gradient-to-r from-secondary to-accent hover:from-secondary/90 hover:to-accent/90'
+                    }`}
                   >
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Regenerate
+                    {generating ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
+                        />
+                        {useKnowledgeBase && uploadedFiles.length > 0 ? 'Analyzing...' : 'Generating...'}
+                      </>
+                    ) : (
+                      <>
+                        {useKnowledgeBase && uploadedFiles.length > 0 ? (
+                          <>
+                            <Brain className="h-4 w-4 mr-2" />
+                            Skill Analysis
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-4 w-4 mr-2" />
+                            Regenerate
+                          </>
+                        )}
+                      </>
+                    )}
                   </Button>
                 </CardContent>
               </Card>
