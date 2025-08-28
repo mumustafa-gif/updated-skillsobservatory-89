@@ -14,7 +14,102 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chart_history: {
+        Row: {
+          chart_config: Json
+          chart_type: string | null
+          created_at: string
+          diagnostics: Json | null
+          id: string
+          knowledge_base_files: string[] | null
+          prompt: string
+          user_id: string
+        }
+        Insert: {
+          chart_config: Json
+          chart_type?: string | null
+          created_at?: string
+          diagnostics?: Json | null
+          id?: string
+          knowledge_base_files?: string[] | null
+          prompt: string
+          user_id: string
+        }
+        Update: {
+          chart_config?: Json
+          chart_type?: string | null
+          created_at?: string
+          diagnostics?: Json | null
+          id?: string
+          knowledge_base_files?: string[] | null
+          prompt?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      knowledge_base_files: {
+        Row: {
+          created_at: string
+          extracted_content: string | null
+          file_size: number
+          filename: string
+          id: string
+          mime_type: string
+          original_filename: string
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          extracted_content?: string | null
+          file_size: number
+          filename: string
+          id?: string
+          mime_type: string
+          original_filename: string
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          extracted_content?: string | null
+          file_size?: number
+          filename?: string
+          id?: string
+          mime_type?: string
+          original_filename?: string
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
