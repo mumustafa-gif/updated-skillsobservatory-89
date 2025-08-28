@@ -63,77 +63,50 @@ serve(async (req) => {
       }
     }
 
-    // Generate charts with improved prompt for multiple charts
-    const chartSystemPrompt = `You are an expert chart generation assistant for UAE workforce skills analysis.
+    // Generate charts with dynamic prompt based on user request
+    const chartSystemPrompt = `You are an expert data visualization assistant specializing in UAE workforce and skills analysis.
 
-CRITICAL INSTRUCTIONS:
-1. Return ONLY valid JSON with properly quoted property names
-2. Do NOT use markdown code blocks or explanations
-3. Replace ALL "&" symbols with "and" in text content
-4. Use only double quotes for strings
-5. Generate exactly ${numberOfCharts} DIFFERENT charts with unique data
+CRITICAL JSON FORMATTING RULES:
+1. Return ONLY valid JSON - no markdown, no explanations, no code blocks
+2. Use double quotes for all strings
+3. No trailing commas
+4. Replace "&" with "and" in all text content
+5. Escape any quotes inside string values properly
 
-Return this exact JSON structure:
+Generate exactly ${numberOfCharts} unique chart(s) based on the user's specific request. Each chart should directly address their prompt with relevant, realistic UAE data.
+
+JSON Structure Required:
 {
   "charts": [
     {
-      "title": {"text": "UAE Skills Gap Analysis", "subtext": "Demand vs Supply by Sector"},
-      "tooltip": {"trigger": "axis"},
-      "legend": {"data": ["Demand", "Supply"]},
-      "xAxis": {"type": "category", "data": ["Technology", "Healthcare", "Finance", "Tourism"]},
-      "yAxis": {"type": "value", "name": "Number of Professionals"},
+      "title": {"text": "Chart Title Based on User Request", "subtext": "Relevant Subtitle"},
+      "tooltip": {"trigger": "axis" or "item"},
+      "legend": {"data": ["Relevant Legend Items"]},
+      "xAxis": {"type": "category", "data": ["Relevant Categories"]},
+      "yAxis": {"type": "value", "name": "Appropriate Y-axis Label"},
       "series": [
-        {"name": "Demand", "type": "bar", "data": [8500, 6200, 5800, 4200]},
-        {"name": "Supply", "type": "bar", "data": [4200, 5100, 4800, 3800]}
+        {"name": "Series Name", "type": "bar/line/pie", "data": [realistic_numbers]}
       ]
-    }${numberOfCharts > 1 ? `,
-    {
-      "title": {"text": "Skills Distribution by Sector", "subtext": "UAE Workforce 2024"},
-      "tooltip": {"trigger": "item", "formatter": "{a} <br/>{b}: {c} ({d}%)"},
-      "legend": {"data": ["Technology", "Healthcare", "Finance", "Tourism", "Government"]},
-      "series": [{
-        "name": "Sector Distribution",
-        "type": "pie",
-        "radius": "65%",
-        "data": [
-          {"value": 32, "name": "Technology"},
-          {"value": 24, "name": "Healthcare"},
-          {"value": 22, "name": "Finance"},
-          {"value": 14, "name": "Tourism"},
-          {"value": 8, "name": "Government"}
-        ]
-      }]
-    }` : ''}${numberOfCharts > 2 ? `,
-    {
-      "title": {"text": "Skills Trends 2024-2028", "subtext": "Projected Growth in Key Areas"},
-      "tooltip": {"trigger": "axis"},
-      "legend": {"data": ["AI and Data Science", "Cybersecurity", "Digital Health"]},
-      "xAxis": {"type": "category", "data": ["2024", "2025", "2026", "2027", "2028"]},
-      "yAxis": {"type": "value", "name": "Growth Percentage"},
-      "series": [
-        {"name": "AI and Data Science", "type": "line", "smooth": true, "data": [25, 40, 58, 72, 85]},
-        {"name": "Cybersecurity", "type": "line", "smooth": true, "data": [20, 32, 48, 60, 75]},
-        {"name": "Digital Health", "type": "line", "smooth": true, "data": [15, 28, 42, 55, 68]}
-      ]
-    }` : ''}
+    }
   ],
   "diagnostics": {
-    "chartTypes": ["bar"${numberOfCharts > 1 ? ', "pie"' : ''}${numberOfCharts > 2 ? ', "line"' : ''}],
-    "dimensions": ["Skills", "Sectors", "Time"],
-    "notes": "Generated ${numberOfCharts} charts for UAE workforce analysis",
-    "sources": ["UAE Skills Database", "Labor Market Reports 2024"]
+    "chartTypes": ["chart_type_array"],
+    "dimensions": ["relevant_dimensions"],
+    "notes": "Description of what was generated",
+    "sources": ["UAE relevant sources"]
   }
 }
 
-MANDATORY REQUIREMENTS:
-- Generate exactly ${numberOfCharts} unique charts
-- Each chart must show different UAE workforce skills data
-- Use realistic data for UAE sectors: Technology, Healthcare, Finance, Tourism
-- Replace any "&" symbols with "and" in all text
-- NO special characters that break JSON parsing
-- Focus on Skills Observatory goals for UAE Vision 2071
+Chart Type Guidelines:
+- Use "bar" for comparisons, gaps, distributions
+- Use "line" for trends over time
+- Use "pie" for percentage breakdowns
+- Use "scatter" for correlations
+- Use "radar" for multi-dimensional comparisons
 
-${knowledgeBaseContext ? `Use this data context for realistic numbers:\n${knowledgeBaseContext.slice(0, 800)}` : ''}`;
+Generate charts that specifically match the user's request topic. Use realistic UAE workforce data.
+
+${knowledgeBaseContext ? `Context Data:\n${knowledgeBaseContext.slice(0, 1000)}` : ''}`;
 
     const chartResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -150,15 +123,18 @@ ${knowledgeBaseContext ? `Use this data context for realistic numbers:\n${knowle
           },
           { 
             role: 'user', 
-            content: `Generate exactly ${numberOfCharts} different charts for UAE workforce skills analysis: ${prompt}. 
+            content: `USER REQUEST: ${prompt}
 
-IMPORTANT: Create ${numberOfCharts} completely separate and distinct charts, each showing different aspects:
-${numberOfCharts >= 1 ? '1. Skills gap analysis (bar chart showing demand vs supply)' : ''}
-${numberOfCharts >= 2 ? '2. Skills distribution by sector (pie chart)' : ''}
-${numberOfCharts >= 3 ? '3. Skills trends over time (line chart for 2024-2028)' : ''}
-${numberOfCharts >= 4 ? '4. Regional skills distribution (area chart)' : ''}
+Generate ${numberOfCharts} chart(s) that directly visualize data related to this specific request. Create charts that would help answer or illustrate the user's question about UAE workforce/skills.
 
-Each chart must have unique data, different chart type, and focus on different UAE skills aspects.` 
+Requirements:
+- Each chart must be relevant to the user's specific request
+- Use appropriate chart types for the data being shown
+- Include realistic UAE workforce data
+- Make each chart unique if generating multiple charts
+- Focus on the actual topic requested, not generic skills analysis
+
+Generate the JSON response now.`
           }
         ],
         max_completion_tokens: 4000,
@@ -174,42 +150,55 @@ Each chart must have unique data, different chart type, and focus on different U
     let parsedChartData;
     
     try {
-      const responseContent = chartData.choices[0].message.content.trim();
+      let responseContent = chartData.choices[0].message.content.trim();
       console.log('Raw AI response length:', responseContent.length);
-      console.log('First 200 chars:', responseContent.substring(0, 200));
+      console.log('First 300 chars:', responseContent.substring(0, 300));
       
-      // Remove any markdown code blocks and find JSON
-      let cleanContent = responseContent;
-      
+      // Clean the response more thoroughly
       // Remove markdown code blocks
-      cleanContent = cleanContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+      responseContent = responseContent.replace(/```json\s*/gi, '').replace(/```\s*/g, '');
       
-      // Find the JSON object by looking for the first { and last }
-      const firstBrace = cleanContent.indexOf('{');
-      const lastBrace = cleanContent.lastIndexOf('}');
+      // Remove any explanatory text before the JSON
+      const jsonStart = responseContent.indexOf('{');
+      const jsonEnd = responseContent.lastIndexOf('}');
       
-      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-        cleanContent = cleanContent.substring(firstBrace, lastBrace + 1);
+      if (jsonStart === -1 || jsonEnd === -1 || jsonEnd <= jsonStart) {
+        throw new Error('No valid JSON structure found in response');
       }
       
-      // Fix common JSON issues without being too aggressive
-      cleanContent = cleanContent
-        .replace(/&/g, 'and') // Replace & with 'and' to avoid JSON issues
+      responseContent = responseContent.substring(jsonStart, jsonEnd + 1);
+      
+      // Fix common JSON formatting issues
+      responseContent = responseContent
+        .replace(/&/g, 'and') // Replace & with 'and'
         .replace(/'/g, '"') // Replace single quotes with double quotes
         .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
-        .replace(/\s+/g, ' ') // Normalize whitespace
+        .replace(/[\r\n\t]/g, ' ') // Replace line breaks and tabs with spaces
+        .replace(/\s+/g, ' ') // Normalize multiple spaces
+        .replace(/"\s*:\s*"/g, '":"') // Clean up object syntax
+        .replace(/,\s*}/g, '}') // Remove trailing commas before closing braces
+        .replace(/,\s*]/g, ']') // Remove trailing commas before closing brackets
         .trim();
       
-      console.log('Cleaned content first 300 chars:', cleanContent.substring(0, 300));
+      console.log('Cleaned JSON first 500 chars:', responseContent.substring(0, 500));
       
-      parsedChartData = JSON.parse(cleanContent);
+      parsedChartData = JSON.parse(responseContent);
       
-      // Validate structure
-      if (!parsedChartData.charts || !Array.isArray(parsedChartData.charts) || parsedChartData.charts.length === 0) {
-        throw new Error('No valid charts found in response');
+      // Validate required structure
+      if (!parsedChartData || typeof parsedChartData !== 'object') {
+        throw new Error('Response is not a valid object');
       }
       
-      console.log('Successfully parsed', parsedChartData.charts.length, 'charts');
+      if (!parsedChartData.charts || !Array.isArray(parsedChartData.charts)) {
+        throw new Error('Charts array is missing or invalid');
+      }
+      
+      if (parsedChartData.charts.length === 0) {
+        throw new Error('No charts found in response');
+      }
+      
+      console.log('Successfully parsed', parsedChartData.charts.length, 'charts with titles:', 
+        parsedChartData.charts.map(c => c.title?.text || 'No title'));
       
     } catch (parseError) {
       console.error('JSON Parse Error:', parseError);
