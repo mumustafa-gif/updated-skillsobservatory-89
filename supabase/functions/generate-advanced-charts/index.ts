@@ -64,53 +64,37 @@ serve(async (req) => {
     }
 
     // Generate charts with completely dynamic prompt based on user request
-    const chartSystemPrompt = `You are an expert data visualization assistant. Create charts based on what the user requests, but with PROFESSIONAL, CONCISE titles.
+    const chartSystemPrompt = `You are an expert data visualization assistant. 
 
-CRITICAL TITLE GENERATION:
-- Create SHORT, professional titles (maximum 8-10 words)
-- DO NOT copy the user's exact words - improve and refine them
-- Use business/analytical terminology
-- Make titles specific but concise
-- Examples:
-  * User: "analyze sales performance in Q3 for our company" → Title: "Q3 Sales Performance Analysis"
-  * User: "show me skill gaps in technology sector" → Title: "Technology Sector Skills Gap"
-  * User: "compare workforce demand and supply" → Title: "Workforce Supply vs Demand"
+INSTRUCTIONS:
+1. Read the user's request carefully and create charts that DIRECTLY address their specific question
+2. Generate titles that reflect their actual request domain (finance, healthcare, education, etc.)
+3. Use concise, professional titles (max 8-10 words)
+4. Create realistic data relevant to their request
+5. MUST return VALID JSON - be extremely careful with syntax
 
-CRITICAL JSON RULES:
-- Return ONLY valid JSON, no markdown, no explanations, no code blocks
-- Use double quotes for ALL strings and property names  
-- NEVER use quotes, apostrophes, or special characters inside string values
-- Replace any quotes with descriptive words or remove them entirely
-- Example: Instead of "UAE's Technology Skills" use "UAE Technology Skills"
-
-Generate exactly ${numberOfCharts} completely different charts based on the user request.
-
-IMPORTANT: Create SHORT, PROFESSIONAL titles that capture the essence of what the user wants analyzed.
-
-Required JSON structure:
+RESPONSE FORMAT (return ONLY this JSON structure):
 {
   "charts": [
     {
-      "title": {"text": "SHORT professional title (max 8-10 words)", "subtext": "Brief descriptive subtitle"},
+      "title": {"text": "Professional Title Based on Request", "subtext": "Brief subtitle"},
       "tooltip": {"trigger": "axis"},
-      "legend": {"data": ["Series names from user context"]},
-      "xAxis": {"type": "category", "data": ["Categories from user request"]},
-      "yAxis": {"type": "value", "name": "Metric name"},
-      "series": [{"name": "Data series", "type": "bar", "data": [realistic_numbers]}]
+      "legend": {"data": ["Relevant series names"]},
+      "xAxis": {"type": "category", "data": ["Categories from user context"]},
+      "yAxis": {"type": "value", "name": "Relevant metric"},
+      "series": [{"name": "Series name", "type": "bar", "data": [100, 200, 150]}]
     }
   ],
   "diagnostics": {
-    "chartTypes": ["chart_types_used"],
-    "dimensions": ["data_dimensions"],
-    "notes": "Description of what was generated",
-    "sources": ["data_sources"]
+    "chartTypes": ["bar"],
+    "dimensions": ["relevant dimensions"],
+    "notes": "Brief description",
+    "sources": ["data sources"]
   }
 }
 
-Chart type options: bar, line, pie, area, scatter, radar
-Choose types that best fit the user's specific request.
-
-${knowledgeBaseContext ? `Available data context:\n${knowledgeBaseContext.slice(0, 1000)}` : ''}`;
+Chart types: bar, line, pie, area, scatter, radar
+${knowledgeBaseContext ? `\nContext: ${knowledgeBaseContext.slice(0, 1000)}` : ''}`;
 
     const chartResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -203,28 +187,61 @@ Please generate charts that directly address the user's specific request. Each c
       // Extract key terms from user prompt for more relevant fallback titles
       const promptWords = prompt.toLowerCase().split(/\s+/);
       
-      // Create concise, professional titles based on user request
+      // Create titles that better reflect the user's actual query
       const getRelevantTitle = (index) => {
-        // Generate shorter, more professional titles
-        if (promptWords.some(word => ['sales', 'revenue', 'profit', 'income'].includes(word))) {
-          return index === 0 ? 'Sales Performance Analysis' : 
-                 index === 1 ? 'Revenue Distribution' : 
-                 'Sales Trend Overview';
+        const prompt_lower = prompt.toLowerCase();
+        
+        // Extract key domain words to create more relevant titles
+        if (prompt_lower.includes('finance') || prompt_lower.includes('financial')) {
+          return index === 0 ? 'Financial Performance Analysis' : 
+                 index === 1 ? 'Financial Metrics Overview' : 
+                 'Financial Trends';
         }
-        if (promptWords.some(word => ['skill', 'talent', 'workforce', 'employee'].includes(word))) {
-          return index === 0 ? 'Skills Gap Analysis' : 
-                 index === 1 ? 'Workforce Distribution' : 
-                 'Talent Development Trends';
+        if (prompt_lower.includes('healthcare') || prompt_lower.includes('medical')) {
+          return index === 0 ? 'Healthcare Analytics' : 
+                 index === 1 ? 'Medical Data Overview' : 
+                 'Health Trends';
         }
-        if (promptWords.some(word => ['market', 'industry', 'sector', 'business'].includes(word))) {
-          return index === 0 ? 'Market Analysis Overview' : 
-                 index === 1 ? 'Industry Breakdown' : 
-                 'Sector Performance Trends';
+        if (prompt_lower.includes('education') || prompt_lower.includes('student')) {
+          return index === 0 ? 'Education Analytics' : 
+                 index === 1 ? 'Academic Performance' : 
+                 'Learning Trends';
         }
-        // Generic but professional titles
-        return index === 0 ? 'Performance Analysis' : 
-               index === 1 ? 'Distribution Overview' : 
-               'Trend Analysis';
+        if (prompt_lower.includes('technology') || prompt_lower.includes('tech')) {
+          return index === 0 ? 'Technology Analysis' : 
+                 index === 1 ? 'Tech Metrics' : 
+                 'Technology Trends';
+        }
+        
+        // Look for action/analysis keywords
+        if (promptWords.some(word => ['sales', 'revenue', 'profit', 'income', 'financial'].includes(word))) {
+          return index === 0 ? 'Revenue Analysis' : 
+                 index === 1 ? 'Sales Distribution' : 
+                 'Financial Performance';
+        }
+        if (promptWords.some(word => ['skill', 'talent', 'workforce', 'employee', 'job'].includes(word))) {
+          return index === 0 ? 'Talent Analytics' : 
+                 index === 1 ? 'Skills Assessment' : 
+                 'Workforce Insights';
+        }
+        if (promptWords.some(word => ['market', 'industry', 'sector', 'business', 'company'].includes(word))) {
+          return index === 0 ? 'Market Intelligence' : 
+                 index === 1 ? 'Industry Analysis' : 
+                 'Business Metrics';
+        }
+        if (promptWords.some(word => ['performance', 'analysis', 'data', 'report'].includes(word))) {
+          return index === 0 ? 'Performance Dashboard' : 
+                 index === 1 ? 'Data Analysis' : 
+                 'Analytical Report';
+        }
+        
+        // Last resort: use first few words of prompt (cleaned)
+        const firstWords = prompt.split(' ').slice(0, 3).join(' ');
+        const cleanedTitle = firstWords.replace(/[^\w\s]/g, '').trim();
+        
+        return index === 0 ? `${cleanedTitle} Analysis` : 
+               index === 1 ? `${cleanedTitle} Overview` : 
+               `${cleanedTitle} Trends`;
       };
       
       for (let i = 0; i < numberOfCharts; i++) {
