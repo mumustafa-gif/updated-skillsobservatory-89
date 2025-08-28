@@ -16,7 +16,6 @@ import DataInsights from '@/components/dashboard/DataInsights';
 import PolicyAnalysis from '@/components/dashboard/PolicyAnalysis';
 import ChartCustomizer from '@/components/dashboard/ChartCustomizer';
 import AIAgentLoader from '@/components/dashboard/AIAgentLoader';
-import AIAssistant from '@/components/dashboard/AIAssistant';
 
 interface UploadedFile {
   id: string;
@@ -48,7 +47,6 @@ const Dashboard = () => {
   const [generationResult, setGenerationResult] = useState<GenerationResult | null>(null);
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
-  const [activeTab, setActiveTab] = useState<'charts' | 'assistant'>('charts');
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -223,219 +221,59 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Tab Navigation */}
-      <div className="border-b bg-card/50 backdrop-blur">
-        <div className="container mx-auto px-4">
-          <nav className="flex space-x-8">
-            <button
-              onClick={() => setActiveTab('charts')}
-              className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'charts'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'
-              }`}
-            >
-              <BarChart3 className="h-4 w-4 mr-2 inline" />
-              Charts & Analytics
-            </button>
-            <button
-              onClick={() => setActiveTab('assistant')}
-              className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'assistant'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'
-              }`}
-            >
-              <Brain className="h-4 w-4 mr-2 inline" />
-              AI Assistant
-            </button>
-          </nav>
-        </div>
-      </div>
-
       <div className="container mx-auto px-4 py-8">
-        {activeTab === 'charts' ? (
-          <>
-            {/* Centered Configuration (Before Generation) */}
-            {!hasGenerated && !generating && (
-              <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
+        {/* Centered Configuration (Before Generation) */}
+        {!hasGenerated && !generating && (
+          <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="w-full max-w-4xl"
+            >
+              {/* Welcome Header */}
+              <div className="text-center mb-12">
                 <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                  className="w-full max-w-4xl"
+                  animate={{ 
+                    rotate: [0, 5, -5, 0],
+                    scale: [1, 1.05, 1]
+                  }}
+                  transition={{ 
+                    duration: 4, 
+                    repeat: Infinity, 
+                    ease: "easeInOut" 
+                  }}
+                  className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-r from-primary via-secondary to-accent p-5 shadow-lg"
                 >
-                  {/* Welcome Header */}
-                  <div className="text-center mb-12">
-                    <motion.div
-                      animate={{ 
-                        rotate: [0, 5, -5, 0],
-                        scale: [1, 1.05, 1]
-                      }}
-                      transition={{ 
-                        duration: 4, 
-                        repeat: Infinity, 
-                        ease: "easeInOut" 
-                      }}
-                      className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-r from-primary via-secondary to-accent p-5 shadow-lg"
-                    >
-                      <Sparkles className="h-10 w-10 text-white" />
-                    </motion.div>
-                    <h1 className="text-4xl font-bold mb-4 text-primary">
-                      Skills Observatory
-                    </h1>
-                    <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                      AI-powered platform mapping workforce skills supply and demand across the UAE. 
-                      Supporting strategic planning in education, employment, and policy development.
-                    </p>
-                  </div>
-
-                  {/* Centered Configuration Cards */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    {/* Chart Configuration */}
-                    <motion.div
-                      initial={{ opacity: 0, x: -30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.6, delay: 0.2 }}
-                    >
-                      <Card className="h-full bg-gradient-to-br from-card to-card/50 border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300">
-                        <CardHeader className="pb-4">
-                          <CardTitle className="flex items-center gap-3 text-xl">
-                            <div className="p-2 rounded-lg bg-primary/10">
-                              <BarChart3 className="h-5 w-5 text-primary" />
-                            </div>
-                            Chart Configuration
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                          <ChartControls
-                            numberOfCharts={numberOfCharts}
-                            onNumberOfChartsChange={setNumberOfCharts}
-                            chartTypes={chartTypes}
-                            onChartTypesChange={setChartTypes}
-                            useKnowledgeBase={useKnowledgeBase}
-                            onUseKnowledgeBaseChange={setUseKnowledgeBase}
-                            knowledgeBaseFilesCount={uploadedFiles.length}
-                          />
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-
-                    {/* Generate Charts */}
-                    <motion.div
-                      initial={{ opacity: 0, x: 30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.6, delay: 0.3 }}
-                    >
-                      <Card className="h-full bg-gradient-to-br from-card to-card/50 border-secondary/20 shadow-lg hover:shadow-xl transition-all duration-300">
-                        <CardHeader className="pb-4">
-                          <CardTitle className="flex items-center gap-3 text-xl">
-                            <div className="p-2 rounded-lg bg-secondary/10">
-                              <Sparkles className="h-5 w-5 text-secondary" />
-                            </div>
-                            Generate Charts
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                          <div className="space-y-4">
-                            <Label htmlFor="prompt" className="text-base font-medium">
-                              Describe your workforce analysis needs
-                            </Label>
-                            <Textarea
-                              id="prompt"
-                              placeholder="Example: Analyze demand for AI and data science skills in Dubai's financial sector for 2025 workforce planning..."
-                              value={prompt}
-                              onChange={(e) => setPrompt(e.target.value)}
-                              rows={6}
-                              className="resize-none text-base leading-relaxed"
-                            />
-                          </div>
-
-                          <Button 
-                            onClick={handleGenerate} 
-                            disabled={generating}
-                            size="lg"
-                            className="w-full h-12 text-base font-medium bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 transition-all duration-300"
-                          >
-                            {generating ? (
-                              <>
-                                <motion.div
-                                  animate={{ rotate: 360 }}
-                                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                  className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-3"
-                                />
-                                Generating Skills Analysis...
-                              </>
-                            ) : (
-                              <>
-                                <Sparkles className="h-5 w-5 mr-3" />
-                                Generate Skills Analysis
-                              </>
-                            )}
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  </div>
-
-                  {/* Feature Highlights */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.4 }}
-                    className="grid grid-cols-1 md:grid-cols-3 gap-6"
-                  >
-                    <div className="text-center p-6 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 hover:border-primary/40 transition-colors">
-                      <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <BarChart3 className="h-6 w-6 text-primary" />
-                      </div>
-                      <h3 className="font-semibold mb-2">Skills Mapping</h3>
-                      <p className="text-sm text-muted-foreground">
-                        AI-powered analysis of workforce skills supply and demand patterns
-                      </p>
-                    </div>
-                    <div className="text-center p-6 rounded-xl bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20 hover:border-secondary/40 transition-colors">
-                      <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-secondary/10 flex items-center justify-center">
-                        <Brain className="h-6 w-6 text-secondary" />
-                      </div>
-                      <h3 className="font-semibold mb-2">Workforce Analytics</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Strategic insights for education and employment planning in the UAE
-                      </p>
-                    </div>
-                    <div className="text-center p-6 rounded-xl bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 hover:border-accent/40 transition-colors">
-                      <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-accent/10 flex items-center justify-center">
-                        <Lightbulb className="h-6 w-6 text-accent" />
-                      </div>
-                      <h3 className="font-semibold mb-2">Policy Intelligence</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Data-driven recommendations for strategic workforce development
-                      </p>
-                    </div>
-                  </motion.div>
+                  <Sparkles className="h-10 w-10 text-white" />
                 </motion.div>
+                <h1 className="text-4xl font-bold mb-4 text-primary">
+                  Skills Observatory
+                </h1>
+                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                  AI-powered platform mapping workforce skills supply and demand across the UAE. 
+                  Supporting strategic planning in education, employment, and policy development.
+                </p>
               </div>
-            )}
 
-            {/* Sidebar Layout (After Generation) */}
-            {hasGenerated && !generating && (
-              <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 min-h-[calc(100vh-200px)]">
-                {/* Left Sidebar - Configuration */}
+              {/* Centered Configuration Cards */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                {/* Chart Configuration */}
                 <motion.div
-                  initial={{ opacity: 0, x: -50 }}
+                  initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="xl:col-span-1 space-y-6"
+                  transition={{ duration: 0.6, delay: 0.2 }}
                 >
-                  {/* Compact Chart Controls */}
-                  <Card className="bg-gradient-to-br from-card to-card/50 border-primary/20">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <BarChart3 className="h-4 w-4 text-primary" />
-                        Configuration
+                  <Card className="h-full bg-gradient-to-br from-card to-card/50 border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="flex items-center gap-3 text-xl">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <BarChart3 className="h-5 w-5 text-primary" />
+                        </div>
+                        Chart Configuration
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-6">
                       <ChartControls
                         numberOfCharts={numberOfCharts}
                         onNumberOfChartsChange={setNumberOfCharts}
@@ -447,96 +285,219 @@ const Dashboard = () => {
                       />
                     </CardContent>
                   </Card>
+                </motion.div>
 
-                  {/* Compact Generate Section */}
-                  <Card className="bg-gradient-to-br from-card to-card/50 border-secondary/20">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-secondary" />
-                        Regenerate
+                {/* Generate Charts */}
+                <motion.div
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                >
+                  <Card className="h-full bg-gradient-to-br from-card to-card/50 border-secondary/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="flex items-center gap-3 text-xl">
+                        <div className="p-2 rounded-lg bg-secondary/10">
+                          <Sparkles className="h-5 w-5 text-secondary" />
+                        </div>
+                        Generate Charts
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <Textarea
-                        placeholder="Modify your workforce analysis requirements..."
-                        value={prompt}
-                        onChange={(e) => setPrompt(e.target.value)}
-                        rows={3}
-                        className="resize-none text-sm"
-                      />
+                    <CardContent className="space-y-6">
+                      <div className="space-y-4">
+                        <Label htmlFor="prompt" className="text-base font-medium">
+                          Describe your workforce analysis needs
+                        </Label>
+                        <Textarea
+                          id="prompt"
+                          placeholder="Example: Analyze demand for AI and data science skills in Dubai's financial sector for 2025 workforce planning..."
+                          value={prompt}
+                          onChange={(e) => setPrompt(e.target.value)}
+                          rows={6}
+                          className="resize-none text-base leading-relaxed"
+                        />
+                      </div>
+
                       <Button 
                         onClick={handleGenerate} 
                         disabled={generating}
-                        size="sm"
-                        className="w-full bg-gradient-to-r from-secondary to-accent hover:from-secondary/90 hover:to-accent/90"
+                        size="lg"
+                        className="w-full h-12 text-base font-medium bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 transition-all duration-300"
                       >
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Regenerate
+                        {generating ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                              className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-3"
+                            />
+                            Generating Skills Analysis...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-5 w-5 mr-3" />
+                            Generate Skills Analysis
+                          </>
+                        )}
                       </Button>
                     </CardContent>
                   </Card>
                 </motion.div>
-
-                {/* Main Content - Charts & Analysis */}
-                <div className="xl:col-span-4 space-y-6">
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <MultiChartDisplay 
-                      chartOptions={generationResult?.charts || []} 
-                      loading={generating} 
-                    />
-                  </motion.div>
-
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
-                  >
-                    <DiagnosticsPanel 
-                      diagnostics={generationResult?.diagnostics}
-                      visible={!!generationResult?.diagnostics}
-                    />
-                  </motion.div>
-
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                  >
-                    <DataInsights 
-                      insights={generationResult?.insights || []}
-                      visible={!!(generationResult?.insights && generationResult.insights.length > 0)}
-                    />
-                  </motion.div>
-
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                  >
-                    <PolicyAnalysis 
-                      policyData={generationResult?.policyData}
-                      visible={!!generationResult?.policyData}
-                    />
-                  </motion.div>
-                </div>
               </div>
-            )}
 
-            <ChartCustomizer
-              charts={generationResult?.charts || []}
-              onChartsUpdate={handleChartsUpdate}
-              isVisible={showCustomizer && generationResult?.charts.length > 0}
-              onToggle={() => setShowCustomizer(!showCustomizer)}
-            />
-          </>
-        ) : (
-          /* AI Assistant Tab */
-          <AIAssistant />
+              {/* Feature Highlights */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="grid grid-cols-1 md:grid-cols-3 gap-6"
+              >
+                <div className="text-center p-6 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 hover:border-primary/40 transition-colors">
+                  <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <BarChart3 className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="font-semibold mb-2">Skills Mapping</h3>
+                  <p className="text-sm text-muted-foreground">
+                    AI-powered analysis of workforce skills supply and demand patterns
+                  </p>
+                </div>
+                <div className="text-center p-6 rounded-xl bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20 hover:border-secondary/40 transition-colors">
+                  <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-secondary/10 flex items-center justify-center">
+                    <Brain className="h-6 w-6 text-secondary" />
+                  </div>
+                  <h3 className="font-semibold mb-2">Workforce Analytics</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Strategic insights for education and employment planning in the UAE
+                  </p>
+                </div>
+                <div className="text-center p-6 rounded-xl bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 hover:border-accent/40 transition-colors">
+                  <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <Lightbulb className="h-6 w-6 text-accent" />
+                  </div>
+                  <h3 className="font-semibold mb-2">Policy Intelligence</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Data-driven recommendations for strategic workforce development
+                  </p>
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
         )}
+
+        {/* Sidebar Layout (After Generation) */}
+        {hasGenerated && !generating && (
+          <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 min-h-[calc(100vh-200px)]">
+            {/* Left Sidebar - Configuration */}
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              className="xl:col-span-1 space-y-6"
+            >
+              {/* Compact Chart Controls */}
+              <Card className="bg-gradient-to-br from-card to-card/50 border-primary/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    Configuration
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ChartControls
+                    numberOfCharts={numberOfCharts}
+                    onNumberOfChartsChange={setNumberOfCharts}
+                    chartTypes={chartTypes}
+                    onChartTypesChange={setChartTypes}
+                    useKnowledgeBase={useKnowledgeBase}
+                    onUseKnowledgeBaseChange={setUseKnowledgeBase}
+                    knowledgeBaseFilesCount={uploadedFiles.length}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Compact Generate Section */}
+              <Card className="bg-gradient-to-br from-card to-card/50 border-secondary/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-secondary" />
+                    Regenerate
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Textarea
+                    placeholder="Modify your workforce analysis requirements..."
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    rows={3}
+                    className="resize-none text-sm"
+                  />
+                  <Button 
+                    onClick={handleGenerate} 
+                    disabled={generating}
+                    size="sm"
+                    className="w-full bg-gradient-to-r from-secondary to-accent hover:from-secondary/90 hover:to-accent/90"
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Regenerate
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Main Content - Charts & Analysis */}
+            <div className="xl:col-span-4 space-y-6">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <MultiChartDisplay 
+                  chartOptions={generationResult?.charts || []} 
+                  loading={generating} 
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <DiagnosticsPanel 
+                  diagnostics={generationResult?.diagnostics}
+                  visible={!!generationResult?.diagnostics}
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <DataInsights 
+                  insights={generationResult?.insights || []}
+                  visible={!!(generationResult?.insights && generationResult.insights.length > 0)}
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <PolicyAnalysis 
+                  policyData={generationResult?.policyData}
+                  visible={!!generationResult?.policyData}
+                />
+              </motion.div>
+            </div>
+          </div>
+        )}
+
+        <ChartCustomizer
+          charts={generationResult?.charts || []}
+          onChartsUpdate={handleChartsUpdate}
+          isVisible={showCustomizer && generationResult?.charts.length > 0}
+          onToggle={() => setShowCustomizer(!showCustomizer)}
+        />
       </div>
     </div>
   );
