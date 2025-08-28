@@ -31,7 +31,17 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    // Create Supabase client with user's auth token
+    const supabaseWithAuth = createClient(supabaseUrl, supabaseKey, {
+      global: {
+        headers: {
+          Authorization: authHeader
+        }
+      }
+    });
+    
+    const { data: { user }, error: authError } = await supabaseWithAuth.auth.getUser(token);
     
     if (authError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -43,7 +53,7 @@ serve(async (req) => {
     // Get or create conversation
     let conversation;
     if (conversationId) {
-      const { data } = await supabase
+      const { data } = await supabaseWithAuth
         .from('conversations')
         .select('*')
         .eq('id', conversationId)
@@ -51,7 +61,7 @@ serve(async (req) => {
         .single();
       conversation = data;
     } else {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseWithAuth
         .from('conversations')
         .insert({
           user_id: user.id,
@@ -66,7 +76,7 @@ serve(async (req) => {
     }
 
     // Save user message
-    const { data: userMessage } = await supabase
+    const { data: userMessage } = await supabaseWithAuth
       .from('conversation_messages')
       .insert({
         conversation_id: conversation.id,
@@ -77,14 +87,14 @@ serve(async (req) => {
       .single();
 
     // Get conversation history
-    const { data: messages } = await supabase
+    const { data: messages } = await supabaseWithAuth
       .from('conversation_messages')
       .select('role, content')
       .eq('conversation_id', conversation.id)
       .order('created_at', { ascending: true });
 
     // Get knowledge base context if available
-    const { data: files } = await supabase
+    const { data: files } = await supabaseWithAuth
       .from('knowledge_base_files')
       .select('original_filename, extracted_content')
       .eq('user_id', user.id);
@@ -175,7 +185,7 @@ Current conversation context: ${JSON.stringify(conversation.context)}`;
     }
 
     // Save AI response
-    const { data: assistantMessage } = await supabase
+    const { data: assistantMessage } = await supabaseWithAuth
       .from('conversation_messages')
       .insert({
         conversation_id: conversation.id,
@@ -191,7 +201,7 @@ Current conversation context: ${JSON.stringify(conversation.context)}`;
       .single();
 
     // Update conversation context
-    await supabase
+    await supabaseWithAuth
       .from('conversations')
       .update({
         context: { ...conversation.context, ...aiResponse.context },
