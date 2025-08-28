@@ -72,7 +72,25 @@ serve(async (req) => {
     
     // Upload file to storage
     const fileBuffer = await file.arrayBuffer();
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    
+    console.log('Attempting to upload file:', {
+      fileName,
+      userId: user.id,
+      bucketId: 'knowledge-base',
+      fileSize: file.size,
+      contentType: file.type
+    });
+    
+    // Create a new supabase client with the user's token for proper RLS
+    const userSupabase = createClient(supabaseUrl, supabaseKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    });
+    
+    const { data: uploadData, error: uploadError } = await userSupabase.storage
       .from('knowledge-base')
       .upload(fileName, fileBuffer, {
         contentType: file.type,
@@ -81,6 +99,7 @@ serve(async (req) => {
 
     if (uploadError) {
       console.error('Storage upload error:', uploadError);
+      console.error('Full error details:', JSON.stringify(uploadError, null, 2));
       return new Response(JSON.stringify({ error: 'Failed to upload file' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
