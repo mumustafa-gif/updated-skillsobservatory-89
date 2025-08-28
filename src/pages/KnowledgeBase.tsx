@@ -143,14 +143,6 @@ const KnowledgeBase = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      {/* Logo in top left */}
-      <div className="absolute top-8 left-8 z-50">
-        <img 
-          src="/lovable-uploads/c4d663bc-27ef-4ba5-9a5e-f8401832952e.png" 
-          alt="Logo" 
-          className="h-16 w-auto"
-        />
-      </div>
       
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur">
