@@ -60,17 +60,24 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
-        <div className="flex items-center justify-center mb-8">
-          <BarChart3 className="h-12 w-12 text-primary mr-3" />
-          <h1 className="text-3xl font-bold text-foreground">ChartGen AI</h1>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
+      {/* Logo in top left */}
+      <div className="absolute top-8 left-8">
+        <img 
+          src="/lovable-uploads/c4d663bc-27ef-4ba5-9a5e-f8401832952e.png" 
+          alt="Logo" 
+          className="h-16 w-auto"
+        />
+      </div>
+      
+      {/* Centered content */}
+      <div className="min-h-screen flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md"
+        >
 
         <Card>
           <CardHeader>
@@ -128,7 +135,8 @@ const Auth = () => {
             </div>
           </CardContent>
         </Card>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 };
