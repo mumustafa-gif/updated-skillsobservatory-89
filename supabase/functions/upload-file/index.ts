@@ -85,7 +85,7 @@ serve(async (req) => {
     const userSupabase = createClient(supabaseUrl, supabaseKey, {
       global: {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: authHeader
         }
       }
     });
@@ -100,18 +100,25 @@ serve(async (req) => {
     if (uploadError) {
       console.error('Storage upload error:', uploadError);
       console.error('Full error details:', JSON.stringify(uploadError, null, 2));
-      return new Response(JSON.stringify({ error: 'Failed to upload file' }), {
+      return new Response(JSON.stringify({ 
+        error: 'Failed to upload file',
+        details: uploadError.message || 'Unknown storage error'
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    console.log('File uploaded successfully to storage:', uploadData);
+
     // Extract text content
     const content = new Uint8Array(fileBuffer);
     const extractedContent = extractTextFromFile(file.name, content);
 
-    // Save file metadata to database
-    const { data: fileData, error: dbError } = await supabase
+    console.log('Extracted content length:', extractedContent.length);
+
+    // Save file metadata to database using authenticated client
+    const { data: fileData, error: dbError } = await userSupabase
       .from('knowledge_base_files')
       .insert({
         user_id: user.id,
@@ -127,9 +134,13 @@ serve(async (req) => {
 
     if (dbError) {
       console.error('Database error:', dbError);
+      console.error('Full database error details:', JSON.stringify(dbError, null, 2));
       // Clean up uploaded file if database insert fails
-      await supabase.storage.from('knowledge-base').remove([fileName]);
-      return new Response(JSON.stringify({ error: 'Failed to save file metadata' }), {
+      await userSupabase.storage.from('knowledge-base').remove([fileName]);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to save file metadata',
+        details: dbError.message || 'Unknown database error'
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
