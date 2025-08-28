@@ -24,16 +24,16 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.conversational-chat]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-multiple-charts]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-policies]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-insights]
-verify_jwt = true
+verify_jwt = false
 
 [auth]
 enabled = true

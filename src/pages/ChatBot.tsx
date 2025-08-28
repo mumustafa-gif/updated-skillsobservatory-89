@@ -16,33 +16,10 @@ interface UploadedFile {
 }
 
 const ChatBot = () => {
-  const { user, signOut, loading } = useAuth();
-  const navigate = useNavigate();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [showUpload, setShowUpload] = useState(false);
 
-  // Redirect if not logged in
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
-  }, [user, loading, navigate]);
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4 animate-spin" />
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // For prototyping - no auth needed
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
@@ -51,7 +28,7 @@ const ChatBot = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Bot className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold">ChartGen AI Assistant</h1>
+            <h1 className="text-2xl font-bold">ChartGen AI Assistant (Prototype)</h1>
           </div>
           <div className="flex items-center space-x-4">
             <Button 
@@ -63,12 +40,8 @@ const ChatBot = () => {
               Files ({uploadedFiles.length})
             </Button>
             <span className="text-sm text-muted-foreground">
-              {user?.email}
+              Test User (Prototype Mode)
             </span>
-            <Button variant="outline" size="sm" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
           </div>
         </div>
         

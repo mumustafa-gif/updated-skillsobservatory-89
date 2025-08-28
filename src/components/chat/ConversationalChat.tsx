@@ -57,20 +57,11 @@ const ConversationalChat = () => {
     setLoading(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error('Not authenticated');
-      }
-
       const response = await supabase.functions.invoke('conversational-chat', {
         body: {
           conversationId,
           message: input,
           userContext: {}
-        },
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
         }
       });
 
@@ -113,13 +104,9 @@ const ConversationalChat = () => {
 
   const generateAllContent = async (convId: string, msgId: string, context: any) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
       // Generate multiple charts
       const chartsResponse = await supabase.functions.invoke('generate-multiple-charts', {
-        body: { conversationId: convId, messageId: msgId, context },
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
+        body: { conversationId: convId, messageId: msgId, context }
       });
 
       if (chartsResponse.data) {
@@ -129,8 +116,7 @@ const ConversationalChat = () => {
       // Generate policies if region is mentioned
       if (context.region) {
         const policiesResponse = await supabase.functions.invoke('generate-policies', {
-          body: { conversationId: convId, messageId: msgId, context, region: context.region },
-          headers: { 'Authorization': `Bearer ${session.access_token}` }
+          body: { conversationId: convId, messageId: msgId, context, region: context.region }
         });
 
         if (policiesResponse.data) {
@@ -140,8 +126,7 @@ const ConversationalChat = () => {
 
       // Generate insights
       const insightsResponse = await supabase.functions.invoke('generate-insights', {
-        body: { conversationId: convId, messageId: msgId, context, chartData: chartsResponse.data },
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
+        body: { conversationId: convId, messageId: msgId, context, chartData: chartsResponse.data }
       });
 
       if (insightsResponse.data) {

@@ -4,14 +4,15 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Use service role key for admin access during prototyping
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -21,62 +22,41 @@ serve(async (req) => {
   try {
     const { conversationId, message, userContext = {} } = await req.json();
     
-    // Get user from auth header
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    
-    // Create Supabase client with user's auth token
-    const supabaseWithAuth = createClient(supabaseUrl, supabaseKey, {
-      global: {
-        headers: {
-          Authorization: authHeader
-        }
-      }
-    });
-    
-    const { data: { user }, error: authError } = await supabaseWithAuth.auth.getUser(token);
-    
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    // Use static test user for prototyping
+    const testUserId = '00000000-0000-0000-0000-000000000001';
+    console.log('Using test user:', testUserId);
 
     // Get or create conversation
     let conversation;
     if (conversationId) {
-      const { data } = await supabaseWithAuth
+      const { data } = await supabase
         .from('conversations')
         .select('*')
         .eq('id', conversationId)
-        .eq('user_id', user.id)
+        .eq('user_id', testUserId)
         .single();
       conversation = data;
     } else {
-      const { data, error } = await supabaseWithAuth
+      const { data, error } = await supabase
         .from('conversations')
         .insert({
-          user_id: user.id,
+          user_id: testUserId,
           title: message.substring(0, 50) + '...',
           context: userContext
         })
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating conversation:', error);
+        throw error;
+      }
       conversation = data;
+      console.log('Created new conversation:', conversation.id);
     }
 
     // Save user message
-    const { data: userMessage } = await supabaseWithAuth
+    const { data: userMessage, error: userMessageError } = await supabase
       .from('conversation_messages')
       .insert({
         conversation_id: conversation.id,
@@ -86,22 +66,31 @@ serve(async (req) => {
       .select()
       .single();
 
+    if (userMessageError) {
+      console.error('Error saving user message:', userMessageError);
+      throw userMessageError;
+    }
+
+    console.log('Saved user message:', userMessage.id);
+
     // Get conversation history
-    const { data: messages } = await supabaseWithAuth
+    const { data: messages } = await supabase
       .from('conversation_messages')
       .select('role, content')
       .eq('conversation_id', conversation.id)
       .order('created_at', { ascending: true });
 
     // Get knowledge base context if available
-    const { data: files } = await supabaseWithAuth
+    const { data: files } = await supabase
       .from('knowledge_base_files')
       .select('original_filename, extracted_content')
-      .eq('user_id', user.id);
+      .eq('user_id', testUserId);
     
     const knowledgeBaseContext = files && files.length > 0 
       ? files.map(file => `File: ${file.original_filename}\nContent: ${file.extracted_content}`).join('\n\n')
       : '';
+
+    console.log('Knowledge base files found:', files?.length || 0);
 
     // Create dynamic system prompt for conversational AI
     const systemPrompt = `You are ChartGen AI, an intelligent conversational assistant specialized in data visualization, policy analysis, and business insights.
@@ -146,6 +135,7 @@ ${knowledgeBaseContext ? `Available Data Files:\n${knowledgeBaseContext}\n` : ''
 
 Current conversation context: ${JSON.stringify(conversation.context)}`;
 
+    console.log('Calling OpenAI API...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -156,14 +146,15 @@ Current conversation context: ${JSON.stringify(conversation.context)}`;
         model: 'gpt-5-2025-08-07',
         messages: [
           { role: 'system', content: systemPrompt },
-          ...messages.map(msg => ({ role: msg.role, content: msg.content }))
+          ...(messages || []).map(msg => ({ role: msg.role, content: msg.content }))
         ],
         max_completion_tokens: 1500,
       }),
     });
 
     if (!response.ok) {
-      console.error('OpenAI API error:', await response.text());
+      const errorText = await response.text();
+      console.error('OpenAI API error:', errorText);
       return new Response(JSON.stringify({ error: 'Failed to generate response' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -184,8 +175,10 @@ Current conversation context: ${JSON.stringify(conversation.context)}`;
       };
     }
 
+    console.log('AI Response:', aiResponse);
+
     // Save AI response
-    const { data: assistantMessage } = await supabaseWithAuth
+    const { data: assistantMessage, error: assistantError } = await supabase
       .from('conversation_messages')
       .insert({
         conversation_id: conversation.id,
@@ -200,8 +193,15 @@ Current conversation context: ${JSON.stringify(conversation.context)}`;
       .select()
       .single();
 
+    if (assistantError) {
+      console.error('Error saving assistant message:', assistantError);
+      throw assistantError;
+    }
+
+    console.log('Saved assistant message:', assistantMessage.id);
+
     // Update conversation context
-    await supabaseWithAuth
+    await supabase
       .from('conversations')
       .update({
         context: { ...conversation.context, ...aiResponse.context },
