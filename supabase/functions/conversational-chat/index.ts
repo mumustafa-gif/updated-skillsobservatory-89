@@ -163,16 +163,25 @@ Current conversation context: ${JSON.stringify(conversation.context)}`;
     }
 
     const data = await response.json();
+    const rawContent = data.choices[0].message.content;
+    console.log('Raw OpenAI response:', rawContent);
+    
     let aiResponse;
     
     try {
-      aiResponse = JSON.parse(data.choices[0].message.content);
-    } catch {
+      aiResponse = JSON.parse(rawContent);
+    } catch (parseError) {
+      console.log('Failed to parse as JSON, using fallback response');
       // Fallback if response is not JSON
       aiResponse = {
-        response: data.choices[0].message.content,
-        needsMoreInfo: true,
-        generateContent: false
+        response: rawContent,
+        needsMoreInfo: false,
+        generateContent: true,
+        contentTypes: ["charts"],
+        context: {
+          chartTypes: ["bar", "line", "pie"],
+          dataContext: "General business data visualization"
+        }
       };
     }
 
