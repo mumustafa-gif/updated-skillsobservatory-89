@@ -13,19 +13,30 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Simple text extraction for different file types
 function extractTextFromFile(filename: string, content: Uint8Array): string {
-  const textContent = new TextDecoder().decode(content);
-  
-  // For now, we'll do simple text extraction
-  // In a production app, you'd use proper parsers for PDF, DOCX, etc.
-  
-  if (filename.toLowerCase().endsWith('.csv')) {
-    return `CSV Data:\n${textContent}`;
-  } else if (filename.toLowerCase().endsWith('.txt')) {
-    return textContent;
-  } else {
-    // For other file types, we'll just return the raw text content
-    // In production, you'd integrate proper parsers
-    return `File content (${filename}):\n${textContent.substring(0, 5000)}...`;
+  try {
+    const textContent = new TextDecoder('utf-8', { fatal: false }).decode(content);
+    
+    // Remove null bytes and other problematic characters for PostgreSQL
+    const sanitizedContent = textContent
+      .replace(/\u0000/g, '') // Remove null bytes
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove other control characters
+      .trim();
+    
+    if (filename.toLowerCase().endsWith('.csv')) {
+      return `CSV Data:\n${sanitizedContent}`;
+    } else if (filename.toLowerCase().endsWith('.txt')) {
+      return sanitizedContent;
+    } else if (filename.toLowerCase().endsWith('.pdf')) {
+      // For PDF files, provide basic metadata since we can't properly parse them
+      return `PDF File: ${filename}\nSize: ${content.length} bytes\nUploaded for processing.`;
+    } else {
+      // For other file types, provide basic info and truncated content
+      const truncatedContent = sanitizedContent.substring(0, 1000);
+      return `File: ${filename}\nContent preview:\n${truncatedContent}${sanitizedContent.length > 1000 ? '...' : ''}`;
+    }
+  } catch (error) {
+    console.error('Error extracting text:', error);
+    return `File: ${filename}\nSize: ${content.length} bytes\nContent extraction failed - file uploaded successfully.`;
   }
 }
 
