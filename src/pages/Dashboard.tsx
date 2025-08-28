@@ -14,6 +14,7 @@ import MultiChartDisplay from '@/components/dashboard/MultiChartDisplay';
 import DiagnosticsPanel from '@/components/dashboard/DiagnosticsPanel';
 import DataInsights from '@/components/dashboard/DataInsights';
 import PolicyAnalysis from '@/components/dashboard/PolicyAnalysis';
+import ChartCustomizer from '@/components/dashboard/ChartCustomizer';
 import AIAgentLoader from '@/components/dashboard/AIAgentLoader';
 
 interface UploadedFile {
@@ -44,6 +45,7 @@ const Dashboard = () => {
   const [useKnowledgeBase, setUseKnowledgeBase] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [generationResult, setGenerationResult] = useState<GenerationResult | null>(null);
+  const [showCustomizer, setShowCustomizer] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
@@ -125,6 +127,7 @@ const Dashboard = () => {
 
       setGenerationResult(response.data);
       setHasGenerated(true);
+      setShowCustomizer(true);
 
       toast({
         title: "Charts Generated!",
@@ -145,6 +148,15 @@ const Dashboard = () => {
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
+  };
+
+  const handleChartsUpdate = (updatedCharts: any[]) => {
+    if (generationResult) {
+      setGenerationResult({
+        ...generationResult,
+        charts: updatedCharts
+      });
+    }
   };
 
   if (loading) {
@@ -487,6 +499,13 @@ const Dashboard = () => {
             </div>
           </div>
         )}
+
+        <ChartCustomizer
+          charts={generationResult?.charts || []}
+          onChartsUpdate={handleChartsUpdate}
+          isVisible={showCustomizer && generationResult?.charts.length > 0}
+          onToggle={() => setShowCustomizer(!showCustomizer)}
+        />
       </div>
     </div>
   );
