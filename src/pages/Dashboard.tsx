@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { BarChart3, LogOut, Sparkles, FileText, Link, Brain, Lightbulb } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import ChartControls from '@/components/dashboard/ChartControls';
 import MultiChartDisplay from '@/components/dashboard/MultiChartDisplay';
 import DiagnosticsPanel from '@/components/dashboard/DiagnosticsPanel';
@@ -279,9 +280,9 @@ const Dashboard = () => {
                         onNumberOfChartsChange={setNumberOfCharts}
                         chartTypes={chartTypes}
                         onChartTypesChange={setChartTypes}
-                        useKnowledgeBase={useKnowledgeBase}
-                        onUseKnowledgeBaseChange={setUseKnowledgeBase}
-                        knowledgeBaseFilesCount={uploadedFiles.length}
+                        useKnowledgeBase={false}
+                        onUseKnowledgeBaseChange={() => {}}
+                        knowledgeBaseFilesCount={0}
                       />
                     </CardContent>
                   </Card>
@@ -317,6 +318,22 @@ const Dashboard = () => {
                         />
                       </div>
 
+                      {/* Knowledge Base Toggle */}
+                      {uploadedFiles.length > 0 && (
+                        <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border">
+                          <div className="space-y-1">
+                            <Label className="text-sm font-medium">Use Knowledge Base</Label>
+                            <p className="text-xs text-muted-foreground">
+                              Analyze {uploadedFiles.length} uploaded file{uploadedFiles.length > 1 ? 's' : ''} with AI
+                            </p>
+                          </div>
+                          <Switch
+                            checked={useKnowledgeBase}
+                            onCheckedChange={setUseKnowledgeBase}
+                          />
+                        </div>
+                      )}
+
                       <Button 
                         onClick={handleGenerate} 
                         disabled={generating}
@@ -330,12 +347,12 @@ const Dashboard = () => {
                               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                               className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-3"
                             />
-                            Generating Skills Analysis...
+                            {useKnowledgeBase ? 'Generating Skill Analysis...' : 'Generating Charts...'}
                           </>
                         ) : (
                           <>
                             <Sparkles className="h-5 w-5 mr-3" />
-                            Generate Skills Analysis
+                            {useKnowledgeBase ? 'Generate Skill Analysis' : 'Generate Charts'}
                           </>
                         )}
                       </Button>
@@ -407,9 +424,9 @@ const Dashboard = () => {
                     onNumberOfChartsChange={setNumberOfCharts}
                     chartTypes={chartTypes}
                     onChartTypesChange={setChartTypes}
-                    useKnowledgeBase={useKnowledgeBase}
-                    onUseKnowledgeBaseChange={setUseKnowledgeBase}
-                    knowledgeBaseFilesCount={uploadedFiles.length}
+                    useKnowledgeBase={false}
+                    onUseKnowledgeBaseChange={() => {}}
+                    knowledgeBaseFilesCount={0}
                   />
                 </CardContent>
               </Card>
