@@ -8,12 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, LogOut, Sparkles, FileText, Link } from 'lucide-react';
+import { BarChart3, LogOut, Sparkles, FileText, Link, Brain, Lightbulb } from 'lucide-react';
 import ChartControls from '@/components/dashboard/ChartControls';
 import MultiChartDisplay from '@/components/dashboard/MultiChartDisplay';
 import DiagnosticsPanel from '@/components/dashboard/DiagnosticsPanel';
 import DataInsights from '@/components/dashboard/DataInsights';
 import PolicyAnalysis from '@/components/dashboard/PolicyAnalysis';
+import AIAgentLoader from '@/components/dashboard/AIAgentLoader';
 
 interface UploadedFile {
   id: string;
@@ -43,6 +44,7 @@ const Dashboard = () => {
   const [useKnowledgeBase, setUseKnowledgeBase] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [generationResult, setGenerationResult] = useState<GenerationResult | null>(null);
+  const [hasGenerated, setHasGenerated] = useState(false);
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -122,6 +124,7 @@ const Dashboard = () => {
       }
 
       setGenerationResult(response.data);
+      setHasGenerated(true);
 
       toast({
         title: "Charts Generated!",
@@ -160,31 +163,57 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
+      {/* AI Agent Loader */}
+      <AIAgentLoader visible={generating} />
+      
       {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur">
+      <header className="border-b bg-card/80 backdrop-blur-xl shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <BarChart3 className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold">ChartGen AI</h1>
-          </div>
-          <div className="flex items-center space-x-4">
+          <motion.div 
+            className="flex items-center space-x-3"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <motion.div
+              animate={{ rotate: hasGenerated ? 360 : 0 }}
+              transition={{ duration: 0.8, ease: "easeInOut" }}
+              className="p-2 rounded-lg bg-gradient-to-r from-primary to-secondary"
+            >
+              <BarChart3 className="h-6 w-6 text-primary-foreground" />
+            </motion.div>
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                ChartGen AI
+              </h1>
+              <p className="text-xs text-muted-foreground">Intelligent Data Visualization</p>
+            </div>
+          </motion.div>
+          <motion.div 
+            className="flex items-center space-x-4"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <Button 
               variant="outline" 
               size="sm" 
               onClick={() => navigate('/knowledge-base')}
+              className="transition-all duration-300 hover:shadow-md"
             >
               <FileText className="h-4 w-4 mr-2" />
               Knowledge Base
             </Button>
-            <span className="text-sm text-muted-foreground">
-              Welcome, {user?.email}
-            </span>
+            <div className="text-right">
+              <p className="text-sm font-medium">{user?.email?.split('@')[0]}</p>
+              <p className="text-xs text-muted-foreground">AI Dashboard</p>
+            </div>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </Button>
-          </div>
+          </motion.div>
         </div>
       </header>
 
@@ -261,49 +290,120 @@ const Dashboard = () => {
 
           {/* Right Panel - Results */}
           <div className="lg:col-span-3 space-y-6">
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <MultiChartDisplay 
-                chartOptions={generationResult?.charts || []} 
-                loading={generating} 
-              />
-            </motion.div>
+            {/* Welcome/Empty State */}
+            {!hasGenerated && !generating && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="text-center py-16"
+              >
+                <motion.div
+                  animate={{ float: [0, -10, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  className="mb-8"
+                >
+                  <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-r from-primary via-secondary to-accent p-6 shadow-lg">
+                    <Sparkles className="h-12 w-12 text-white" />
+                  </div>
+                </motion.div>
+                <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                  Welcome to ChartGen AI
+                </h2>
+                <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+                  Transform your data into stunning visualizations with the power of AI. 
+                  Describe what you want to see, and our intelligent agents will create 
+                  professional charts with insights and analysis.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="p-6 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20"
+                  >
+                    <BarChart3 className="h-8 w-8 text-primary mb-4" />
+                    <h3 className="font-semibold mb-2">Smart Visualizations</h3>
+                    <p className="text-sm text-muted-foreground">
+                      AI-powered chart generation that understands your data
+                    </p>
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="p-6 rounded-xl bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20"
+                  >
+                    <Brain className="h-8 w-8 text-secondary mb-4" />
+                    <h3 className="font-semibold mb-2">Deep Insights</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Automatic analysis and recommendations from your data
+                    </p>
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="p-6 rounded-xl bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20"
+                  >
+                    <Lightbulb className="h-8 w-8 text-accent mb-4" />
+                    <h3 className="font-semibold mb-2">Policy Analysis</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Strategic recommendations based on your data trends
+                    </p>
+                  </motion.div>
+                </div>
+              </motion.div>
+            )}
 
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <DiagnosticsPanel 
-                diagnostics={generationResult?.diagnostics}
-                visible={!!generationResult?.diagnostics}
-              />
-            </motion.div>
+            {/* Generated Content */}
+            {hasGenerated && !generating && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <MultiChartDisplay 
+                    chartOptions={generationResult?.charts || []} 
+                    loading={generating} 
+                  />
+                </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <DataInsights 
-                insights={generationResult?.insights || []}
-                visible={!!(generationResult?.insights && generationResult.insights.length > 0)}
-              />
-            </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                  <DiagnosticsPanel 
+                    diagnostics={generationResult?.diagnostics}
+                    visible={!!generationResult?.diagnostics}
+                  />
+                </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <PolicyAnalysis 
-                policyData={generationResult?.policyData}
-                visible={!!generationResult?.policyData}
-              />
-            </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <DataInsights 
+                    insights={generationResult?.insights || []}
+                    visible={!!(generationResult?.insights && generationResult.insights.length > 0)}
+                  />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                >
+                  <PolicyAnalysis 
+                    policyData={generationResult?.policyData}
+                    visible={!!generationResult?.policyData}
+                  />
+                </motion.div>
+              </>
+            )}
           </div>
         </div>
       </div>

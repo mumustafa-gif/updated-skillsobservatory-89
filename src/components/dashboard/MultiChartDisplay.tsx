@@ -10,51 +10,11 @@ interface MultiChartDisplayProps {
 
 const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loading }) => {
   if (loading) {
-    return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {Array.from({ length: 4 }, (_, index) => (
-          <Card key={index} className="h-[400px]">
-            <CardContent className="p-6 h-full flex items-center justify-center">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full"
-              />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+    return null; // Don't show anything while loading - AIAgentLoader handles this
   }
 
   if (!chartOptions || chartOptions.length === 0) {
-    return (
-      <Card className="h-[500px]">
-        <CardContent className="p-6 h-full flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-24 h-24 mx-auto mb-4 bg-muted rounded-lg flex items-center justify-center">
-              <svg
-                className="w-12 h-12 text-muted-foreground"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-              </svg>
-            </div>
-            <p className="text-lg font-medium text-muted-foreground mb-2">No Charts Generated</p>
-            <p className="text-sm text-muted-foreground">
-              Configure your charts and click generate to create visualizations
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return null; // Don't show empty state until user generates first chart
   }
 
   const getGridCols = (count: number) => {

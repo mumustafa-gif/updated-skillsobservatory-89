@@ -54,9 +54,25 @@ All colors MUST be HSL.
     --chart-4: 262 83% 58%;
     --chart-5: 46 87% 65%;
 
+    /* AI Theme Colors */
+    --ai-primary: 221 83% 53%;
+    --ai-secondary: 262 83% 58%;
+    --ai-accent: 346 77% 49%;
+    --ai-glow: 221 83% 73%;
+    
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(221 83% 63%));
+    --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(262 83% 58%));
     --gradient-secondary: linear-gradient(135deg, hsl(210 40% 96.1%), hsl(214.3 31.8% 91.4%));
+    --gradient-ai: linear-gradient(135deg, hsl(221 83% 53%), hsl(262 83% 58%), hsl(346 77% 49%));
+    --gradient-glow: radial-gradient(circle, hsl(221 83% 73% / 0.3), transparent);
+    
+    /* Shadows */
+    --shadow-ai: 0 10px 40px hsl(221 83% 53% / 0.3);
+    --shadow-glow: 0 0 30px hsl(221 83% 73% / 0.5);
+    
+    /* Animations */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --bounce-timing: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
   .dark {
