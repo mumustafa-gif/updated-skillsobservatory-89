@@ -319,20 +319,22 @@ const Dashboard = () => {
                       </div>
 
                       {/* Knowledge Base Toggle */}
-                      {uploadedFiles.length > 0 && (
-                        <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border">
-                          <div className="space-y-1">
-                            <Label className="text-sm font-medium">Use Knowledge Base</Label>
-                            <p className="text-xs text-muted-foreground">
-                              Analyze {uploadedFiles.length} uploaded file{uploadedFiles.length > 1 ? 's' : ''} with AI
-                            </p>
-                          </div>
-                          <Switch
-                            checked={useKnowledgeBase}
-                            onCheckedChange={setUseKnowledgeBase}
-                          />
+                      <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border">
+                        <div className="space-y-1">
+                          <Label className="text-sm font-medium">Use Knowledge Base</Label>
+                          <p className="text-xs text-muted-foreground">
+                            {uploadedFiles.length > 0 
+                              ? `Analyze ${uploadedFiles.length} uploaded file${uploadedFiles.length > 1 ? 's' : ''} with AI`
+                              : 'Upload files to Knowledge Base to enable this feature'
+                            }
+                          </p>
                         </div>
-                      )}
+                        <Switch
+                          checked={useKnowledgeBase && uploadedFiles.length > 0}
+                          onCheckedChange={setUseKnowledgeBase}
+                          disabled={uploadedFiles.length === 0}
+                        />
+                      </div>
 
                       <Button 
                         onClick={handleGenerate} 
