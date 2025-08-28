@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_policies: {
+        Row: {
+          country: string | null
+          created_at: string
+          data_context: string | null
+          id: string
+          policy_category: string
+          policy_content: Json
+          region: string
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          data_context?: string | null
+          id?: string
+          policy_category: string
+          policy_content: Json
+          region: string
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          data_context?: string | null
+          id?: string
+          policy_category?: string
+          policy_content?: Json
+          region?: string
+          state?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chart_history: {
         Row: {
           chart_config: Json
@@ -46,6 +82,116 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      conversation_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          context: Json | null
+          created_at: string
+          id: string
+          status: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          status?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          status?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      generated_content: {
+        Row: {
+          content: Json
+          content_type: string
+          conversation_id: string
+          created_at: string
+          id: string
+          message_id: string | null
+          region_context: string | null
+        }
+        Insert: {
+          content: Json
+          content_type: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          region_context?: string | null
+        }
+        Update: {
+          content?: Json
+          content_type?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          region_context?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_content_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_content_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       knowledge_base_files: {
         Row: {
