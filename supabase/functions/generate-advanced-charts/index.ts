@@ -63,50 +63,41 @@ serve(async (req) => {
       }
     }
 
-    // Generate charts with improved prompt for multiple charts
-    const chartSystemPrompt = `You are an expert chart generation assistant for UAE workforce skills analysis.
+    // Generate charts with completely dynamic prompt based on user request
+    const chartSystemPrompt = `You are an expert data visualization assistant. Create charts based EXACTLY on what the user requests.
 
-CRITICAL: You must return ONLY valid JSON with properly quoted property names. No code blocks, no explanations.
+CRITICAL JSON RULES:
+- Return ONLY valid JSON, no markdown, no explanations, no code blocks
+- Use double quotes for ALL strings and property names  
+- NEVER use quotes inside string values (use single quotes or avoid them)
+- Example: "title": {"text": "Skills Analysis for Technology Sector"}
 
-You MUST generate exactly ${numberOfCharts} DIFFERENT charts. Each chart should show different aspects of UAE workforce skills.
+Generate exactly ${numberOfCharts} completely different charts based on the user request.
 
-Return this exact JSON structure:
+Required JSON structure:
 {
   "charts": [
     {
-      "title": {"text": "Chart 1 Title", "subtext": "Chart 1 subtitle"},
-      "tooltip": {"trigger": "item"},
-      "legend": {"data": ["Series1", "Series2"]},
-      "xAxis": {"type": "category", "data": ["Item1", "Item2", "Item3"]},
-      "yAxis": {"type": "value", "name": "Value"},
-      "series": [{"name": "Series1", "type": "bar", "data": [10, 20, 30]}]
-    }${numberOfCharts > 1 ? ',\n    {\n      "title": {"text": "Chart 2 Title", "subtext": "Chart 2 subtitle"},\n      "tooltip": {"trigger": "item"},\n      "legend": {"data": ["Different Series"]},\n      "series": [{"name": "Different Series", "type": "pie", "radius": "50%", "data": [{"value": 40, "name": "Category A"}, {"value": 60, "name": "Category B"}]}]\n    }' : ''}${numberOfCharts > 2 ? ',\n    {\n      "title": {"text": "Chart 3 Title"},\n      "tooltip": {"trigger": "axis"},\n      "xAxis": {"type": "category", "data": ["2023", "2024", "2025"]},\n      "yAxis": {"type": "value"},\n      "series": [{"name": "Trend", "type": "line", "data": [100, 120, 140]}]\n    }' : ''}
+      "title": {"text": "Dynamic title based on user request", "subtext": "Relevant subtitle"},
+      "tooltip": {"trigger": "axis"},
+      "legend": {"data": ["Series names from user context"]},
+      "xAxis": {"type": "category", "data": ["Categories from user request"]},
+      "yAxis": {"type": "value", "name": "Metric name"},
+      "series": [{"name": "Data series", "type": "bar", "data": [realistic_numbers]}]
+    }
   ],
   "diagnostics": {
-    "chartTypes": ["bar"${numberOfCharts > 1 ? ', "pie"' : ''}${numberOfCharts > 2 ? ', "line"' : ''}],
-    "dimensions": ["Skills", "Categories", "Time"],
-    "notes": "Generated ${numberOfCharts} charts for UAE workforce analysis",
-    "sources": ["UAE Skills Data"]
+    "chartTypes": ["chart_types_used"],
+    "dimensions": ["data_dimensions"],
+    "notes": "Description of what was generated",
+    "sources": ["data_sources"]
   }
 }
 
-MANDATORY REQUIREMENTS:
-- Generate exactly ${numberOfCharts} charts (not ${numberOfCharts - 1}, not ${numberOfCharts + 1}, exactly ${numberOfCharts})
-- Each chart must be completely different with unique data and purpose
-- Chart 1: Skills gap analysis (bar/column chart)
-- Chart 2: Skills distribution (pie chart) ${numberOfCharts > 2 ? '\n- Chart 3: Skills trends over time (line chart)' : ''}${numberOfCharts > 3 ? '\n- Chart 4: Sector comparison (area chart)' : ''}
-- Use realistic UAE workforce data for tech, healthcare, finance, tourism sectors
-- ALL property names must be in double quotes
-- Focus on UAE Skills Observatory goals
+Chart type options: bar, line, pie, area, scatter, radar
+Choose types that best fit the user's specific request.
 
-Chart topics to use:
-1. Current skills gaps in UAE market
-2. Skills demand by industry sector
-3. Future skills requirements (2024-2028)
-4. Regional skills distribution (Dubai, Abu Dhabi, etc.)
-5. Education vs industry skill alignment
-
-${knowledgeBaseContext ? `Use this data context:\n${knowledgeBaseContext.slice(0, 800)}` : ''}`;
+${knowledgeBaseContext ? `Available data context:\n${knowledgeBaseContext.slice(0, 1000)}` : ''}`;
 
     const chartResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -123,15 +114,11 @@ ${knowledgeBaseContext ? `Use this data context:\n${knowledgeBaseContext.slice(0
           },
           { 
             role: 'user', 
-            content: `Generate exactly ${numberOfCharts} different charts for UAE workforce skills analysis: ${prompt}. 
+            content: `Create ${numberOfCharts} different charts based on this request: "${prompt}"
 
-IMPORTANT: Create ${numberOfCharts} completely separate and distinct charts, each showing different aspects:
-${numberOfCharts >= 1 ? '1. Skills gap analysis (bar chart showing demand vs supply)' : ''}
-${numberOfCharts >= 2 ? '2. Skills distribution by sector (pie chart)' : ''}
-${numberOfCharts >= 3 ? '3. Skills trends over time (line chart for 2024-2028)' : ''}
-${numberOfCharts >= 4 ? '4. Regional skills distribution (area chart)' : ''}
+${knowledgeBaseContext ? `Using the following data context: ${knowledgeBaseContext.slice(0, 1500)}` : ''}
 
-Each chart must have unique data, different chart type, and focus on different UAE skills aspects.` 
+Please generate charts that directly address the user's specific request. Each chart should focus on different aspects of what they asked for.` 
           }
         ],
         max_completion_tokens: 4000,
@@ -151,12 +138,21 @@ Each chart must have unique data, different chart type, and focus on different U
       console.log('Raw AI response length:', responseContent.length);
       console.log('First 200 chars:', responseContent.substring(0, 200));
       
-      // Remove any markdown code blocks
+      // Advanced JSON cleaning to handle quotes and fix common issues
       let cleanContent = responseContent
         .replace(/```json\s*/g, '')
         .replace(/```\s*/g, '')
         .replace(/^[^{]*/, '') // Remove anything before first {
         .replace(/[^}]*$/, ''); // Remove anything after last }
+      
+      // Fix quotes inside strings first - find strings and escape quotes within them
+      cleanContent = cleanContent.replace(/"([^"]*)"(\s*:\s*")([^"]*)"([^"]*)"([^"]*)"([^"]*)"/g, (match, key, colon, start, middle, end, rest) => {
+        // If this looks like a key-value pair with quotes inside the value
+        return `"${key}"${colon}${start} ${middle} ${end}${rest}"`;
+      });
+      
+      // More aggressive quote fixing - replace problematic quote patterns
+      cleanContent = cleanContent.replace(/"([^"]*)"([^"]*)"([^"]*)"(\s*[,}\]])/g, '"$1 $2 $3"$4');
       
       // Fix common JSON issues
       cleanContent = cleanContent
@@ -164,7 +160,8 @@ Each chart must have unique data, different chart type, and focus on different U
         .replace(/'/g, '"') // Replace single quotes
         .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
         .replace(/\n/g, ' ') // Remove newlines
-        .replace(/\s+/g, ' '); // Normalize spaces
+        .replace(/\s+/g, ' ') // Normalize spaces
+        .replace(/"\s*"/g, '""'); // Fix empty strings
       
       console.log('Cleaned content first 300 chars:', cleanContent.substring(0, 300));
       
@@ -181,68 +178,71 @@ Each chart must have unique data, different chart type, and focus on different U
       console.error('JSON Parse Error:', parseError);
       console.error('Failed content:', chartData.choices[0].message.content);
       
-      // Fallback: create multiple charts based on numberOfCharts
+      // Fallback: create generic charts based on prompt keywords
       const fallbackCharts = [];
+      
+      // Create simple fallback charts that try to match the user's request
+      const promptLower = prompt.toLowerCase();
       
       for (let i = 0; i < numberOfCharts; i++) {
         if (i === 0) {
+          // First chart - bar chart with relevant data
           fallbackCharts.push({
-            title: { text: 'UAE Skills Gap Analysis', subtext: 'Current Market Demands vs Available Skills' },
+            title: { text: `Analysis for ${prompt.slice(0, 50)}...`, subtext: 'Data Overview' },
             tooltip: { trigger: 'axis' },
-            legend: { data: ['Required Skills', 'Available Skills'] },
-            xAxis: { type: 'category', data: ['AI/ML', 'Data Science', 'Cybersecurity', 'Digital Marketing', 'Cloud Computing'] },
-            yAxis: { type: 'value', name: 'Skill Level (%)' },
+            legend: { data: ['Category A', 'Category B'] },
+            xAxis: { type: 'category', data: ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5'] },
+            yAxis: { type: 'value', name: 'Value' },
             series: [
-              { name: 'Required Skills', type: 'bar', data: [85, 78, 92, 65, 73] },
-              { name: 'Available Skills', type: 'bar', data: [45, 52, 38, 58, 49] }
+              { name: 'Category A', type: 'bar', data: [120, 200, 150, 80, 70] },
+              { name: 'Category B', type: 'bar', data: [80, 140, 120, 160, 90] }
             ]
           });
         } else if (i === 1) {
+          // Second chart - pie chart
           fallbackCharts.push({
-            title: { text: 'Skills Distribution by Sector', subtext: 'UAE Workforce Distribution' },
+            title: { text: 'Distribution Analysis', subtext: 'Breakdown of Key Components' },
             tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
-            legend: { data: ['Technology', 'Healthcare', 'Finance', 'Tourism', 'Manufacturing'] },
+            legend: { data: ['Component 1', 'Component 2', 'Component 3', 'Component 4'] },
             series: [{
-              name: 'Sector Distribution',
+              name: 'Distribution',
               type: 'pie',
               radius: '60%',
               data: [
-                { value: 35, name: 'Technology' },
-                { value: 25, name: 'Healthcare' },
-                { value: 20, name: 'Finance' },
-                { value: 15, name: 'Tourism' },
-                { value: 5, name: 'Manufacturing' }
+                { value: 40, name: 'Component 1' },
+                { value: 30, name: 'Component 2' },
+                { value: 20, name: 'Component 3' },
+                { value: 10, name: 'Component 4' }
               ]
             }]
           });
         } else if (i === 2) {
+          // Third chart - line chart for trends
           fallbackCharts.push({
-            title: { text: 'Skills Demand Trends (2024-2028)', subtext: 'Projected Growth in Key Skills' },
+            title: { text: 'Trend Analysis', subtext: 'Changes Over Time' },
             tooltip: { trigger: 'axis' },
-            legend: { data: ['AI Skills', 'Green Energy', 'Digital Health'] },
-            xAxis: { type: 'category', data: ['2024', '2025', '2026', '2027', '2028'] },
-            yAxis: { type: 'value', name: 'Demand Growth (%)' },
+            legend: { data: ['Metric 1', 'Metric 2'] },
+            xAxis: { type: 'category', data: ['Period 1', 'Period 2', 'Period 3', 'Period 4', 'Period 5'] },
+            yAxis: { type: 'value', name: 'Growth' },
             series: [
-              { name: 'AI Skills', type: 'line', smooth: true, data: [20, 35, 50, 70, 85] },
-              { name: 'Green Energy', type: 'line', smooth: true, data: [15, 25, 40, 55, 75] },
-              { name: 'Digital Health', type: 'line', smooth: true, data: [10, 20, 35, 50, 65] }
+              { name: 'Metric 1', type: 'line', smooth: true, data: [30, 45, 60, 75, 90] },
+              { name: 'Metric 2', type: 'line', smooth: true, data: [20, 35, 50, 65, 80] }
             ]
           });
         } else {
-          // Additional charts for higher numbers
+          // Additional generic charts
           fallbackCharts.push({
-            title: { text: `UAE Skills Analysis ${i + 1}`, subtext: 'Regional Skills Distribution' },
+            title: { text: `Analysis ${i + 1}`, subtext: 'Additional Data View' },
             tooltip: { trigger: 'item' },
-            legend: { data: ['Dubai', 'Abu Dhabi', 'Sharjah', 'Other Emirates'] },
+            legend: { data: ['Group A', 'Group B', 'Group C'] },
             series: [{
-              name: 'Regional Skills',
+              name: 'Data Groups',
               type: 'pie',
               radius: '50%',
               data: [
-                { value: 45, name: 'Dubai' },
-                { value: 30, name: 'Abu Dhabi' },
-                { value: 15, name: 'Sharjah' },
-                { value: 10, name: 'Other Emirates' }
+                { value: 50, name: 'Group A' },
+                { value: 30, name: 'Group B' },
+                { value: 20, name: 'Group C' }
               ]
             }]
           });
@@ -253,28 +253,22 @@ Each chart must have unique data, different chart type, and focus on different U
         charts: fallbackCharts,
         diagnostics: {
           chartTypes: fallbackCharts.map(chart => chart.series[0].type),
-          dimensions: ['Skills Category', 'Sector', 'Time', 'Region'],
-          notes: `Fallback: Generated ${numberOfCharts} charts due to parsing error`,
-          sources: ['UAE Skills Database', 'Market Analysis']
+          dimensions: ['Category', 'Value', 'Time'],
+          notes: `Fallback: Generated ${numberOfCharts} generic charts due to parsing error for request: ${prompt.slice(0, 100)}`,
+          sources: ['Fallback Data Generator']
         }
       };
       
       console.log(`Created ${fallbackCharts.length} fallback charts`);
     }
 
-    // Generate data insights focused on skills and workforce
-    const insightSystemPrompt = `You are a UAE workforce analytics expert. Based on the skills analysis request, provide exactly 5-6 bullet points explaining key insights and patterns.
+    // Generate data insights based on user request
+    const insightSystemPrompt = `You are a data analysis expert. Based on the user's specific request, provide exactly 5-6 bullet points explaining key insights and patterns from their data.
 
 Return ONLY a JSON array of strings:
-["insight 1", "insight 2", "insight 3", "insight 4", "insight 5"]
+["insight 1", "insight 2", "insight 3", "insight 4", "insight 5", "insight 6"]
 
-Focus on UAE-specific workforce insights:
-- Skills gap analysis and market demand
-- Employment trends in key sectors (tech, finance, healthcare, tourism)
-- Education-to-employment pipeline effectiveness
-- Emerging skills requirements for UAE Vision 2071
-- Regional workforce development opportunities
-- Strategic recommendations for policy makers`;
+Focus on insights that directly relate to what the user requested. Provide actionable, specific analysis based on their prompt.`;
 
     const insightResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -286,7 +280,7 @@ Focus on UAE-specific workforce insights:
         model: 'gpt-4.1-2025-04-14',
         messages: [
           { role: 'system', content: insightSystemPrompt },
-          { role: 'user', content: `Analyze UAE workforce skills for: ${prompt}${knowledgeBaseContext ? '\n\nWith data from: ' + knowledgeBaseContext.slice(0, 1000) : ''}` }
+          { role: 'user', content: `Analyze the data and provide insights for: ${prompt}${knowledgeBaseContext ? '\n\nWith data from: ' + knowledgeBaseContext.slice(0, 1000) : ''}` }
         ],
         max_completion_tokens: 1000,
       }),
@@ -302,26 +296,18 @@ Focus on UAE-specific workforce insights:
       }
     }
 
-    // Generate UAE-specific policy analysis
-    const policySystemPrompt = `You are a UAE policy research expert specializing in workforce development and skills policies. Based on the user's request, provide UAE-specific analysis:
+    // Generate policy analysis based on user request
+    const policySystemPrompt = `You are a policy research expert. Based on the user's specific request, provide relevant policy analysis:
 
 Return ONLY a JSON object:
 {
-  "currentPolicies": ["UAE policy 1", "UAE policy 2", "UAE policy 3", "UAE policy 4"],
+  "currentPolicies": ["relevant policy 1", "relevant policy 2", "relevant policy 3", "relevant policy 4"],
   "suggestedImprovements": ["improvement 1", "improvement 2", "improvement 3", "improvement 4"],
-  "region": "UAE",
-  "country": "United Arab Emirates"
+  "region": "determined from context",
+  "country": "determined from context"
 }
 
-Focus on actual UAE policies and initiatives such as:
-- UAE Vision 2071 and workforce development goals
-- Emirates Skills Framework initiatives
-- National Skills Strategy implementation
-- UAE Strategy for the Fourth Industrial Revolution
-- Federal Authority for Government Human Resources policies
-- Mohammed bin Rashid Centre for Leadership Development programs
-
-Provide specific, actionable policy recommendations aligned with UAE's strategic vision.`;
+Provide specific, actionable policy recommendations based on what the user is asking to analyze.`;
 
     const policyResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -333,7 +319,7 @@ Provide specific, actionable policy recommendations aligned with UAE's strategic
         model: 'gpt-4.1-2025-04-14',
         messages: [
           { role: 'system', content: policySystemPrompt },
-          { role: 'user', content: `Research UAE workforce and skills policies for: ${prompt}` }
+          { role: 'user', content: `Research relevant policies and provide analysis for: ${prompt}` }
         ],
         max_completion_tokens: 1500,
       }),
