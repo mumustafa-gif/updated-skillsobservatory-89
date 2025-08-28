@@ -63,50 +63,50 @@ serve(async (req) => {
       }
     }
 
-    // Generate charts with dynamic prompt based on user request
-    const chartSystemPrompt = `You are an expert data visualization assistant specializing in UAE workforce and skills analysis.
+    // Generate charts with improved prompt for multiple charts
+    const chartSystemPrompt = `You are an expert chart generation assistant for UAE workforce skills analysis.
 
-CRITICAL JSON FORMATTING RULES:
-1. Return ONLY valid JSON - no markdown, no explanations, no code blocks
-2. Use double quotes for all strings
-3. No trailing commas
-4. Replace "&" with "and" in all text content
-5. Escape any quotes inside string values properly
+CRITICAL: You must return ONLY valid JSON with properly quoted property names. No code blocks, no explanations.
 
-Generate exactly ${numberOfCharts} unique chart(s) based on the user's specific request. Each chart should directly address their prompt with relevant, realistic UAE data.
+You MUST generate exactly ${numberOfCharts} DIFFERENT charts. Each chart should show different aspects of UAE workforce skills.
 
-JSON Structure Required:
+Return this exact JSON structure:
 {
   "charts": [
     {
-      "title": {"text": "Chart Title Based on User Request", "subtext": "Relevant Subtitle"},
-      "tooltip": {"trigger": "axis" or "item"},
-      "legend": {"data": ["Relevant Legend Items"]},
-      "xAxis": {"type": "category", "data": ["Relevant Categories"]},
-      "yAxis": {"type": "value", "name": "Appropriate Y-axis Label"},
-      "series": [
-        {"name": "Series Name", "type": "bar/line/pie", "data": [realistic_numbers]}
-      ]
-    }
+      "title": {"text": "Chart 1 Title", "subtext": "Chart 1 subtitle"},
+      "tooltip": {"trigger": "item"},
+      "legend": {"data": ["Series1", "Series2"]},
+      "xAxis": {"type": "category", "data": ["Item1", "Item2", "Item3"]},
+      "yAxis": {"type": "value", "name": "Value"},
+      "series": [{"name": "Series1", "type": "bar", "data": [10, 20, 30]}]
+    }${numberOfCharts > 1 ? ',\n    {\n      "title": {"text": "Chart 2 Title", "subtext": "Chart 2 subtitle"},\n      "tooltip": {"trigger": "item"},\n      "legend": {"data": ["Different Series"]},\n      "series": [{"name": "Different Series", "type": "pie", "radius": "50%", "data": [{"value": 40, "name": "Category A"}, {"value": 60, "name": "Category B"}]}]\n    }' : ''}${numberOfCharts > 2 ? ',\n    {\n      "title": {"text": "Chart 3 Title"},\n      "tooltip": {"trigger": "axis"},\n      "xAxis": {"type": "category", "data": ["2023", "2024", "2025"]},\n      "yAxis": {"type": "value"},\n      "series": [{"name": "Trend", "type": "line", "data": [100, 120, 140]}]\n    }' : ''}
   ],
   "diagnostics": {
-    "chartTypes": ["chart_type_array"],
-    "dimensions": ["relevant_dimensions"],
-    "notes": "Description of what was generated",
-    "sources": ["UAE relevant sources"]
+    "chartTypes": ["bar"${numberOfCharts > 1 ? ', "pie"' : ''}${numberOfCharts > 2 ? ', "line"' : ''}],
+    "dimensions": ["Skills", "Categories", "Time"],
+    "notes": "Generated ${numberOfCharts} charts for UAE workforce analysis",
+    "sources": ["UAE Skills Data"]
   }
 }
 
-Chart Type Guidelines:
-- Use "bar" for comparisons, gaps, distributions
-- Use "line" for trends over time
-- Use "pie" for percentage breakdowns
-- Use "scatter" for correlations
-- Use "radar" for multi-dimensional comparisons
+MANDATORY REQUIREMENTS:
+- Generate exactly ${numberOfCharts} charts (not ${numberOfCharts - 1}, not ${numberOfCharts + 1}, exactly ${numberOfCharts})
+- Each chart must be completely different with unique data and purpose
+- Chart 1: Skills gap analysis (bar/column chart)
+- Chart 2: Skills distribution (pie chart) ${numberOfCharts > 2 ? '\n- Chart 3: Skills trends over time (line chart)' : ''}${numberOfCharts > 3 ? '\n- Chart 4: Sector comparison (area chart)' : ''}
+- Use realistic UAE workforce data for tech, healthcare, finance, tourism sectors
+- ALL property names must be in double quotes
+- Focus on UAE Skills Observatory goals
 
-Generate charts that specifically match the user's request topic. Use realistic UAE workforce data.
+Chart topics to use:
+1. Current skills gaps in UAE market
+2. Skills demand by industry sector
+3. Future skills requirements (2024-2028)
+4. Regional skills distribution (Dubai, Abu Dhabi, etc.)
+5. Education vs industry skill alignment
 
-${knowledgeBaseContext ? `Context Data:\n${knowledgeBaseContext.slice(0, 1000)}` : ''}`;
+${knowledgeBaseContext ? `Use this data context:\n${knowledgeBaseContext.slice(0, 800)}` : ''}`;
 
     const chartResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -115,7 +115,7 @@ ${knowledgeBaseContext ? `Context Data:\n${knowledgeBaseContext.slice(0, 1000)}`
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-2025-08-07',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { 
             role: 'system', 
@@ -123,18 +123,15 @@ ${knowledgeBaseContext ? `Context Data:\n${knowledgeBaseContext.slice(0, 1000)}`
           },
           { 
             role: 'user', 
-            content: `USER REQUEST: ${prompt}
+            content: `Generate exactly ${numberOfCharts} different charts for UAE workforce skills analysis: ${prompt}. 
 
-Generate ${numberOfCharts} chart(s) that directly visualize data related to this specific request. Create charts that would help answer or illustrate the user's question about UAE workforce/skills.
+IMPORTANT: Create ${numberOfCharts} completely separate and distinct charts, each showing different aspects:
+${numberOfCharts >= 1 ? '1. Skills gap analysis (bar chart showing demand vs supply)' : ''}
+${numberOfCharts >= 2 ? '2. Skills distribution by sector (pie chart)' : ''}
+${numberOfCharts >= 3 ? '3. Skills trends over time (line chart for 2024-2028)' : ''}
+${numberOfCharts >= 4 ? '4. Regional skills distribution (area chart)' : ''}
 
-Requirements:
-- Each chart must be relevant to the user's specific request
-- Use appropriate chart types for the data being shown
-- Include realistic UAE workforce data
-- Make each chart unique if generating multiple charts
-- Focus on the actual topic requested, not generic skills analysis
-
-Generate the JSON response now.`
+Each chart must have unique data, different chart type, and focus on different UAE skills aspects.` 
           }
         ],
         max_completion_tokens: 4000,
@@ -150,55 +147,35 @@ Generate the JSON response now.`
     let parsedChartData;
     
     try {
-      let responseContent = chartData.choices[0].message.content.trim();
+      const responseContent = chartData.choices[0].message.content.trim();
       console.log('Raw AI response length:', responseContent.length);
-      console.log('First 300 chars:', responseContent.substring(0, 300));
+      console.log('First 200 chars:', responseContent.substring(0, 200));
       
-      // Clean the response more thoroughly
-      // Remove markdown code blocks
-      responseContent = responseContent.replace(/```json\s*/gi, '').replace(/```\s*/g, '');
+      // Remove any markdown code blocks
+      let cleanContent = responseContent
+        .replace(/```json\s*/g, '')
+        .replace(/```\s*/g, '')
+        .replace(/^[^{]*/, '') // Remove anything before first {
+        .replace(/[^}]*$/, ''); // Remove anything after last }
       
-      // Remove any explanatory text before the JSON
-      const jsonStart = responseContent.indexOf('{');
-      const jsonEnd = responseContent.lastIndexOf('}');
-      
-      if (jsonStart === -1 || jsonEnd === -1 || jsonEnd <= jsonStart) {
-        throw new Error('No valid JSON structure found in response');
-      }
-      
-      responseContent = responseContent.substring(jsonStart, jsonEnd + 1);
-      
-      // Fix common JSON formatting issues
-      responseContent = responseContent
-        .replace(/&/g, 'and') // Replace & with 'and'
-        .replace(/'/g, '"') // Replace single quotes with double quotes
+      // Fix common JSON issues
+      cleanContent = cleanContent
+        .replace(/(\w+)(\s*):/g, '"$1"$2:') // Quote unquoted keys
+        .replace(/'/g, '"') // Replace single quotes
         .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
-        .replace(/[\r\n\t]/g, ' ') // Replace line breaks and tabs with spaces
-        .replace(/\s+/g, ' ') // Normalize multiple spaces
-        .replace(/"\s*:\s*"/g, '":"') // Clean up object syntax
-        .replace(/,\s*}/g, '}') // Remove trailing commas before closing braces
-        .replace(/,\s*]/g, ']') // Remove trailing commas before closing brackets
-        .trim();
+        .replace(/\n/g, ' ') // Remove newlines
+        .replace(/\s+/g, ' '); // Normalize spaces
       
-      console.log('Cleaned JSON first 500 chars:', responseContent.substring(0, 500));
+      console.log('Cleaned content first 300 chars:', cleanContent.substring(0, 300));
       
-      parsedChartData = JSON.parse(responseContent);
+      parsedChartData = JSON.parse(cleanContent);
       
-      // Validate required structure
-      if (!parsedChartData || typeof parsedChartData !== 'object') {
-        throw new Error('Response is not a valid object');
+      // Validate structure
+      if (!parsedChartData.charts || !Array.isArray(parsedChartData.charts) || parsedChartData.charts.length === 0) {
+        throw new Error('No valid charts found in response');
       }
       
-      if (!parsedChartData.charts || !Array.isArray(parsedChartData.charts)) {
-        throw new Error('Charts array is missing or invalid');
-      }
-      
-      if (parsedChartData.charts.length === 0) {
-        throw new Error('No charts found in response');
-      }
-      
-      console.log('Successfully parsed', parsedChartData.charts.length, 'charts with titles:', 
-        parsedChartData.charts.map(c => c.title?.text || 'No title'));
+      console.log('Successfully parsed', parsedChartData.charts.length, 'charts');
       
     } catch (parseError) {
       console.error('JSON Parse Error:', parseError);
@@ -306,7 +283,7 @@ Focus on UAE-specific workforce insights:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-2025-08-07',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { role: 'system', content: insightSystemPrompt },
           { role: 'user', content: `Analyze UAE workforce skills for: ${prompt}${knowledgeBaseContext ? '\n\nWith data from: ' + knowledgeBaseContext.slice(0, 1000) : ''}` }
@@ -353,7 +330,7 @@ Provide specific, actionable policy recommendations aligned with UAE's strategic
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-2025-08-07',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { role: 'system', content: policySystemPrompt },
           { role: 'user', content: `Research UAE workforce and skills policies for: ${prompt}` }
