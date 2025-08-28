@@ -142,7 +142,7 @@ ${knowledgeBaseContext ? `Use this data context for realistic numbers:\n${knowle
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-5-2025-08-07',
         messages: [
           { 
             role: 'system', 
@@ -317,7 +317,7 @@ Focus on UAE-specific workforce insights:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-5-2025-08-07',
         messages: [
           { role: 'system', content: insightSystemPrompt },
           { role: 'user', content: `Analyze UAE workforce skills for: ${prompt}${knowledgeBaseContext ? '\n\nWith data from: ' + knowledgeBaseContext.slice(0, 1000) : ''}` }
@@ -364,7 +364,7 @@ Provide specific, actionable policy recommendations aligned with UAE's strategic
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-5-2025-08-07',
         messages: [
           { role: 'system', content: policySystemPrompt },
           { role: 'user', content: `Research UAE workforce and skills policies for: ${prompt}` }
