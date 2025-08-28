@@ -185,9 +185,9 @@ const Dashboard = () => {
             </motion.div>
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                ChartGen AI
+                Skills Observatory
               </h1>
-              <p className="text-xs text-muted-foreground">Intelligent Data Visualization</p>
+              <p className="text-xs text-muted-foreground">UAE Workforce Analytics</p>
             </div>
           </motion.div>
           <motion.div 
@@ -244,11 +244,11 @@ const Dashboard = () => {
                   <Sparkles className="h-10 w-10 text-white" />
                 </motion.div>
                 <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                  Create Amazing Charts with AI
+                  Skills Observatory
                 </h1>
                 <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                  Transform your ideas into stunning visualizations. Our AI agents will analyze, 
-                  process, and create intelligent charts tailored to your needs.
+                  AI-powered platform mapping workforce skills supply and demand across the UAE. 
+                  Supporting strategic planning in education, employment, and policy development.
                 </p>
               </div>
 
@@ -301,11 +301,11 @@ const Dashboard = () => {
                     <CardContent className="space-y-6">
                       <div className="space-y-4">
                         <Label htmlFor="prompt" className="text-base font-medium">
-                          Describe your visualization needs
+                          Describe your workforce analysis needs
                         </Label>
                         <Textarea
                           id="prompt"
-                          placeholder="Example: Create sales performance charts for Q4 2024 by region and product category..."
+                          placeholder="Example: Analyze demand for AI and data science skills in Dubai's financial sector for 2025 workforce planning..."
                           value={prompt}
                           onChange={(e) => setPrompt(e.target.value)}
                           rows={6}
@@ -326,12 +326,12 @@ const Dashboard = () => {
                               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                               className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-3"
                             />
-                            Generating AI Charts...
+                            Generating Skills Analysis...
                           </>
                         ) : (
                           <>
                             <Sparkles className="h-5 w-5 mr-3" />
-                            Generate Charts with AI
+                            Generate Skills Analysis
                           </>
                         )}
                       </Button>
@@ -351,27 +351,27 @@ const Dashboard = () => {
                   <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center">
                     <BarChart3 className="h-6 w-6 text-primary" />
                   </div>
-                  <h3 className="font-semibold mb-2">Smart Visualizations</h3>
+                  <h3 className="font-semibold mb-2">Skills Mapping</h3>
                   <p className="text-sm text-muted-foreground">
-                    AI-powered chart generation that understands your data patterns
+                    AI-powered analysis of workforce skills supply and demand patterns
                   </p>
                 </div>
                 <div className="text-center p-6 rounded-xl bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20 hover:border-secondary/40 transition-colors">
                   <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-secondary/10 flex items-center justify-center">
                     <Brain className="h-6 w-6 text-secondary" />
                   </div>
-                  <h3 className="font-semibold mb-2">Deep Insights</h3>
+                  <h3 className="font-semibold mb-2">Workforce Analytics</h3>
                   <p className="text-sm text-muted-foreground">
-                    Automatic analysis and strategic recommendations from your data
+                    Strategic insights for education and employment planning in the UAE
                   </p>
                 </div>
                 <div className="text-center p-6 rounded-xl bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 hover:border-accent/40 transition-colors">
                   <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-accent/10 flex items-center justify-center">
                     <Lightbulb className="h-6 w-6 text-accent" />
                   </div>
-                  <h3 className="font-semibold mb-2">Policy Analysis</h3>
+                  <h3 className="font-semibold mb-2">Policy Intelligence</h3>
                   <p className="text-sm text-muted-foreground">
-                    Strategic recommendations based on comprehensive data trends
+                    Data-driven recommendations for strategic workforce development
                   </p>
                 </div>
               </motion.div>
