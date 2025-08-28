@@ -36,7 +36,7 @@ const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({ diagnostics, visibl
             <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex-shrink-0">
               <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <span className="bg-gradient-to-r from-blue-600 to-sky-600 bg-clip-text text-transparent font-bold">
+            <span className="text-primary font-bold">
               Technical Analysis
             </span>
           </CardTitle>

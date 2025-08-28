@@ -54,7 +54,7 @@ const PolicyAnalysis: React.FC<PolicyAnalysisProps> = ({ policyData, visible }) 
                 <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <span className="bg-gradient-to-r from-blue-600 to-sky-600 bg-clip-text text-transparent font-bold text-lg">
+                <span className="text-primary font-bold text-lg">
                   Current Policies & Regulations
                 </span>
                 <p className="text-sm text-muted-foreground font-normal mt-1">

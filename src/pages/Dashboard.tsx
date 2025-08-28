@@ -196,7 +196,7 @@ const Dashboard = () => {
               <BarChart3 className="h-6 w-6 text-primary-foreground" />
             </motion.div>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold text-primary">
                 Skills Observatory
               </h1>
               <p className="text-xs text-muted-foreground">UAE Workforce Analytics</p>
@@ -255,7 +255,7 @@ const Dashboard = () => {
                 >
                   <Sparkles className="h-10 w-10 text-white" />
                 </motion.div>
-                <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                <h1 className="text-4xl font-bold mb-4 text-primary">
                   Skills Observatory
                 </h1>
                 <p className="text-xl text-muted-foreground max-w-2xl mx-auto">

@@ -106,7 +106,7 @@ const AIAgentLoader: React.FC<AIAgentLoaderProps> = ({ visible }) => {
                 <Sparkles className="h-8 w-8 text-primary-foreground" />
               </motion.div>
               <div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                <h2 className="text-3xl font-bold text-primary">
                   AI Agents Working
                 </h2>
                 <p className="text-muted-foreground mt-1">
