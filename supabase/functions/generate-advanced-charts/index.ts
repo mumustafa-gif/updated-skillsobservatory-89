@@ -66,35 +66,40 @@ serve(async (req) => {
     // Generate charts with completely dynamic prompt based on user request
     const chartSystemPrompt = `You are an expert data visualization assistant. 
 
-INSTRUCTIONS:
-1. Read the user's request carefully and create charts that DIRECTLY address their specific question
-2. Generate titles that reflect their actual request domain (finance, healthcare, education, etc.)
-3. Use concise, professional titles (max 8-10 words)
-4. Create realistic data relevant to their request
-5. MUST return VALID JSON - be extremely careful with syntax
+CRITICAL INSTRUCTIONS:
+1. Read the user's request and create charts that DIRECTLY address their specific topic
+2. Generate professional titles that reflect their actual domain/topic
+3. Use realistic sample data relevant to their request
+4. RETURN ONLY VALID JSON - no markdown, no explanations, no code blocks
 
-RESPONSE FORMAT (return ONLY this JSON structure):
+JSON FORMAT RULES:
+- Use ONLY double quotes for strings
+- NO quotes inside string values (replace with spaces or remove)
+- NO trailing commas
+- NO line breaks in string values
+- NO special characters like apostrophes
+
+RESPONSE (JSON only):
 {
   "charts": [
     {
-      "title": {"text": "Professional Title Based on Request", "subtext": "Brief subtitle"},
+      "title": {"text": "Short Professional Title", "subtext": "Brief description"},
       "tooltip": {"trigger": "axis"},
-      "legend": {"data": ["Relevant series names"]},
-      "xAxis": {"type": "category", "data": ["Categories from user context"]},
-      "yAxis": {"type": "value", "name": "Relevant metric"},
-      "series": [{"name": "Series name", "type": "bar", "data": [100, 200, 150]}]
+      "legend": {"data": ["Series1", "Series2"]},
+      "xAxis": {"type": "category", "data": ["Cat1", "Cat2", "Cat3", "Cat4", "Cat5"]},
+      "yAxis": {"type": "value", "name": "Value"},
+      "series": [{"name": "Series1", "type": "bar", "data": [100, 200, 150, 80, 120]}]
     }
   ],
   "diagnostics": {
     "chartTypes": ["bar"],
-    "dimensions": ["relevant dimensions"],
+    "dimensions": ["dimension1", "dimension2"],
     "notes": "Brief description",
-    "sources": ["data sources"]
+    "sources": ["data source"]
   }
 }
 
-Chart types: bar, line, pie, area, scatter, radar
-${knowledgeBaseContext ? `\nContext: ${knowledgeBaseContext.slice(0, 1000)}` : ''}`;
+${knowledgeBaseContext ? `Context: ${knowledgeBaseContext.slice(0, 800)}` : ''}`;
 
     const chartResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -135,40 +140,54 @@ Please generate charts that directly address the user's specific request. Each c
       console.log('Raw AI response length:', responseContent.length);
       console.log('First 200 chars:', responseContent.substring(0, 200));
       
-      // Advanced JSON cleaning to handle quotes and fix common issues
+      // More aggressive JSON cleaning to handle quotes and fix common issues
       let cleanContent = responseContent
         .replace(/```json\s*/g, '')
         .replace(/```\s*/g, '')
         .replace(/^[^{]*/, '') // Remove anything before first {
         .replace(/[^}]*$/, ''); // Remove anything after last }
       
-      // More comprehensive quote and character cleaning
+      // Super aggressive cleaning for malformed JSON
       cleanContent = cleanContent
-        // Remove problematic characters that cause JSON issues
-        .replace(/'/g, '') // Remove apostrophes completely
-        .replace(/"/g, '"') // Normalize smart quotes
-        .replace(/"/g, '"') // Normalize smart quotes
-        .replace(/&/g, 'and') // Replace ampersands
+        // Fix smart quotes and apostrophes
+        .replace(/'/g, '') // Remove all apostrophes
+        .replace(/"/g, '"').replace(/"/g, '"') // Normalize smart quotes
+        .replace(/'/g, '') // Remove smart single quotes
         
-        // Fix string values that contain quotes - find and clean them
-        .replace(/"text":\s*"([^"]*)"([^"]*)"([^"]*)"/g, '"text": "$1 $2 $3"')
-        .replace(/"subtext":\s*"([^"]*)"([^"]*)"([^"]*)"/g, '"subtext": "$1 $2 $3"')
-        .replace(/"name":\s*"([^"]*)"([^"]*)"([^"]*)"/g, '"name": "$1 $2 $3"')
+        // Fix broken string values with embedded quotes
+        .replace(/"([^"]*)"([^"]*)"([^"]*)"/g, '"$1 $2 $3"') // Fix any string with quotes inside
+        .replace(/:\s*"([^"]*)"([^"]*)"([^"]*)"([^"]*)"([^"]*)"/g, ': "$1 $2 $3 $4 $5"') // Fix longer strings
         
-        // Fix nested quotes in any string value
-        .replace(/:\s*"([^"]*)"([^"]*)"([^"]*)"(\s*[,}\]])/g, ': "$1 $2 $3"$4')
+        // Fix specific known issues from logs
+        .replace(/,\s*"/g, ', "') // Space after commas
+        .replace(/}\s*{/g, '}, {') // Missing comma between objects
         
-        // Fix common JSON structural issues
+        // Clean up structure
         .replace(/(\w+)(\s*):/g, '"$1"$2:') // Quote unquoted keys
         .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
         .replace(/\n/g, ' ') // Remove newlines
         .replace(/\s+/g, ' ') // Normalize spaces
-        .replace(/"\s*"/g, '""') // Fix empty strings
-        .replace(/,\s*,/g, ','); // Remove double commas
+        .replace(/,\s*,/g, ',') // Remove double commas
+        .replace(/"\s*"/g, '""'); // Fix empty strings
       
       console.log('Cleaned content first 300 chars:', cleanContent.substring(0, 300));
       
-      parsedChartData = JSON.parse(cleanContent);
+      // Try parsing with additional error handling
+      try {
+        parsedChartData = JSON.parse(cleanContent);
+      } catch (firstError) {
+        console.log('First parse failed, trying manual fixes...');
+        
+        // Try fixing common specific issues seen in logs
+        let manualFix = cleanContent
+          .replace(/"text": "([^"]*), "subtext"/g, '"text": "$1", "subtext"') // Fix missing quotes after commas
+          .replace(/"([^"]*), "([^"]*)"/g, '"$1 $2"') // Fix strings split by commas
+          .replace(/([^,])\s*}/g, '$1}') // Clean up before closing braces
+          .replace(/{\s*([^"])/g, '{ "$1'); // Fix objects starting without quotes
+        
+        console.log('Manual fix attempt:', manualFix.substring(0, 200));
+        parsedChartData = JSON.parse(manualFix);
+      }
       
       // Validate structure
       if (!parsedChartData.charts || !Array.isArray(parsedChartData.charts) || parsedChartData.charts.length === 0) {
