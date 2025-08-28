@@ -63,43 +63,30 @@ serve(async (req) => {
       }
     }
 
-    // Generate charts with completely dynamic prompt based on user request
-    const chartSystemPrompt = `You are an expert data visualization assistant. 
+    // Generate charts with GPT-5 and simplified prompt
+    const chartSystemPrompt = `Create ${numberOfCharts} chart(s) for: "${prompt}"
 
-CRITICAL INSTRUCTIONS:
-1. Read the user's request and create charts that DIRECTLY address their specific topic
-2. Generate professional titles that reflect their actual domain/topic
-3. Use realistic sample data relevant to their request
-4. RETURN ONLY VALID JSON - no markdown, no explanations, no code blocks
+Generate realistic data and professional charts that directly address the user's request.
+Return only valid JSON with this exact structure:
 
-JSON FORMAT RULES:
-- Use ONLY double quotes for strings
-- NO quotes inside string values (replace with spaces or remove)
-- NO trailing commas
-- NO line breaks in string values
-- NO special characters like apostrophes
-
-RESPONSE (JSON only):
 {
   "charts": [
     {
-      "title": {"text": "Short Professional Title", "subtext": "Brief description"},
+      "title": {"text": "Chart Title", "subtext": "Brief description"},
       "tooltip": {"trigger": "axis"},
       "legend": {"data": ["Series1", "Series2"]},
-      "xAxis": {"type": "category", "data": ["Cat1", "Cat2", "Cat3", "Cat4", "Cat5"]},
-      "yAxis": {"type": "value", "name": "Value"},
-      "series": [{"name": "Series1", "type": "bar", "data": [100, 200, 150, 80, 120]}]
+      "xAxis": {"type": "category", "data": ["Jan", "Feb", "Mar", "Apr", "May"]},
+      "yAxis": {"type": "value"},
+      "series": [{"name": "Series1", "type": "bar", "data": [120, 200, 150, 80, 70]}]
     }
   ],
   "diagnostics": {
     "chartTypes": ["bar"],
-    "dimensions": ["dimension1", "dimension2"],
-    "notes": "Brief description",
-    "sources": ["data source"]
+    "dimensions": ["time", "value"],
+    "notes": "Chart analysis",
+    "sources": ["sample data"]
   }
-}
-
-${knowledgeBaseContext ? `Context: ${knowledgeBaseContext.slice(0, 800)}` : ''}`;
+}`;
 
     const chartResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -108,22 +95,13 @@ ${knowledgeBaseContext ? `Context: ${knowledgeBaseContext.slice(0, 800)}` : ''}`
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-5-2025-08-07',
+        response_format: { type: "json_object" },
         messages: [
-          { 
-            role: 'system', 
-            content: chartSystemPrompt 
-          },
-          { 
-            role: 'user', 
-            content: `Create ${numberOfCharts} different charts based on this request: "${prompt}"
-
-${knowledgeBaseContext ? `Using the following data context: ${knowledgeBaseContext.slice(0, 1500)}` : ''}
-
-Please generate charts that directly address the user's specific request. Each chart should focus on different aspects of what they asked for.` 
-          }
+          { role: 'system', content: chartSystemPrompt },
+          { role: 'user', content: prompt }
         ],
-        max_completion_tokens: 4000,
+        max_completion_tokens: 2000,
       }),
     });
 
@@ -137,64 +115,17 @@ Please generate charts that directly address the user's specific request. Each c
     
     try {
       const responseContent = chartData.choices[0].message.content.trim();
-      console.log('Raw AI response length:', responseContent.length);
-      console.log('First 200 chars:', responseContent.substring(0, 200));
+      console.log('GPT-5 JSON Response:', responseContent.substring(0, 500));
       
-      // More aggressive JSON cleaning to handle quotes and fix common issues
-      let cleanContent = responseContent
-        .replace(/```json\s*/g, '')
-        .replace(/```\s*/g, '')
-        .replace(/^[^{]*/, '') // Remove anything before first {
-        .replace(/[^}]*$/, ''); // Remove anything after last }
-      
-      // Super aggressive cleaning for malformed JSON
-      cleanContent = cleanContent
-        // Fix smart quotes and apostrophes
-        .replace(/'/g, '') // Remove all apostrophes
-        .replace(/"/g, '"').replace(/"/g, '"') // Normalize smart quotes
-        .replace(/'/g, '') // Remove smart single quotes
-        
-        // Fix broken string values with embedded quotes
-        .replace(/"([^"]*)"([^"]*)"([^"]*)"/g, '"$1 $2 $3"') // Fix any string with quotes inside
-        .replace(/:\s*"([^"]*)"([^"]*)"([^"]*)"([^"]*)"([^"]*)"/g, ': "$1 $2 $3 $4 $5"') // Fix longer strings
-        
-        // Fix specific known issues from logs
-        .replace(/,\s*"/g, ', "') // Space after commas
-        .replace(/}\s*{/g, '}, {') // Missing comma between objects
-        
-        // Clean up structure
-        .replace(/(\w+)(\s*):/g, '"$1"$2:') // Quote unquoted keys
-        .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
-        .replace(/\n/g, ' ') // Remove newlines
-        .replace(/\s+/g, ' ') // Normalize spaces
-        .replace(/,\s*,/g, ',') // Remove double commas
-        .replace(/"\s*"/g, '""'); // Fix empty strings
-      
-      console.log('Cleaned content first 300 chars:', cleanContent.substring(0, 300));
-      
-      // Try parsing with additional error handling
-      try {
-        parsedChartData = JSON.parse(cleanContent);
-      } catch (firstError) {
-        console.log('First parse failed, trying manual fixes...');
-        
-        // Try fixing common specific issues seen in logs
-        let manualFix = cleanContent
-          .replace(/"text": "([^"]*), "subtext"/g, '"text": "$1", "subtext"') // Fix missing quotes after commas
-          .replace(/"([^"]*), "([^"]*)"/g, '"$1 $2"') // Fix strings split by commas
-          .replace(/([^,])\s*}/g, '$1}') // Clean up before closing braces
-          .replace(/{\s*([^"])/g, '{ "$1'); // Fix objects starting without quotes
-        
-        console.log('Manual fix attempt:', manualFix.substring(0, 200));
-        parsedChartData = JSON.parse(manualFix);
-      }
+      // GPT-5 with response_format should return clean JSON, so minimal processing
+      parsedChartData = JSON.parse(responseContent);
       
       // Validate structure
       if (!parsedChartData.charts || !Array.isArray(parsedChartData.charts) || parsedChartData.charts.length === 0) {
         throw new Error('No valid charts found in response');
       }
       
-      console.log('Successfully parsed', parsedChartData.charts.length, 'charts');
+      console.log('Successfully parsed', parsedChartData.charts.length, 'charts for prompt:', prompt.substring(0, 100));
       
     } catch (parseError) {
       console.error('JSON Parse Error:', parseError);
@@ -368,10 +299,11 @@ Focus on insights that directly relate to what the user requested. Provide actio
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-5-2025-08-07',
+        response_format: { type: "json_object" },
         messages: [
           { role: 'system', content: insightSystemPrompt },
-          { role: 'user', content: `Analyze the data and provide insights for: ${prompt}${knowledgeBaseContext ? '\n\nWith data from: ' + knowledgeBaseContext.slice(0, 1000) : ''}` }
+          { role: 'user', content: `Analyze the data and provide insights for: ${prompt}` }
         ],
         max_completion_tokens: 1000,
       }),
@@ -407,7 +339,8 @@ Provide specific, actionable policy recommendations based on what the user is as
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-5-2025-08-07',
+        response_format: { type: "json_object" },
         messages: [
           { role: 'system', content: policySystemPrompt },
           { role: 'user', content: `Research relevant policies and provide analysis for: ${prompt}` }
