@@ -66,19 +66,28 @@ serve(async (req) => {
     // Generate charts with completely dynamic prompt based on user request
     const chartSystemPrompt = `You are an expert data visualization assistant. Create charts based EXACTLY on what the user requests.
 
+CRITICAL TITLE GENERATION:
+- Chart titles MUST directly reflect the user's specific request and the data being visualized
+- Use the user's exact terminology and context from their prompt
+- Make titles descriptive and specific, not generic
+- Example: If user asks about "Sales Performance in Q3", title should be "Q3 Sales Performance Analysis"
+
 CRITICAL JSON RULES:
 - Return ONLY valid JSON, no markdown, no explanations, no code blocks
 - Use double quotes for ALL strings and property names  
-- NEVER use quotes inside string values (use single quotes or avoid them)
-- Example: "title": {"text": "Skills Analysis for Technology Sector"}
+- NEVER use quotes, apostrophes, or special characters inside string values
+- Replace any quotes with descriptive words or remove them entirely
+- Example: Instead of "UAE's Technology Skills" use "UAE Technology Skills"
 
 Generate exactly ${numberOfCharts} completely different charts based on the user request.
+
+IMPORTANT: Create titles that specifically address what the user is asking about. Use their keywords and terminology.
 
 Required JSON structure:
 {
   "charts": [
     {
-      "title": {"text": "Dynamic title based on user request", "subtext": "Relevant subtitle"},
+      "title": {"text": "SPECIFIC title reflecting user request", "subtext": "Relevant subtitle based on chart data"},
       "tooltip": {"trigger": "axis"},
       "legend": {"data": ["Series names from user context"]},
       "xAxis": {"type": "category", "data": ["Categories from user request"]},
@@ -145,23 +154,29 @@ Please generate charts that directly address the user's specific request. Each c
         .replace(/^[^{]*/, '') // Remove anything before first {
         .replace(/[^}]*$/, ''); // Remove anything after last }
       
-      // Fix quotes inside strings first - find strings and escape quotes within them
-      cleanContent = cleanContent.replace(/"([^"]*)"(\s*:\s*")([^"]*)"([^"]*)"([^"]*)"([^"]*)"/g, (match, key, colon, start, middle, end, rest) => {
-        // If this looks like a key-value pair with quotes inside the value
-        return `"${key}"${colon}${start} ${middle} ${end}${rest}"`;
-      });
-      
-      // More aggressive quote fixing - replace problematic quote patterns
-      cleanContent = cleanContent.replace(/"([^"]*)"([^"]*)"([^"]*)"(\s*[,}\]])/g, '"$1 $2 $3"$4');
-      
-      // Fix common JSON issues
+      // More comprehensive quote and character cleaning
       cleanContent = cleanContent
+        // Remove problematic characters that cause JSON issues
+        .replace(/'/g, '') // Remove apostrophes completely
+        .replace(/"/g, '"') // Normalize smart quotes
+        .replace(/"/g, '"') // Normalize smart quotes
+        .replace(/&/g, 'and') // Replace ampersands
+        
+        // Fix string values that contain quotes - find and clean them
+        .replace(/"text":\s*"([^"]*)"([^"]*)"([^"]*)"/g, '"text": "$1 $2 $3"')
+        .replace(/"subtext":\s*"([^"]*)"([^"]*)"([^"]*)"/g, '"subtext": "$1 $2 $3"')
+        .replace(/"name":\s*"([^"]*)"([^"]*)"([^"]*)"/g, '"name": "$1 $2 $3"')
+        
+        // Fix nested quotes in any string value
+        .replace(/:\s*"([^"]*)"([^"]*)"([^"]*)"(\s*[,}\]])/g, ': "$1 $2 $3"$4')
+        
+        // Fix common JSON structural issues
         .replace(/(\w+)(\s*):/g, '"$1"$2:') // Quote unquoted keys
-        .replace(/'/g, '"') // Replace single quotes
         .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
         .replace(/\n/g, ' ') // Remove newlines
         .replace(/\s+/g, ' ') // Normalize spaces
-        .replace(/"\s*"/g, '""'); // Fix empty strings
+        .replace(/"\s*"/g, '""') // Fix empty strings
+        .replace(/,\s*,/g, ','); // Remove double commas
       
       console.log('Cleaned content first 300 chars:', cleanContent.substring(0, 300));
       
@@ -178,61 +193,97 @@ Please generate charts that directly address the user's specific request. Each c
       console.error('JSON Parse Error:', parseError);
       console.error('Failed content:', chartData.choices[0].message.content);
       
-      // Fallback: create generic charts based on prompt keywords
+      // Fallback: create charts that reflect the user's specific request
       const fallbackCharts = [];
       
-      // Create simple fallback charts that try to match the user's request
-      const promptLower = prompt.toLowerCase();
+      // Extract key terms from user prompt for more relevant fallback titles
+      const promptWords = prompt.toLowerCase().split(/\s+/);
+      const capitalizedPrompt = prompt.charAt(0).toUpperCase() + prompt.slice(1);
+      
+      // Create meaningful titles based on user request
+      const getRelevantTitle = (index) => {
+        if (promptWords.some(word => ['sales', 'revenue', 'profit', 'income'].includes(word))) {
+          return index === 0 ? `${capitalizedPrompt} - Performance Analysis` : 
+                 index === 1 ? `${capitalizedPrompt} - Distribution Breakdown` : 
+                 `${capitalizedPrompt} - Trends Over Time`;
+        }
+        if (promptWords.some(word => ['skill', 'talent', 'workforce', 'employee'].includes(word))) {
+          return index === 0 ? `${capitalizedPrompt} - Skills Analysis` : 
+                 index === 1 ? `${capitalizedPrompt} - Competency Distribution` : 
+                 `${capitalizedPrompt} - Development Trends`;
+        }
+        if (promptWords.some(word => ['market', 'industry', 'sector', 'business'].includes(word))) {
+          return index === 0 ? `${capitalizedPrompt} - Market Analysis` : 
+                 index === 1 ? `${capitalizedPrompt} - Sector Breakdown` : 
+                 `${capitalizedPrompt} - Industry Trends`;
+        }
+        // Generic but still specific to user request
+        return index === 0 ? `${capitalizedPrompt} - Analysis Overview` : 
+               index === 1 ? `${capitalizedPrompt} - Component Distribution` : 
+               `${capitalizedPrompt} - Trend Analysis`;
+      };
       
       for (let i = 0; i < numberOfCharts; i++) {
         if (i === 0) {
           // First chart - bar chart with relevant data
           fallbackCharts.push({
-            title: { text: `Analysis for ${prompt.slice(0, 50)}...`, subtext: 'Data Overview' },
+            title: { 
+              text: getRelevantTitle(0), 
+              subtext: 'Data visualization based on your request' 
+            },
             tooltip: { trigger: 'axis' },
-            legend: { data: ['Category A', 'Category B'] },
-            xAxis: { type: 'category', data: ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5'] },
+            legend: { data: ['Primary Data', 'Secondary Data'] },
+            xAxis: { type: 'category', data: ['Category 1', 'Category 2', 'Category 3', 'Category 4', 'Category 5'] },
             yAxis: { type: 'value', name: 'Value' },
             series: [
-              { name: 'Category A', type: 'bar', data: [120, 200, 150, 80, 70] },
-              { name: 'Category B', type: 'bar', data: [80, 140, 120, 160, 90] }
+              { name: 'Primary Data', type: 'bar', data: [120, 200, 150, 80, 70] },
+              { name: 'Secondary Data', type: 'bar', data: [80, 140, 120, 160, 90] }
             ]
           });
         } else if (i === 1) {
           // Second chart - pie chart
           fallbackCharts.push({
-            title: { text: 'Distribution Analysis', subtext: 'Breakdown of Key Components' },
+            title: { 
+              text: getRelevantTitle(1), 
+              subtext: 'Breakdown of key components' 
+            },
             tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
-            legend: { data: ['Component 1', 'Component 2', 'Component 3', 'Component 4'] },
+            legend: { data: ['Segment A', 'Segment B', 'Segment C', 'Segment D'] },
             series: [{
               name: 'Distribution',
               type: 'pie',
               radius: '60%',
               data: [
-                { value: 40, name: 'Component 1' },
-                { value: 30, name: 'Component 2' },
-                { value: 20, name: 'Component 3' },
-                { value: 10, name: 'Component 4' }
+                { value: 40, name: 'Segment A' },
+                { value: 30, name: 'Segment B' },
+                { value: 20, name: 'Segment C' },
+                { value: 10, name: 'Segment D' }
               ]
             }]
           });
         } else if (i === 2) {
           // Third chart - line chart for trends
           fallbackCharts.push({
-            title: { text: 'Trend Analysis', subtext: 'Changes Over Time' },
+            title: { 
+              text: getRelevantTitle(2), 
+              subtext: 'Progression and trends analysis' 
+            },
             tooltip: { trigger: 'axis' },
-            legend: { data: ['Metric 1', 'Metric 2'] },
+            legend: { data: ['Trend A', 'Trend B'] },
             xAxis: { type: 'category', data: ['Period 1', 'Period 2', 'Period 3', 'Period 4', 'Period 5'] },
             yAxis: { type: 'value', name: 'Growth' },
             series: [
-              { name: 'Metric 1', type: 'line', smooth: true, data: [30, 45, 60, 75, 90] },
-              { name: 'Metric 2', type: 'line', smooth: true, data: [20, 35, 50, 65, 80] }
+              { name: 'Trend A', type: 'line', smooth: true, data: [30, 45, 60, 75, 90] },
+              { name: 'Trend B', type: 'line', smooth: true, data: [20, 35, 50, 65, 80] }
             ]
           });
         } else {
-          // Additional generic charts
+          // Additional charts based on user request
           fallbackCharts.push({
-            title: { text: `Analysis ${i + 1}`, subtext: 'Additional Data View' },
+            title: { 
+              text: `${capitalizedPrompt} - Analysis ${i + 1}`, 
+              subtext: 'Additional perspective on your data' 
+            },
             tooltip: { trigger: 'item' },
             legend: { data: ['Group A', 'Group B', 'Group C'] },
             series: [{
