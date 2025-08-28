@@ -64,13 +64,17 @@ serve(async (req) => {
     }
 
     // Generate charts with completely dynamic prompt based on user request
-    const chartSystemPrompt = `You are an expert data visualization assistant. Create charts based EXACTLY on what the user requests.
+    const chartSystemPrompt = `You are an expert data visualization assistant. Create charts based on what the user requests, but with PROFESSIONAL, CONCISE titles.
 
 CRITICAL TITLE GENERATION:
-- Chart titles MUST directly reflect the user's specific request and the data being visualized
-- Use the user's exact terminology and context from their prompt
-- Make titles descriptive and specific, not generic
-- Example: If user asks about "Sales Performance in Q3", title should be "Q3 Sales Performance Analysis"
+- Create SHORT, professional titles (maximum 8-10 words)
+- DO NOT copy the user's exact words - improve and refine them
+- Use business/analytical terminology
+- Make titles specific but concise
+- Examples:
+  * User: "analyze sales performance in Q3 for our company" → Title: "Q3 Sales Performance Analysis"
+  * User: "show me skill gaps in technology sector" → Title: "Technology Sector Skills Gap"
+  * User: "compare workforce demand and supply" → Title: "Workforce Supply vs Demand"
 
 CRITICAL JSON RULES:
 - Return ONLY valid JSON, no markdown, no explanations, no code blocks
@@ -81,13 +85,13 @@ CRITICAL JSON RULES:
 
 Generate exactly ${numberOfCharts} completely different charts based on the user request.
 
-IMPORTANT: Create titles that specifically address what the user is asking about. Use their keywords and terminology.
+IMPORTANT: Create SHORT, PROFESSIONAL titles that capture the essence of what the user wants analyzed.
 
 Required JSON structure:
 {
   "charts": [
     {
-      "title": {"text": "SPECIFIC title reflecting user request", "subtext": "Relevant subtitle based on chart data"},
+      "title": {"text": "SHORT professional title (max 8-10 words)", "subtext": "Brief descriptive subtitle"},
       "tooltip": {"trigger": "axis"},
       "legend": {"data": ["Series names from user context"]},
       "xAxis": {"type": "category", "data": ["Categories from user request"]},
@@ -198,29 +202,29 @@ Please generate charts that directly address the user's specific request. Each c
       
       // Extract key terms from user prompt for more relevant fallback titles
       const promptWords = prompt.toLowerCase().split(/\s+/);
-      const capitalizedPrompt = prompt.charAt(0).toUpperCase() + prompt.slice(1);
       
-      // Create meaningful titles based on user request
+      // Create concise, professional titles based on user request
       const getRelevantTitle = (index) => {
+        // Generate shorter, more professional titles
         if (promptWords.some(word => ['sales', 'revenue', 'profit', 'income'].includes(word))) {
-          return index === 0 ? `${capitalizedPrompt} - Performance Analysis` : 
-                 index === 1 ? `${capitalizedPrompt} - Distribution Breakdown` : 
-                 `${capitalizedPrompt} - Trends Over Time`;
+          return index === 0 ? 'Sales Performance Analysis' : 
+                 index === 1 ? 'Revenue Distribution' : 
+                 'Sales Trend Overview';
         }
         if (promptWords.some(word => ['skill', 'talent', 'workforce', 'employee'].includes(word))) {
-          return index === 0 ? `${capitalizedPrompt} - Skills Analysis` : 
-                 index === 1 ? `${capitalizedPrompt} - Competency Distribution` : 
-                 `${capitalizedPrompt} - Development Trends`;
+          return index === 0 ? 'Skills Gap Analysis' : 
+                 index === 1 ? 'Workforce Distribution' : 
+                 'Talent Development Trends';
         }
         if (promptWords.some(word => ['market', 'industry', 'sector', 'business'].includes(word))) {
-          return index === 0 ? `${capitalizedPrompt} - Market Analysis` : 
-                 index === 1 ? `${capitalizedPrompt} - Sector Breakdown` : 
-                 `${capitalizedPrompt} - Industry Trends`;
+          return index === 0 ? 'Market Analysis Overview' : 
+                 index === 1 ? 'Industry Breakdown' : 
+                 'Sector Performance Trends';
         }
-        // Generic but still specific to user request
-        return index === 0 ? `${capitalizedPrompt} - Analysis Overview` : 
-               index === 1 ? `${capitalizedPrompt} - Component Distribution` : 
-               `${capitalizedPrompt} - Trend Analysis`;
+        // Generic but professional titles
+        return index === 0 ? 'Performance Analysis' : 
+               index === 1 ? 'Distribution Overview' : 
+               'Trend Analysis';
       };
       
       for (let i = 0; i < numberOfCharts; i++) {
@@ -229,7 +233,7 @@ Please generate charts that directly address the user's specific request. Each c
           fallbackCharts.push({
             title: { 
               text: getRelevantTitle(0), 
-              subtext: 'Data visualization based on your request' 
+              subtext: 'Comprehensive data analysis' 
             },
             tooltip: { trigger: 'axis' },
             legend: { data: ['Primary Data', 'Secondary Data'] },
@@ -245,7 +249,7 @@ Please generate charts that directly address the user's specific request. Each c
           fallbackCharts.push({
             title: { 
               text: getRelevantTitle(1), 
-              subtext: 'Breakdown of key components' 
+              subtext: 'Key component breakdown' 
             },
             tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
             legend: { data: ['Segment A', 'Segment B', 'Segment C', 'Segment D'] },
@@ -266,7 +270,7 @@ Please generate charts that directly address the user's specific request. Each c
           fallbackCharts.push({
             title: { 
               text: getRelevantTitle(2), 
-              subtext: 'Progression and trends analysis' 
+              subtext: 'Performance trends analysis' 
             },
             tooltip: { trigger: 'axis' },
             legend: { data: ['Trend A', 'Trend B'] },
@@ -281,8 +285,8 @@ Please generate charts that directly address the user's specific request. Each c
           // Additional charts based on user request
           fallbackCharts.push({
             title: { 
-              text: `${capitalizedPrompt} - Analysis ${i + 1}`, 
-              subtext: 'Additional perspective on your data' 
+              text: `Additional Analysis ${i + 1}`, 
+              subtext: 'Supplementary data insights' 
             },
             tooltip: { trigger: 'item' },
             legend: { data: ['Group A', 'Group B', 'Group C'] },
