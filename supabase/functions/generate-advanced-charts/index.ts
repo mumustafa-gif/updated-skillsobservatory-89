@@ -63,54 +63,40 @@ serve(async (req) => {
       }
     }
 
-    // Generate charts
-    const chartSystemPrompt = `You are an advanced chart generation assistant specializing in ECharts configurations for workforce skills analysis in the UAE.
+    // Generate charts with improved prompt
+    const chartSystemPrompt = `You are an expert chart generation assistant for UAE workforce skills analysis.
 
-CRITICAL INSTRUCTIONS:
-1. Return ONLY valid JSON with properly quoted property names
-2. All object properties MUST be in double quotes
-3. Do not use JavaScript object notation - use strict JSON format
+CRITICAL: You must return ONLY valid JSON with properly quoted property names. No code blocks, no explanations.
 
-Return ONLY a JSON object with this exact structure:
+Return this exact JSON structure:
 {
   "charts": [
     {
-      "title": {
-        "text": "Chart Title",
-        "subtext": "Chart Subtitle"
-      },
-      "tooltip": {
-        "trigger": "item"
-      },
-      "legend": {
-        "data": ["Series 1", "Series 2"]
-      },
-      "series": [{
-        "name": "Series Name",
-        "type": "bar",
-        "data": [10, 20, 30, 40, 50]
-      }]
+      "title": {"text": "Chart Title", "subtext": "Optional subtitle"},
+      "tooltip": {"trigger": "item"},
+      "legend": {"data": ["Series1", "Series2"], "orient": "horizontal"},
+      "xAxis": {"type": "category", "data": ["Item1", "Item2", "Item3"]},
+      "yAxis": {"type": "value", "name": "Value"},
+      "series": [{"name": "Series1", "type": "bar", "data": [10, 20, 30]}]
     }
   ],
   "diagnostics": {
-    "chartTypes": ["array of chart types used"],
-    "dimensions": ["array of all dimensions across charts"],
-    "notes": "string with assumptions made",
-    "sources": ["array of source files used"]
+    "chartTypes": ["bar"],
+    "dimensions": ["Skills", "Value"],
+    "notes": "Analysis notes here",
+    "sources": ["UAE Skills Data"]
   }
 }
 
-REQUIREMENTS:
+RULES:
+- ALL property names must be in double quotes
 - Generate exactly ${numberOfCharts} chart${numberOfCharts > 1 ? 's' : ''}
-- Chart types requested: ${chartTypes.join(', ')} (use 'auto' to select best type)
-- Focus on UAE workforce and skills data
-- Support: bar, line, pie, scatter, area charts
-- Include proper titles, tooltips, legends, and axis labels
-- Use UAE-themed colors and professional styling
-- Create realistic workforce/skills sample data if no data provided
-- Make each chart unique and informative for Skills Observatory
+- Use realistic UAE workforce data (AI, healthcare, finance, tourism sectors)
+- Chart types: bar, line, pie, area only
+- Include proper UAE skills categories and employment sectors
+- Make data relevant to Skills Observatory goals
 
-${knowledgeBaseContext ? `Knowledge Base Context:\n${knowledgeBaseContext}` : ''}`;
+${knowledgeBaseContext ? `Use this data context:\n${knowledgeBaseContext.slice(0, 800)}` : ''}`;
 
     const chartResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -143,35 +129,64 @@ ${knowledgeBaseContext ? `Knowledge Base Context:\n${knowledgeBaseContext}` : ''
     let parsedChartData;
     
     try {
-      const responseContent = chartData.choices[0].message.content;
-      console.log('Raw AI response:', responseContent);
+      const responseContent = chartData.choices[0].message.content.trim();
+      console.log('Raw AI response length:', responseContent.length);
+      console.log('First 200 chars:', responseContent.substring(0, 200));
       
-      // Clean up common JSON formatting issues
-      let cleanedContent = responseContent
-        .replace(/```json\n?/g, '')
-        .replace(/```\n?/g, '')
-        .replace(/^\s*/, '')
-        .replace(/\s*$/, '');
+      // Remove any markdown code blocks
+      let cleanContent = responseContent
+        .replace(/```json\s*/g, '')
+        .replace(/```\s*/g, '')
+        .replace(/^[^{]*/, '') // Remove anything before first {
+        .replace(/[^}]*$/, ''); // Remove anything after last }
       
-      // Fix common JavaScript object notation issues
-      cleanedContent = cleanedContent
-        .replace(/(\w+):/g, '"$1":')  // Add quotes to unquoted keys
-        .replace(/'/g, '"')           // Replace single quotes with double quotes
-        .replace(/,\s*}/g, '}')       // Remove trailing commas
-        .replace(/,\s*]/g, ']');      // Remove trailing commas in arrays
+      // Fix common JSON issues
+      cleanContent = cleanContent
+        .replace(/(\w+)(\s*):/g, '"$1"$2:') // Quote unquoted keys
+        .replace(/'/g, '"') // Replace single quotes
+        .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
+        .replace(/\n/g, ' ') // Remove newlines
+        .replace(/\s+/g, ' '); // Normalize spaces
       
-      console.log('Cleaned content:', cleanedContent);
-      parsedChartData = JSON.parse(cleanedContent);
+      console.log('Cleaned content first 300 chars:', cleanContent.substring(0, 300));
       
-      // Validate chart structure
-      if (!parsedChartData.charts || !Array.isArray(parsedChartData.charts)) {
-        throw new Error('Invalid chart structure: missing charts array');
+      parsedChartData = JSON.parse(cleanContent);
+      
+      // Validate structure
+      if (!parsedChartData.charts || !Array.isArray(parsedChartData.charts) || parsedChartData.charts.length === 0) {
+        throw new Error('No valid charts found in response');
       }
       
+      console.log('Successfully parsed', parsedChartData.charts.length, 'charts');
+      
     } catch (parseError) {
-      console.error('Failed to parse chart response:', parseError);
-      console.error('Original content:', chartData.choices[0].message.content);
-      throw new Error(`Invalid chart configuration generated: ${parseError.message}`);
+      console.error('JSON Parse Error:', parseError);
+      console.error('Failed content:', chartData.choices[0].message.content);
+      
+      // Fallback: create a simple chart
+      parsedChartData = {
+        charts: [{
+          title: { text: 'UAE Skills Analysis', subtext: 'Sample Data' },
+          tooltip: { trigger: 'item' },
+          legend: { data: ['Technical Skills', 'Soft Skills', 'Digital Skills'] },
+          series: [{
+            name: 'Skills Distribution',
+            type: 'pie',
+            radius: '50%',
+            data: [
+              { value: 45, name: 'Technical Skills' },
+              { value: 30, name: 'Soft Skills' },
+              { value: 25, name: 'Digital Skills' }
+            ]
+          }]
+        }],
+        diagnostics: {
+          chartTypes: ['pie'],
+          dimensions: ['Skills Category'],
+          notes: 'Fallback chart due to parsing error',
+          sources: ['Generated']
+        }
+      };
     }
 
     // Generate data insights focused on skills and workforce
@@ -261,21 +276,38 @@ Provide specific, actionable policy recommendations aligned with UAE's strategic
       }
     }
 
-    // Save to chart history (save first chart for backwards compatibility)
+    // Save to chart history with proper user context
     if (parsedChartData.charts && parsedChartData.charts.length > 0) {
-      const { error: saveError } = await supabase
-        .from('chart_history')
-        .insert({
-          user_id: user.id,
-          prompt,
-          chart_config: parsedChartData.charts[0],
-          diagnostics: parsedChartData.diagnostics,
-          chart_type: parsedChartData.diagnostics?.chartTypes?.[0] || 'unknown',
-          knowledge_base_files: useKnowledgeBase ? knowledgeBaseFiles : []
+      try {
+        // Create authenticated client for database operations
+        const userSupabase = createClient(supabaseUrl, supabaseKey, {
+          global: {
+            headers: {
+              Authorization: authHeader
+            }
+          }
         });
 
-      if (saveError) {
-        console.error('Failed to save chart history:', saveError);
+        const { error: saveError } = await userSupabase
+          .from('chart_history')
+          .insert({
+            user_id: user.id,
+            prompt: prompt,
+            chart_config: parsedChartData.charts[0],
+            diagnostics: parsedChartData.diagnostics || {},
+            chart_type: parsedChartData.diagnostics?.chartTypes?.[0] || 'unknown',
+            knowledge_base_files: useKnowledgeBase ? knowledgeBaseFiles : []
+          });
+
+        if (saveError) {
+          console.error('Failed to save chart history:', saveError);
+          // Don't fail the request, just log the error
+        } else {
+          console.log('Successfully saved chart history');
+        }
+      } catch (historyError) {
+        console.error('Error saving to history:', historyError);
+        // Continue with response even if history save fails
       }
     }
 
