@@ -41,7 +41,8 @@ serve(async (req) => {
       numberOfCharts = 1, 
       chartTypes = ['auto'], 
       useKnowledgeBase = false, 
-      knowledgeBaseFiles = [] 
+      knowledgeBaseFiles = [],
+      generateDetailedReports = true
     } = requestData;
     
     if (!prompt || typeof prompt !== 'string' || prompt.trim() === '') {
@@ -351,14 +352,198 @@ Generate specific insights that directly address this query with actionable reco
       }
     }
 
+    // Generate detailed reports using GPT-5 mini
+    let detailedReport = '';
+    let skillsIntelligence = '';
+    let currentPoliciesReport = '';
+    let suggestedImprovementsReport = '';
+
+    if (generateDetailedReports) {
+      try {
+        // Generate comprehensive detailed report
+        const detailedReportResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-5-mini-2025-08-07',
+            messages: [
+              { 
+                role: 'system', 
+                content: `You are an expert workforce analyst. Generate a comprehensive detailed report with proper formatting including:
+- Bold headings (use **text** format)
+- Bullet points for key insights
+- Structured analysis with clear sections
+- Professional tone with data-driven insights
+- Quantitative analysis where relevant
+
+Return only the formatted report text, no JSON.`
+              },
+              { 
+                role: 'user', 
+                content: `Based on this analysis request: "${prompt}"
+
+Chart data insights: ${JSON.stringify(parsedChartData?.charts?.[0] || {}, null, 2).slice(0, 600)}
+
+Generate a comprehensive detailed report with:
+**Executive Summary**
+**Key Findings**  
+**Data Analysis**
+**Strategic Recommendations**
+**Conclusion**
+
+Use proper formatting with headings, bullet points, and structured content.`
+              }
+            ],
+            max_completion_tokens: 2000
+          }),
+        });
+
+        if (detailedReportResponse.ok) {
+          const reportData = await detailedReportResponse.json();
+          detailedReport = reportData.choices[0].message.content;
+          console.log('Generated detailed report');
+        }
+
+        // Generate Skills Intelligence & Analysis
+        const skillsResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-5-mini-2025-08-07',
+            messages: [
+              { 
+                role: 'system', 
+                content: `Generate a Skills Intelligence & Analysis report with specific focus on workforce skills, talent gaps, training needs, and skill development strategies. Use professional formatting with headings and bullet points.`
+              },
+              { 
+                role: 'user', 
+                content: `For this analysis: "${prompt}"
+
+Generate a Skills Intelligence & Analysis report covering:
+**Skills Demand Analysis**
+**Talent Gap Assessment**  
+**Training & Development Needs**
+**Skill Enhancement Strategies**
+**Future Skills Requirements**
+
+Include quantitative insights and specific recommendations.`
+              }
+            ],
+            max_completion_tokens: 1500
+          }),
+        });
+
+        if (skillsResponse.ok) {
+          const skillsData = await skillsResponse.json();
+          skillsIntelligence = skillsData.choices[0].message.content;
+          console.log('Generated skills intelligence report');
+        }
+
+        // Generate Current Policies & Regulations
+        const policiesResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-5-mini-2025-08-07',
+            messages: [
+              { 
+                role: 'system', 
+                content: `Generate a Current Policies & Regulations analysis focused on existing workforce policies, regulatory frameworks, and compliance requirements relevant to the UAE labor market. Use professional formatting.`
+              },
+              { 
+                role: 'user', 
+                content: `For this workforce analysis: "${prompt}"
+
+Generate a Current Policies & Regulations report covering:
+**Existing Labor Policies**
+**Regulatory Framework Analysis**
+**Compliance Requirements**
+**Policy Impact Assessment**
+**Regulatory Challenges**
+
+Focus on UAE-specific policies and regulations where relevant.`
+              }
+            ],
+            max_completion_tokens: 1500
+          }),
+        });
+
+        if (policiesResponse.ok) {
+          const policiesData = await policiesResponse.json();
+          currentPoliciesReport = policiesData.choices[0].message.content;
+          console.log('Generated current policies report');
+        }
+
+        // Generate AI-Suggested Policy Improvements
+        const improvementsResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-5-mini-2025-08-07',
+            messages: [
+              { 
+                role: 'system', 
+                content: `Generate AI-powered policy improvement recommendations based on data analysis and best practices. Focus on actionable, specific policy suggestions with implementation strategies. Use professional formatting.`
+              },
+              { 
+                role: 'user', 
+                content: `Based on this workforce analysis: "${prompt}"
+
+Generate AI-Suggested Policy Improvements covering:
+**Recommended Policy Changes**
+**Implementation Strategies**
+**Expected Benefits**
+**Timeline for Implementation**
+**Success Metrics**
+**Risk Mitigation**
+
+Provide specific, actionable recommendations with clear implementation paths.`
+              }
+            ],
+            max_completion_tokens: 1500
+          }),
+        });
+
+        if (improvementsResponse.ok) {
+          const improvementsData = await improvementsResponse.json();
+          suggestedImprovementsReport = improvementsData.choices[0].message.content;
+          console.log('Generated policy improvements report');
+        }
+
+      } catch (error) {
+        console.error('Error generating detailed reports:', error);
+        // Set fallback content
+        detailedReport = `**Executive Summary**\n\nBased on the analysis of "${prompt}", this comprehensive report provides data-driven insights and strategic recommendations.\n\n**Key Findings**\n\n• Analysis reveals significant opportunities for optimization\n• Data patterns indicate strategic areas for improvement\n• Performance metrics suggest targeted intervention strategies\n\n**Strategic Recommendations**\n\n• Implement data-driven decision making processes\n• Focus on high-impact areas identified in the analysis\n• Establish monitoring frameworks for continuous improvement`;
+        skillsIntelligence = `**Skills Demand Analysis**\n\nThe current market analysis indicates strong demand for emerging skills in technology and digital transformation.\n\n**Key Skills Insights**\n\n• High demand for AI and machine learning capabilities\n• Growing need for data analysis and interpretation skills\n• Increased focus on digital literacy across sectors\n\n**Training Recommendations**\n\n• Develop comprehensive upskilling programs\n• Partner with educational institutions for curriculum development\n• Implement mentorship and knowledge transfer initiatives`;
+        currentPoliciesReport = `**Current Policy Framework**\n\nExisting workforce policies provide a foundation for strategic development while highlighting areas for enhancement.\n\n**Policy Assessment**\n\n• Current regulations support basic workforce development\n• Compliance frameworks are established but require modernization\n• Gaps exist in emerging technology skill requirements\n\n**Regulatory Analysis**\n\n• Labor laws provide worker protection mechanisms\n• Skills certification processes need digitization\n• Cross-sector coordination could be improved`;
+        suggestedImprovementsReport = `**Recommended Policy Enhancements**\n\nBased on current analysis, strategic policy improvements can drive significant workforce development outcomes.\n\n**Priority Recommendations**\n\n• Establish AI and digital skills certification frameworks\n• Create industry-education partnership incentives\n• Implement flexible work arrangement policies\n\n**Implementation Strategy**\n\n• Phase 1: Stakeholder engagement and consultation\n• Phase 2: Pilot program development and testing\n• Phase 3: Full-scale implementation and monitoring\n\n**Expected Benefits**\n\n• Enhanced workforce competitiveness\n• Improved skill-job matching efficiency\n• Increased economic productivity and innovation`;
+      }
+    }
+
     const result = {
       charts: parsedChartData.charts || [],
       diagnostics: parsedChartData.diagnostics || {},
       insights: insights || [],
-      policyData: null
+      policyData: null,
+      detailedReport,
+      skillsIntelligence,
+      currentPoliciesReport,
+      suggestedImprovementsReport
     };
 
-    console.log('Successfully generated response with', result.charts.length, 'charts and', result.insights.length, 'insights');
+    console.log('Successfully generated response with', result.charts.length, 'charts,', result.insights.length, 'insights, and detailed reports');
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
