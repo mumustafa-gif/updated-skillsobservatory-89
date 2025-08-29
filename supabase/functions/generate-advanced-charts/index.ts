@@ -321,8 +321,9 @@ Generate insights that are this specific and directly tied to the user's query a
 
     let insights = [];
     if (insightResponse.ok) {
+      let insightData = null;
       try {
-        const insightData = await insightResponse.json();
+        insightData = await insightResponse.json();
         const responseContent = insightData.choices[0].message.content;
         
         if (!responseContent || responseContent.trim() === '') {
