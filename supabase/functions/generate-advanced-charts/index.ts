@@ -132,31 +132,54 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: `You are an expert data visualization assistant. Create ECharts configurations based on user requests.
+            content: `You are an expert Apache ECharts configuration generator. Your job is to create valid, working ECharts configurations.
 
-CRITICAL: Generate realistic data relevant to the user's specific request. Use proper ECharts format.
+CRITICAL REQUIREMENTS:
+1. Return ONLY valid JSON - no markdown, no explanations, no text outside JSON
+2. Generate realistic, relevant data for the user's request
+3. Use proper ECharts structure with all required properties
+4. Include meaningful titles, proper axis labels, and appropriate chart types
 
-Return ONLY valid JSON without any markdown or explanations.` 
+MANDATORY JSON STRUCTURE:
+{
+  "charts": [
+    {
+      "title": {"text": "Chart Title", "subtext": "Description"},
+      "tooltip": {"trigger": "axis"},
+      "legend": {"data": ["Series1", "Series2"]},
+      "xAxis": {"type": "category", "data": ["Item1", "Item2"]},
+      "yAxis": {"type": "value"},
+      "series": [{"name": "Series1", "type": "bar", "data": [10, 20]}]
+    }
+  ],
+  "diagnostics": {
+    "chartTypes": ["bar"],
+    "dimensions": ["Category", "Value"],
+    "notes": "Description of data assumptions",
+    "sources": ["Generated data"]
+  }
+}
+
+NEVER include markdown formatting, code blocks, or explanatory text.` 
           },
           { 
             role: 'user', 
-            content: `Create ${numberOfCharts} ECharts configuration(s) for: "${prompt}"
+            content: `Create ${numberOfCharts} Apache ECharts configuration(s) for: "${prompt}"
 
-${knowledgeBaseContext ? `Context: ${knowledgeBaseContext.slice(0, 1000)}` : ''}
+${knowledgeBaseContext ? `Additional Context: ${knowledgeBaseContext.slice(0, 800)}` : ''}
 
-Generate realistic sample data relevant to the request. Each chart should have:
-- Meaningful titles related to the topic
-- Realistic category names and data values
-- Proper ECharts series configuration
+Requirements:
+- Generate ${numberOfCharts} complete ECharts configurations
+- Use realistic sample data relevant to "${prompt}"
+- Include proper titles, legends, and tooltips
+- Ensure all series have appropriate data arrays
+- Return the exact JSON structure specified in system prompt
 
-Return JSON format:
-{
-  "charts": [array of echarts configs],
-  "diagnostics": {"chartTypes": [], "dimensions": [], "notes": "", "sources": []}
-}` 
+Context: Chart generation for data visualization dashboard` 
           }
         ],
-        max_completion_tokens: 4000,
+        max_tokens: 4000,
+        temperature: 0.3,
         response_format: { 
           type: "json_object"
         }
@@ -173,10 +196,33 @@ Return JSON format:
     
     try {
       const responseContent = chartData.choices[0].message.content.trim();
-      console.log('GPT-5 JSON Response:', responseContent);
+      console.log('OpenAI JSON Response:', responseContent);
       
-      // Parse the structured JSON response directly
-      parsedChartData = JSON.parse(responseContent);
+      // Enhanced JSON parsing with multiple strategies
+      let jsonContent = responseContent;
+      
+      // Strategy 1: Direct parsing
+      try {
+        parsedChartData = JSON.parse(jsonContent);
+      } catch (directParseError) {
+        console.log('Direct parsing failed, trying extraction methods');
+        
+        // Strategy 2: Extract JSON from markdown code blocks
+        const markdownMatch = jsonContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+        if (markdownMatch) {
+          jsonContent = markdownMatch[1];
+          parsedChartData = JSON.parse(jsonContent);
+        } else {
+          // Strategy 3: Extract the largest JSON object
+          const jsonMatch = jsonContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            jsonContent = jsonMatch[0];
+            parsedChartData = JSON.parse(jsonContent);
+          } else {
+            throw new Error('No valid JSON found in response');
+          }
+        }
+      }
       
       // Validate and enhance chart structure
       if (parsedChartData.charts && Array.isArray(parsedChartData.charts)) {
@@ -352,7 +398,8 @@ Return JSON format:
                   Generate 6 specific insights that directly address this query with actionable recommendations. Return ONLY the JSON object.`
                 }
               ],
-              max_completion_tokens: 1000,
+              max_tokens: 1000,
+              temperature: 0.2,
               response_format: { type: "json_object" }
             }),
           });
@@ -449,7 +496,8 @@ Generate a comprehensive detailed report with:
 Use proper formatting with headings, bullet points, and structured content.`
               }
             ],
-            max_completion_tokens: 2000
+            max_tokens: 2000,
+            temperature: 0.2
           }),
         });
 
@@ -487,7 +535,8 @@ Generate a Skills Intelligence & Analysis report covering:
 Include quantitative insights and specific recommendations.`
               }
             ],
-            max_completion_tokens: 1500
+            max_tokens: 1500,
+            temperature: 0.2
           }),
         });
 
@@ -525,7 +574,8 @@ Generate a Current Policies & Regulations report covering:
 Focus on UAE-specific policies and regulations where relevant.`
               }
             ],
-            max_completion_tokens: 1500
+            max_tokens: 1500,
+            temperature: 0.2
           }),
         });
 
@@ -564,7 +614,8 @@ Generate AI-Suggested Policy Improvements covering:
 Provide specific, actionable recommendations with clear implementation paths.`
               }
             ],
-            max_completion_tokens: 1500
+            max_tokens: 1500,
+            temperature: 0.2
           }),
         });
 
