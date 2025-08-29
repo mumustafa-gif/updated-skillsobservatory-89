@@ -128,7 +128,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
+        model: 'gpt-4o-mini',
         messages: [
           { 
             role: 'system', 
@@ -327,7 +327,7 @@ Return JSON format:
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'gpt-5-mini-2025-08-07',
+              model: 'gpt-4o-mini',
               messages: [
                 { 
                   role: 'system', 
@@ -420,7 +420,7 @@ Return JSON format:
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-5-mini-2025-08-07',
+            model: 'gpt-4o-mini',
             messages: [
               { 
                 role: 'system', 
@@ -467,7 +467,7 @@ Use proper formatting with headings, bullet points, and structured content.`
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-5-mini-2025-08-07',
+            model: 'gpt-4o-mini',
             messages: [
               { 
                 role: 'system', 
@@ -505,7 +505,7 @@ Include quantitative insights and specific recommendations.`
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-5-mini-2025-08-07',
+            model: 'gpt-4o-mini',
             messages: [
               { 
                 role: 'system', 
@@ -543,7 +543,7 @@ Focus on UAE-specific policies and regulations where relevant.`
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-5-mini-2025-08-07',
+            model: 'gpt-4o-mini',
             messages: [
               { 
                 role: 'system', 
