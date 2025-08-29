@@ -18,13 +18,38 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Request method:', req.method);
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+    
+    let requestData;
+    try {
+      const bodyText = await req.text();
+      console.log('Raw request body:', bodyText);
+      
+      if (!bodyText || bodyText.trim() === '') {
+        throw new Error('Empty request body');
+      }
+      
+      requestData = JSON.parse(bodyText);
+      console.log('Parsed request data:', requestData);
+    } catch (parseError) {
+      console.error('JSON parsing error:', parseError);
+      return new Response(JSON.stringify({ 
+        error: 'Invalid JSON in request body',
+        details: parseError.message 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { 
       prompt, 
       numberOfCharts = 1, 
       chartTypes = ['auto'], 
       useKnowledgeBase = false, 
       knowledgeBaseFiles = [] 
-    } = await req.json();
+    } = requestData;
     
     // Get user from auth header using service role key
     const authHeader = req.headers.get('authorization');
