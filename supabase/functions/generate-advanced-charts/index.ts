@@ -107,19 +107,27 @@ Return JSON format:
     });
 
     if (!chartResponse.ok) {
-      console.error('OpenAI API error (charts):', await chartResponse.text());
-      throw new Error('Failed to generate charts');
+      const errorText = await chartResponse.text();
+      console.error('OpenAI API error (charts):', errorText);
+      console.error('Response status:', chartResponse.status);
+      console.error('Response headers:', Object.fromEntries(chartResponse.headers.entries()));
+      throw new Error(`Failed to generate charts: ${chartResponse.status} - ${errorText}`);
     }
 
     const chartData = await chartResponse.json();
     let parsedChartData;
     
     try {
-      const responseContent = chartData.choices[0].message.content.trim();
-      console.log('GPT-5 JSON Response:', responseContent);
+      const responseContent = chartData.choices[0]?.message?.content;
+      
+      if (!responseContent || responseContent.trim() === '') {
+        throw new Error('Empty or null response content from OpenAI');
+      }
+      
+      console.log('GPT-5 JSON Response:', responseContent.slice(0, 500) + '...');
       
       // Parse the structured JSON response directly
-      parsedChartData = JSON.parse(responseContent);
+      parsedChartData = JSON.parse(responseContent.trim());
       
       // Validate and enhance chart structure
       if (parsedChartData.charts && Array.isArray(parsedChartData.charts)) {
@@ -160,7 +168,8 @@ Return JSON format:
       
     } catch (parseError) {
       console.error('JSON Parse Error:', parseError);
-      console.error('Failed content:', chartData.choices[0].message.content);
+      console.error('Failed content:', chartData.choices?.[0]?.message?.content?.slice(0, 200) || 'No content received');
+      console.error('Full chartData structure:', JSON.stringify(chartData, null, 2).slice(0, 500));
       
       // Enhanced fallback with more relevant data
       const fallbackCharts = [];
@@ -325,7 +334,8 @@ Generate insights that are this specific and directly tied to the user's query a
         console.log('Generated skills insights:', insights.length);
       } catch (error) {
         console.error('Failed to parse insights:', error);
-        console.error('Raw insight response:', insightData?.choices?.[0]?.message?.content);
+        console.error('Raw insight response:', insightData?.choices?.[0]?.message?.content?.slice(0, 200) || 'No content received');
+        console.error('Full insight response structure:', JSON.stringify(insightData, null, 2).slice(0, 500));
         // Enhanced fallback insights based on prompt analysis
         const promptLower = prompt.toLowerCase();
         // Create dynamic fallback insights based on prompt analysis
@@ -445,7 +455,8 @@ Ensure each policy item is detailed, specific, and clearly connected to the data
         console.log('Generated policy analysis for region:', policyData.region);
       } catch (error) {
         console.error('Failed to parse policy data:', error);
-        console.error('Raw policy response:', policyResponseData?.choices?.[0]?.message?.content);
+        console.error('Raw policy response:', policyResponseData?.choices?.[0]?.message?.content?.slice(0, 200) || 'No content received');
+        console.error('Full policy response structure:', JSON.stringify(policyResponseData, null, 2).slice(0, 500));
         // Enhanced fallback based on prompt analysis
         const promptLower = prompt.toLowerCase();
         if (promptLower.includes('uae') || promptLower.includes('dubai') || promptLower.includes('emirates')) {
