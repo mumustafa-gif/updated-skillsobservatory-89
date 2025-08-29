@@ -133,18 +133,18 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
               <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20">
                 <FileText className="h-6 w-6 text-primary" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Detailed Reports & Analysis
+              <span className="text-xl font-bold text-primary">
+                Skills Intelligence & Analysis
               </span>
             </div>
-            <Badge variant="secondary" className="bg-gradient-to-r from-primary/10 to-secondary/10 text-primary border-primary/20 sm:ml-auto">
+            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 sm:ml-auto">
               <BarChart3 className="h-3 w-3 mr-1" />
               AI-Generated
             </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <Tabs defaultValue="skills" className="w-full">
+          <Tabs defaultValue="overview" className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50 p-1 h-12">
               <TabsTrigger 
                 value="overview" 

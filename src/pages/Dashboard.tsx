@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, LogOut, Sparkles, FileText, Link, Brain, Lightbulb } from 'lucide-react';
+import { BarChart3, LogOut, Sparkles, FileText, Link, Brain, Lightbulb, ChevronUp, ChevronDown } from 'lucide-react';
 import ChartControls from '@/components/dashboard/ChartControls';
 import MultiChartDisplay from '@/components/dashboard/MultiChartDisplay';
 import DiagnosticsPanel from '@/components/dashboard/DiagnosticsPanel';
@@ -53,6 +53,7 @@ const Dashboard = () => {
   const [generationResult, setGenerationResult] = useState<GenerationResult | null>(null);
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [configMinimized, setConfigMinimized] = useState(false);
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -467,150 +468,170 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Sidebar Layout (After Generation) */}
+        {/* New Layout (After Generation) */}
         {hasGenerated && !generating && (
-          <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 min-h-[calc(100vh-200px)]">
-            {/* Left Sidebar - Configuration */}
+          <div className="space-y-6">
+            {/* Top Configuration Section - Two Columns with Minimize */}
             <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="xl:col-span-1 space-y-6"
+              className="bg-card border rounded-lg shadow-sm"
             >
-              {/* Compact Chart Controls */}
-              <Card className="bg-gradient-to-br from-card to-card/50 border-primary/20">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4 text-primary" />
-                    Configuration
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ChartControls
-                    numberOfCharts={numberOfCharts}
-                    onNumberOfChartsChange={setNumberOfCharts}
-                    chartTypes={chartTypes}
-                    onChartTypesChange={setChartTypes}
-                    useKnowledgeBase={useKnowledgeBase}
-                    onUseKnowledgeBaseChange={setUseKnowledgeBase}
-                    knowledgeBaseFilesCount={uploadedFiles.length}
-                  />
-                </CardContent>
-              </Card>
-
-              {/* Compact Generate Section */}
-              <Card className="bg-gradient-to-br from-card to-card/50 border-secondary/20">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-secondary" />
-                    Regenerate
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Textarea
-                    placeholder="Modify your workforce analysis requirements..."
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    rows={3}
-                    className="resize-none text-sm"
-                  />
-                  <Button 
-                    onClick={handleGenerate} 
-                    disabled={generating}
+              <div className="p-4 border-b bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-foreground">Chart Configuration</h3>
+                  <Button
+                    variant="ghost"
                     size="sm"
-                    className={`w-full transition-all duration-300 ${
-                      useKnowledgeBase && uploadedFiles.length > 0
-                        ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700'
-                        : 'bg-gradient-to-r from-secondary to-accent hover:from-secondary/90 hover:to-accent/90'
-                    }`}
+                    onClick={() => setConfigMinimized(!configMinimized)}
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
                   >
-                    {generating ? (
-                      <>
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                          className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
-                        />
-                        {useKnowledgeBase && uploadedFiles.length > 0 ? 'Analyzing...' : 'Generating...'}
-                      </>
-                    ) : (
-                      <>
-                        {useKnowledgeBase && uploadedFiles.length > 0 ? (
-                          <>
-                            <Brain className="h-4 w-4 mr-2" />
-                            Skill Analysis
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="h-4 w-4 mr-2" />
-                            Regenerate
-                          </>
-                        )}
-                      </>
-                    )}
+                    {configMinimized ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
                   </Button>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
+              
+              {!configMinimized && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="p-4"
+                >
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Configuration Section */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <BarChart3 className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium text-primary">Configuration</span>
+                      </div>
+                      <ChartControls
+                        numberOfCharts={numberOfCharts}
+                        onNumberOfChartsChange={setNumberOfCharts}
+                        chartTypes={chartTypes}
+                        onChartTypesChange={setChartTypes}
+                        useKnowledgeBase={useKnowledgeBase}
+                        onUseKnowledgeBaseChange={setUseKnowledgeBase}
+                        knowledgeBaseFilesCount={uploadedFiles.length}
+                      />
+                    </div>
+
+                    {/* Regenerate Section */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Sparkles className="h-4 w-4 text-secondary" />
+                        <span className="text-sm font-medium text-secondary">Regenerate</span>
+                      </div>
+                      <div className="space-y-3">
+                        <Textarea
+                          placeholder="Modify your workforce analysis requirements..."
+                          value={prompt}
+                          onChange={(e) => setPrompt(e.target.value)}
+                          rows={3}
+                          className="resize-none text-sm"
+                        />
+                        <Button 
+                          onClick={handleGenerate} 
+                          disabled={generating}
+                          size="sm"
+                          className="w-full bg-secondary hover:bg-secondary/90 text-white"
+                        >
+                          {generating ? (
+                            <>
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
+                              />
+                              {useKnowledgeBase && uploadedFiles.length > 0 ? 'Analyzing...' : 'Generating...'}
+                            </>
+                          ) : (
+                            <>
+                              {useKnowledgeBase && uploadedFiles.length > 0 ? (
+                                <>
+                                  <Brain className="h-4 w-4 mr-2" />
+                                  Skill Analysis
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="h-4 w-4 mr-2" />
+                                  Regenerate
+                                </>
+                              )}
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </motion.div>
 
-            {/* Main Content - Charts & Analysis */}
-            <div className="xl:col-span-4 space-y-6">
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <MultiChartDisplay 
-                  chartOptions={generationResult?.charts || []} 
-                  loading={generating} 
-                />
-              </motion.div>
+            {/* Main Content - Left: Charts, Right: Analysis */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              {/* Left Side - Charts */}
+              <div className="xl:col-span-2 space-y-6">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <MultiChartDisplay 
+                    chartOptions={generationResult?.charts || []} 
+                    loading={generating} 
+                  />
+                </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-              >
-                <DiagnosticsPanel 
-                  diagnostics={generationResult?.diagnostics}
-                  visible={!!generationResult?.diagnostics}
-                />
-              </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                  <DiagnosticsPanel 
+                    diagnostics={generationResult?.diagnostics}
+                    visible={!!generationResult?.diagnostics}
+                  />
+                </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                <DataInsights 
-                  insights={generationResult?.insights || []}
-                  visible={!!(generationResult?.insights && generationResult.insights.length > 0)}
-                />
-              </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <DataInsights 
+                    insights={generationResult?.insights || []}
+                    visible={!!(generationResult?.insights && generationResult.insights.length > 0)}
+                  />
+                </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <PolicyAnalysis 
-                  policyData={generationResult?.policyData}
-                  visible={!!generationResult?.policyData}
-                />
-              </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                >
+                  <PolicyAnalysis 
+                    policyData={generationResult?.policyData}
+                    visible={!!generationResult?.policyData}
+                  />
+                </motion.div>
+              </div>
 
-              {/* Detailed Reports Section */}
-              {generationResult?.detailedReport && (
+              {/* Right Side - Skills Intelligence & Analysis */}
+              <div className="xl:col-span-1">
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.4 }}
+                  className="sticky top-6"
                 >
                   <DetailedReports
                     generationResult={generationResult}
                   />
                 </motion.div>
-              )}
+              </div>
             </div>
           </div>
         )}
