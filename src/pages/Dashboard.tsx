@@ -133,14 +133,34 @@ const Dashboard = () => {
       console.log('Request body:', requestBody);
 
       const response = await supabase.functions.invoke('generate-advanced-charts', {
-        body: requestBody
+        body: requestBody,
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
 
       console.log('Response received:', response);
 
       if (response.error) {
         console.error('Function error:', response.error);
+        
+        // Check if it's a network/timeout error and provide better error handling
+        if (response.error.message?.includes('Failed to fetch') || 
+            response.error.message?.includes('NetworkError') ||
+            response.error.message?.includes('Failed to send a request')) {
+          toast({
+            title: "Network Error",
+            description: "Please check your connection and try again. The chart generation service may be temporarily unavailable.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
         throw response.error;
+      }
+
+      if (!response.data) {
+        throw new Error('No data received from chart generation service');
       }
 
       setGenerationResult(response.data);

@@ -565,16 +565,31 @@ Provide specific, actionable recommendations with clear implementation paths.`
     console.log('Successfully generated response with', result.charts.length, 'charts,', result.insights.length, 'insights, and detailed reports');
 
     return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+      headers: { 
+        ...corsHeaders, 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
+      },
     });
   } catch (error: any) {
     console.error('Error in generate-advanced-charts function:', error);
-    return new Response(JSON.stringify({ 
+    console.error('Error stack:', error.stack);
+    
+    const errorResponse = {
       error: 'Failed to generate charts',
-      details: error.message 
-    }), {
+      details: error.message,
+      timestamp: new Date().toISOString(),
+      requestId: crypto.randomUUID()
+    };
+    
+    return new Response(JSON.stringify(errorResponse), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { 
+        ...corsHeaders, 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
+      },
     });
   }
 });
