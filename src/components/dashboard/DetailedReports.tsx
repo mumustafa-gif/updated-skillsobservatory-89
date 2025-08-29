@@ -19,41 +19,50 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
   const formatReport = (report: string) => {
     if (!report) return '';
     
-    // Enhanced markdown-style formatting to HTML with better styling
+    // Enhanced bullet point formatting for detailed reports
     return report
-      // Headers
-      .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold text-primary mb-3 mt-6 first:mt-0">$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold text-primary mb-4 mt-8 first:mt-0">$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold text-primary mb-5 mt-10 first:mt-0">$1</h1>')
-      // Bold text
+      // Headers with minimal styling
+      .replace(/^### (.*$)/gim, '<h3 class="text-base font-bold text-primary mb-2 mt-4 first:mt-0">$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2 class="text-lg font-bold text-primary mb-3 mt-6 first:mt-0">$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1 class="text-xl font-bold text-primary mb-4 mt-8 first:mt-0">$1</h1>')
+      // Convert paragraphs to bullet points for concise presentation
+      .split('\n\n')
+      .map(paragraph => {
+        if (paragraph.trim() && !paragraph.startsWith('#') && !paragraph.startsWith('•') && !paragraph.startsWith('-')) {
+          // Convert sentences to bullet points
+          const sentences = paragraph.split(/[.!?]+/).filter(s => s.trim().length > 10);
+          return sentences.map(sentence => `• ${sentence.trim()}`).join('\n');
+        }
+        return paragraph;
+      })
+      .join('\n\n')
+      // Enhanced bullet point styling
+      .replace(/^• (.*$)/gim, '<li class="mb-3 text-sm text-foreground leading-relaxed flex items-start"><div class="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></div><span>$1</span></li>')
+      .replace(/^- (.*$)/gim, '<li class="mb-3 text-sm text-foreground leading-relaxed flex items-start"><div class="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></div><span>$1</span></li>')
+      // Bold text with solid colors
       .replace(/\*\*(.*?)\*\*/g, '<strong class="text-primary font-semibold">$1</strong>')
-      // Lists with better styling
-      .replace(/^• (.*$)/gim, '<li class="ml-6 mb-2 text-foreground leading-relaxed relative"><span class="absolute -left-4 text-primary">•</span>$1</li>')
-      .replace(/^- (.*$)/gim, '<li class="ml-6 mb-2 text-foreground leading-relaxed relative"><span class="absolute -left-4 text-primary">•</span>$1</li>')
-      .replace(/^\d+\. (.*$)/gim, '<li class="ml-6 mb-2 text-foreground leading-relaxed list-decimal">$1</li>')
-      // Paragraphs with better spacing
-      .replace(/\n\n/g, '</p><p class="mb-4 text-foreground leading-relaxed">')
+      // Line breaks
       .replace(/\n/g, '<br/>');
   };
 
   const formatPolicyReport = (report: string) => {
     if (!report) return '';
     
-    // Format policy reports as minimal bullet points with clickable references
+    // Format policy reports as clean bullet points with clickable references
     return report
       // Convert policy entries with references and links
-      .replace(/^(.+?)\s*\[Ref:\s*(.+?)\]\s*\(([^)]+)\)/gim, '<li class="mb-4 text-foreground leading-relaxed"><div class="flex flex-col"><span class="font-medium text-sm">• $1</span><div class="mt-2 ml-4"><a href="$3" target="_blank" rel="noopener noreferrer" class="text-xs text-accent hover:text-accent/80 underline transition-colors">📖 $2</a></div></div></li>')
+      .replace(/^(.+?)\s*\[Ref:\s*(.+?)\]\s*\(([^)]+)\)/gim, '<li class="mb-4 text-sm text-foreground leading-relaxed border-l-2 border-accent/30 pl-4"><div class="flex flex-col space-y-2"><div class="flex items-start"><div class="w-2 h-2 bg-accent rounded-full mt-1.5 mr-3 flex-shrink-0"></div><span class="font-medium">$1</span></div><div class="ml-5"><a href="$3" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-xs text-accent hover:text-accent/80 underline transition-colors bg-accent/10 px-2 py-1 rounded-md"><span class="mr-1">📖</span>$2</a></div></div></li>')
       // Convert policy entries with references but no links
-      .replace(/^(.+?)\s*\[Ref:\s*(.+?)\]/gim, '<li class="mb-4 text-foreground leading-relaxed"><div class="flex flex-col"><span class="font-medium text-sm">• $1</span><span class="text-xs text-muted-foreground mt-2 ml-4 italic">📖 Reference: $2</span></div></li>')
+      .replace(/^(.+?)\s*\[Ref:\s*(.+?)\]/gim, '<li class="mb-4 text-sm text-foreground leading-relaxed border-l-2 border-accent/30 pl-4"><div class="flex flex-col space-y-2"><div class="flex items-start"><div class="w-2 h-2 bg-accent rounded-full mt-1.5 mr-3 flex-shrink-0"></div><span class="font-medium">$1</span></div><div class="ml-5"><span class="text-xs text-muted-foreground italic bg-muted/50 px-2 py-1 rounded-md">📖 Reference: $2</span></div></div></li>')
       // Handle basic bullet points without references
-      .replace(/^• (.*$)/gim, '<li class="mb-3 text-foreground leading-relaxed"><span class="font-medium text-sm">• $1</span></li>')
-      .replace(/^- (.*$)/gim, '<li class="mb-3 text-foreground leading-relaxed"><span class="font-medium text-sm">• $1</span></li>')
-      // Headers with minimal styling
+      .replace(/^• (.*$)/gim, '<li class="mb-3 text-sm text-foreground leading-relaxed flex items-start"><div class="w-2 h-2 bg-accent rounded-full mt-1.5 mr-3 flex-shrink-0"></div><span class="font-medium">$1</span></li>')
+      .replace(/^- (.*$)/gim, '<li class="mb-3 text-sm text-foreground leading-relaxed flex items-start"><div class="w-2 h-2 bg-accent rounded-full mt-1.5 mr-3 flex-shrink-0"></div><span class="font-medium">$1</span></li>')
+      // Headers with solid colors
       .replace(/^### (.*$)/gim, '<h3 class="text-base font-bold text-accent mb-3 mt-6 first:mt-0">$1</h3>')
       .replace(/^## (.*$)/gim, '<h2 class="text-lg font-bold text-accent mb-4 mt-8 first:mt-0">$1</h2>')
       .replace(/^# (.*$)/gim, '<h1 class="text-xl font-bold text-accent mb-5 mt-10 first:mt-0">$1</h1>')
-      // Minimal paragraph spacing
-      .replace(/\n\n/g, '</p><p class="mb-3 text-foreground leading-relaxed text-sm">')
+      // Clean line breaks
+      .replace(/\n\n/g, '<br/><br/>')
       .replace(/\n/g, '<br/>');
   };
 
@@ -88,12 +97,14 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
         transition={{ duration: 0.4 }}
         className="space-y-4"
       >
-        <div 
-          className="prose prose-lg max-w-none text-foreground"
-          dangerouslySetInnerHTML={{ 
-            __html: `<div class="space-y-4"><p class="mb-4 text-foreground leading-relaxed first:mb-0">${formatReport(content)}</p></div>` 
-          }}
-        />
+        <ul className="space-y-2">
+          <div 
+            className="text-foreground"
+            dangerouslySetInnerHTML={{ 
+              __html: formatReport(content) 
+            }}
+          />
+        </ul>
       </motion.div>
     );
   };
@@ -277,12 +288,42 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
                 </CardHeader>
                 <Separator className="mb-6" />
                 <CardContent className="pt-0">
-                  <ReportContent 
-                    content={generationResult.suggestedImprovementsReport}
-                    defaultMessage="AI-generated policy improvement suggestions will appear here after chart generation. This section will provide strategic recommendations for enhancing workforce development policies."
-                    icon={Lightbulb}
-                    colorClass="text-emerald-600"
-                  />
+                  {generationResult.suggestedImprovementsReport ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="space-y-4"
+                    >
+                      <ul className="space-y-2">
+                        <div 
+                          dangerouslySetInnerHTML={{ 
+                            __html: generationResult.suggestedImprovementsReport
+                              .split('\n\n')
+                              .map(paragraph => {
+                                if (paragraph.trim() && !paragraph.startsWith('#') && !paragraph.startsWith('•') && !paragraph.startsWith('-')) {
+                                  const sentences = paragraph.split(/[.!?]+/).filter(s => s.trim().length > 10);
+                                  return sentences.map(sentence => `• ${sentence.trim()}`).join('\n');
+                                }
+                                return paragraph;
+                              })
+                              .join('\n\n')
+                              .replace(/^• (.*$)/gim, '<li class="mb-3 text-sm text-foreground leading-relaxed flex items-start border-l-2 border-emerald-500/30 pl-4"><div class="w-2 h-2 bg-emerald-600 rounded-full mt-1.5 mr-3 flex-shrink-0"></div><span>$1</span></li>')
+                              .replace(/^- (.*$)/gim, '<li class="mb-3 text-sm text-foreground leading-relaxed flex items-start border-l-2 border-emerald-500/30 pl-4"><div class="w-2 h-2 bg-emerald-600 rounded-full mt-1.5 mr-3 flex-shrink-0"></div><span>$1</span></li>')
+                              .replace(/\*\*(.*?)\*\*/g, '<strong class="text-emerald-600 font-semibold">$1</strong>')
+                              .replace(/\n/g, '<br/>')
+                          }}
+                        />
+                      </ul>
+                    </motion.div>
+                  ) : (
+                    <ReportContent 
+                      content={undefined}
+                      defaultMessage="AI-generated policy improvement suggestions will appear here after chart generation. This section will provide strategic recommendations for enhancing workforce development policies."
+                      icon={Lightbulb}
+                      colorClass="text-emerald-600"
+                    />
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

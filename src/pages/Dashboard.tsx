@@ -176,6 +176,7 @@ const Dashboard = () => {
 
       setGenerationResult(response.data);
       setHasGenerated(true);
+      setConfigMinimized(true); // Minimize configuration by default after generation
       setShowCustomizer(true);
 
       toast({
