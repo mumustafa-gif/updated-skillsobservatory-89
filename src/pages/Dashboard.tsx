@@ -101,11 +101,21 @@ const Dashboard = () => {
     setGenerating(true);
 
     try {
+      // Get current session
       const { data: { session } } = await supabase.auth.getSession();
       
-      if (!session) {
-        throw new Error('Not authenticated');
+      if (!session?.access_token) {
+        console.error('No valid session found');
+        toast({
+          title: "Authentication Error",
+          description: "Please sign in again",
+          variant: "destructive",
+        });
+        navigate('/auth');
+        return;
       }
+
+      console.log('Starting chart generation with user:', user?.email);
 
       const requestBody = {
         prompt,
@@ -115,14 +125,20 @@ const Dashboard = () => {
         knowledgeBaseFiles: useKnowledgeBase ? uploadedFiles.map(f => f.id) : []
       };
 
+      console.log('Request body:', requestBody);
+
       const response = await supabase.functions.invoke('generate-advanced-charts', {
         body: requestBody,
         headers: {
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
         }
       });
 
+      console.log('Response received:', response);
+
       if (response.error) {
+        console.error('Function error:', response.error);
         throw response.error;
       }
 
