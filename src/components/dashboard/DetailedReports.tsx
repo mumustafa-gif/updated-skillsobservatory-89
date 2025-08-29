@@ -36,6 +36,25 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
       .replace(/\n/g, '<br/>');
   };
 
+  const formatPolicyReport = (report: string) => {
+    if (!report) return '';
+    
+    // Format policy reports as bullet points with references
+    return report
+      // Convert policy entries to bullet points with references
+      .replace(/^(.+?)(\s*\[Ref:\s*(.+?)\])/gim, '<li class="mb-3 text-foreground leading-relaxed"><div class="flex flex-col"><span class="font-medium">• $1</span><span class="text-xs text-muted-foreground mt-1 ml-4 italic">Reference: $3</span></div></li>')
+      // Handle basic bullet points without references
+      .replace(/^• (.*$)/gim, '<li class="mb-3 text-foreground leading-relaxed"><span class="font-medium">• $1</span></li>')
+      .replace(/^- (.*$)/gim, '<li class="mb-3 text-foreground leading-relaxed"><span class="font-medium">• $1</span></li>')
+      // Headers
+      .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold text-accent mb-3 mt-6 first:mt-0">$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold text-accent mb-4 mt-8 first:mt-0">$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold text-accent mb-5 mt-10 first:mt-0">$1</h1>')
+      // Paragraphs with better spacing
+      .replace(/\n\n/g, '</p><p class="mb-4 text-foreground leading-relaxed">')
+      .replace(/\n/g, '<br/>');
+  };
+
   const ReportContent = ({ content, defaultMessage, icon: Icon, colorClass = "text-primary" }: { 
     content?: string; 
     defaultMessage: string;
@@ -78,7 +97,6 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
   };
 
   const hasAnyReport = generationResult.detailedReport || 
-                      generationResult.skillsIntelligence || 
                       generationResult.currentPoliciesReport || 
                       generationResult.suggestedImprovementsReport;
 
@@ -125,20 +143,13 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
         </CardHeader>
         <CardContent className="p-6">
           <Tabs defaultValue="skills" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-8 bg-muted/50 p-1 h-12">
+            <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50 p-1 h-12">
               <TabsTrigger 
                 value="overview" 
                 className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/10 data-[state=active]:to-secondary/10 data-[state=active]:text-primary font-medium"
               >
                 <FileText className="h-4 w-4" />
                 <span className="hidden sm:inline">Overview</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="skills" 
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-secondary/10 data-[state=active]:to-accent/10 data-[state=active]:text-secondary font-medium"
-              >
-                <Brain className="h-4 w-4" />
-                <span className="hidden sm:inline">Skills Intelligence</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="policies" 
@@ -183,57 +194,6 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
               </Card>
             </TabsContent>
 
-            <TabsContent value="skills" className="mt-6">
-              <Card className="bg-gradient-to-br from-secondary/5 to-accent/5 border-secondary/20">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-xl flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-secondary/10">
-                      <Brain className="h-5 w-5 text-secondary" />
-                    </div>
-                    <div>
-                      <span className="text-secondary font-bold">Skills Intelligence & Analysis</span>
-                      <p className="text-sm text-muted-foreground font-normal mt-1">
-                        AI-powered workforce skills supply and demand insights
-                      </p>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <Separator className="mb-6" />
-                <CardContent className="pt-0">
-                  {/* Skills Intelligence Metrics Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-gradient-to-br from-secondary/10 to-accent/10 rounded-xl p-4 border border-secondary/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <TrendingUp className="h-4 w-4 text-secondary" />
-                        <span className="text-sm font-medium text-secondary">Demand Analysis</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Skills gap identification and trend analysis</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-accent/10 to-primary/10 rounded-xl p-4 border border-accent/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Users className="h-4 w-4 text-accent" />
-                        <span className="text-sm font-medium text-accent">Supply Mapping</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Current workforce capabilities assessment</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl p-4 border border-primary/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Target className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-medium text-primary">Strategic Insights</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Future workforce planning recommendations</p>
-                    </div>
-                  </div>
-                  
-                  <ReportContent 
-                    content={generationResult.skillsIntelligence}
-                    defaultMessage="Skills intelligence and workforce analysis will appear here after chart generation. This section will provide comprehensive insights into skills supply and demand patterns."
-                    icon={Brain}
-                    colorClass="text-secondary"
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
 
             <TabsContent value="policies" className="mt-6">
               <Card className="bg-gradient-to-br from-accent/5 to-primary/5 border-accent/20">
@@ -270,12 +230,30 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
                     </div>
                   </div>
                   
-                  <ReportContent 
-                    content={generationResult.currentPoliciesReport}
-                    defaultMessage="Current policies and regulatory analysis will appear here after chart generation. This section will provide detailed coverage of existing workforce development policies."
-                    icon={Shield}
-                    colorClass="text-accent"
-                  />
+                  {/* Policy Content with Custom Formatting */}
+                  {generationResult.currentPoliciesReport ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="space-y-4"
+                    >
+                      <ul className="space-y-2">
+                        <div 
+                          dangerouslySetInnerHTML={{ 
+                            __html: formatPolicyReport(generationResult.currentPoliciesReport) 
+                          }}
+                        />
+                      </ul>
+                    </motion.div>
+                  ) : (
+                    <ReportContent 
+                      content={undefined}
+                      defaultMessage="Current policies and regulatory analysis will appear here after chart generation. Each policy will be presented as concise bullet points with proper references."
+                      icon={Shield}
+                      colorClass="text-accent"
+                    />
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
