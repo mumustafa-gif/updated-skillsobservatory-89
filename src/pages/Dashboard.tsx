@@ -128,11 +128,7 @@ const Dashboard = () => {
       console.log('Request body:', requestBody);
 
       const response = await supabase.functions.invoke('generate-advanced-charts', {
-        body: requestBody,
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        }
+        body: requestBody
       });
 
       console.log('Response received:', response);

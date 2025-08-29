@@ -19,19 +19,12 @@ serve(async (req) => {
 
   try {
     console.log('Request method:', req.method);
-    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+    console.log('Content-Type:', req.headers.get('content-type'));
     
     let requestData;
     try {
-      const bodyText = await req.text();
-      console.log('Raw request body:', bodyText);
-      
-      if (!bodyText || bodyText.trim() === '') {
-        throw new Error('Empty request body');
-      }
-      
-      requestData = JSON.parse(bodyText);
-      console.log('Parsed request data:', requestData);
+      requestData = await req.json();
+      console.log('Parsed request data successfully:', requestData);
     } catch (parseError) {
       console.error('JSON parsing error:', parseError);
       return new Response(JSON.stringify({ 
@@ -50,6 +43,16 @@ serve(async (req) => {
       useKnowledgeBase = false, 
       knowledgeBaseFiles = [] 
     } = requestData;
+    
+    if (!prompt || typeof prompt !== 'string' || prompt.trim() === '') {
+      return new Response(JSON.stringify({ 
+        error: 'Prompt is required',
+        details: 'Please provide a valid prompt for chart generation' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     
     // Get user from auth header using service role key
     const authHeader = req.headers.get('authorization');
