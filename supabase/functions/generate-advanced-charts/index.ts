@@ -303,38 +303,8 @@ Return JSON format:
       console.log(`Created ${fallbackCharts.length} fallback charts`);
     }
 
-    // Generate insights
-    const insightResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
-        messages: [
-          { 
-            role: 'system', 
-            content: `Generate 6-8 specific Skills Intelligence & Analysis insights based on the user query and chart data. Make insights directly relevant to the query with quantitative analysis when possible.
-
-Return JSON format: {"insights": ["insight_1", "insight_2", ...]}`
-          },
-          { 
-            role: 'user', 
-            content: `Query: "${prompt}"
-Chart Data: ${JSON.stringify(parsedChartData?.charts?.[0] || {}, null, 2).slice(0, 800)}
-
-Generate specific insights that directly address this query with actionable recommendations.`
-          }
-        ],
-        max_completion_tokens: 1200,
-        response_format: { type: "json_object" }
-      }),
-    });
-
+    // Generate insights with retry logic
     let insights = [];
-    
-    // Always provide fallback insights to ensure function continues
     const fallbackInsights = [
       `Analysis of "${prompt.slice(0, 50)}..." reveals significant trends requiring strategic attention`,
       'Data shows 20-30% optimization opportunities across key performance indicators',
@@ -344,30 +314,95 @@ Generate specific insights that directly address this query with actionable reco
       'Resource allocation patterns demonstrate opportunities for enhanced efficiency and impact'
     ];
     
-    if (insightResponse.ok) {
-      try {
-        const insightData = await insightResponse.json();
-        const responseContent = insightData.choices?.[0]?.message?.content;
-        
-        if (responseContent && responseContent.trim() !== '') {
-          console.log('Raw insights response:', responseContent);
-          const parsedInsights = JSON.parse(responseContent.trim());
-          insights = parsedInsights.insights || fallbackInsights;
-          console.log('Generated insights:', insights.length);
-        } else {
-          console.log('Empty insights response from OpenAI, using fallback');
-          insights = fallbackInsights;
+    // Function to attempt insights generation with robust error handling
+    async function generateInsightsWithRetry(retries = 2) {
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          console.log(`Attempting insights generation (attempt ${attempt}/${retries})`);
+          
+          const insightResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openAIApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'gpt-5-mini-2025-08-07',
+              messages: [
+                { 
+                  role: 'system', 
+                  content: `You are a data insights expert. Generate exactly 6 specific Skills Intelligence & Analysis insights based on the user query and chart data. 
+                  
+                  CRITICAL: You MUST return a valid JSON object in this EXACT format:
+                  {"insights": ["insight_1", "insight_2", "insight_3", "insight_4", "insight_5", "insight_6"]}
+                  
+                  Each insight should be:
+                  - Specific and actionable
+                  - Relevant to the query
+                  - Include quantitative analysis when possible
+                  - Be 1-2 sentences long
+                  
+                  DO NOT return anything except the JSON object. No explanations, no additional text.`
+                },
+                { 
+                  role: 'user', 
+                  content: `Query: "${prompt}"
+                  Chart Data: ${JSON.stringify(parsedChartData?.charts?.[0] || {}, null, 2).slice(0, 800)}
+                  
+                  Generate 6 specific insights that directly address this query with actionable recommendations. Return ONLY the JSON object.`
+                }
+              ],
+              max_completion_tokens: 1000,
+              response_format: { type: "json_object" }
+            }),
+          });
+
+          if (!insightResponse.ok) {
+            throw new Error(`OpenAI API error: ${insightResponse.status} ${insightResponse.statusText}`);
+          }
+
+          const insightData = await insightResponse.json();
+          const responseContent = insightData.choices?.[0]?.message?.content;
+          
+          if (!responseContent || responseContent.trim() === '') {
+            throw new Error('Empty response from OpenAI');
+          }
+          
+          console.log(`Raw insights response (attempt ${attempt}):`, responseContent);
+          
+          // Robust JSON parsing
+          let parsedResponse;
+          try {
+            parsedResponse = JSON.parse(responseContent.trim());
+          } catch (parseError) {
+            // Try to extract JSON from response if it's wrapped in other text
+            const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              parsedResponse = JSON.parse(jsonMatch[0]);
+            } else {
+              throw new Error('Invalid JSON format in response');
+            }
+          }
+          
+          if (parsedResponse.insights && Array.isArray(parsedResponse.insights) && parsedResponse.insights.length > 0) {
+            console.log(`Successfully generated ${parsedResponse.insights.length} insights`);
+            return parsedResponse.insights;
+          } else {
+            throw new Error('Invalid insights format in response');
+          }
+          
+        } catch (error) {
+          console.error(`Insights generation attempt ${attempt} failed:`, error);
+          if (attempt === retries) {
+            console.log('All attempts failed, using fallback insights');
+            return fallbackInsights;
+          }
         }
-      } catch (error) {
-        console.error('Failed to parse insights:', error);
-        console.log('Using fallback insights');
-        insights = fallbackInsights;
       }
-    } else {
-      console.error('Insights API call failed:', insightResponse.status, insightResponse.statusText);
-      console.log('Using fallback insights');
-      insights = fallbackInsights;
+      return fallbackInsights;
     }
+    
+    insights = await generateInsightsWithRetry();
 
     // Generate detailed reports using GPT-5 mini
     let detailedReport = '';
