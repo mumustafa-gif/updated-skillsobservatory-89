@@ -17,7 +17,6 @@ import DataInsights from '@/components/dashboard/DataInsights';
 import PolicyAnalysis from '@/components/dashboard/PolicyAnalysis';
 import ChartCustomizer from '@/components/dashboard/ChartCustomizer';
 import AIAgentLoader from '@/components/dashboard/AIAgentLoader';
-import DetailedReports from '@/components/dashboard/DetailedReports';
 
 interface UploadedFile {
   id: string;
@@ -37,11 +36,6 @@ interface GenerationResult {
     region: string;
     country: string;
   } | null;
-  detailedReports?: {
-    skillsAnalysis?: string;
-    currentPolicies?: string;
-    policyImprovements?: string;
-  };
 }
 
 const Dashboard = () => {
@@ -555,21 +549,6 @@ const Dashboard = () => {
                 <PolicyAnalysis 
                   policyData={generationResult?.policyData}
                   visible={!!generationResult?.policyData}
-                />
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-              >
-                <DetailedReports 
-                  reportsData={generationResult?.detailedReports || null}
-                  visible={!!(generationResult?.detailedReports && (
-                    generationResult.detailedReports.skillsAnalysis ||
-                    generationResult.detailedReports.currentPolicies ||
-                    generationResult.detailedReports.policyImprovements
-                  ))}
                 />
               </motion.div>
             </div>
