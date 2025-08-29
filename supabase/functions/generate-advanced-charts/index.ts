@@ -33,11 +33,15 @@ serve(async (req) => {
       });
     }
 
-    // Verify the JWT and get user info
+    // Verify the JWT token using service role client
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const serviceSupabase = createClient(supabaseUrl, serviceRoleKey);
+    
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: userError } = await serviceSupabase.auth.getUser(token);
     
     if (userError || !user) {
+      console.error('Auth verification failed:', userError);
       return new Response(JSON.stringify({ error: 'Invalid token or user not found' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
