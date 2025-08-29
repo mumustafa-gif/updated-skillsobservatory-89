@@ -495,6 +495,219 @@ Ensure each policy item is detailed, specific, and clearly connected to the data
       }
     }
 
+    // Generate detailed reports using GPT-5 mini
+    console.log('Generating detailed reports...');
+    
+    // Skills Intelligence & Analysis Report
+    const skillsAnalysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-5-mini-2025-08-07',
+        messages: [
+          {
+            role: 'system',
+            content: `You are an expert workforce analyst. Generate comprehensive, well-structured reports with proper formatting. Use markdown formatting for structure but write in a way that can be easily parsed for HTML display.`
+          },
+          {
+            role: 'user',
+            content: `Generate a detailed Skills Intelligence & Analysis report based on this query and data:
+
+QUERY: "${prompt}"
+
+CHART DATA: ${JSON.stringify(parsedChartData?.charts?.[0] || {}, null, 2).slice(0, 1500)}
+
+${knowledgeBaseContext ? `KNOWLEDGE BASE: ${knowledgeBaseContext.slice(0, 1000)}` : ''}
+
+Create a comprehensive analysis including:
+
+**Executive Summary**
+- Key findings and strategic implications
+- Critical skills gaps identified
+- Market demand vs supply analysis
+
+**Skills Gap Analysis**
+- Quantitative assessment of skill shortages
+- Regional/sector-specific insights
+- Impact on competitiveness and growth
+
+**Market Intelligence**
+- Industry demand trends
+- Emerging skill requirements
+- Future workforce projections
+
+**Strategic Recommendations**
+- Priority intervention areas
+- Skills development strategies
+- Investment recommendations
+- Timeline for implementation
+
+**Actionable Insights**
+- Specific data-driven recommendations
+- Performance metrics to track
+- Success indicators
+
+Format with clear headings, bullet points, and detailed explanations. Be specific and data-driven.`
+          }
+        ],
+        max_completion_tokens: 2000
+      }),
+    });
+
+    let skillsAnalysisReport = null;
+    if (skillsAnalysisResponse.ok) {
+      try {
+        const skillsData = await skillsAnalysisResponse.json();
+        skillsAnalysisReport = skillsData.choices[0].message.content;
+      } catch (error) {
+        console.error('Failed to generate skills analysis:', error);
+      }
+    }
+
+    // Current Policies Report
+    const currentPoliciesResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-5-mini-2025-08-07',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a policy research expert. Generate comprehensive policy analysis reports with proper structure and formatting.`
+          },
+          {
+            role: 'user',
+            content: `Generate a detailed Current Policies & Regulations report for this context:
+
+QUERY: "${prompt}"
+
+CHART INSIGHTS: ${JSON.stringify(parsedChartData?.charts?.[0]?.title || {}, null, 2)}
+
+Create a comprehensive overview including:
+
+**Policy Landscape Overview**
+- Current regulatory framework
+- Key governing bodies and stakeholders
+- Policy implementation status
+
+**Existing Policies Analysis**
+- Active workforce development policies
+- Skills training regulations
+- Industry-specific guidelines
+- Regional/national strategies
+
+**Policy Effectiveness Assessment**
+- Performance metrics and outcomes
+- Areas of successful implementation
+- Identified gaps and limitations
+
+**Regulatory Framework**
+- Compliance requirements
+- Enforcement mechanisms
+- Quality assurance standards
+
+**Stakeholder Impact**
+- Effects on different sectors
+- Implementation challenges
+- Resource allocation analysis
+
+Be specific about policy names, implementing agencies, and measurable outcomes. Include regional context where relevant.`
+          }
+        ],
+        max_completion_tokens: 2000
+      }),
+    });
+
+    let currentPoliciesReport = null;
+    if (currentPoliciesResponse.ok) {
+      try {
+        const policiesData = await currentPoliciesResponse.json();
+        currentPoliciesReport = policiesData.choices[0].message.content;
+      } catch (error) {
+        console.error('Failed to generate current policies report:', error);
+      }
+    }
+
+    // Policy Improvements Report
+    const policyImprovementsResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-5-mini-2025-08-07',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a strategic policy advisor. Generate data-driven policy improvement recommendations with clear implementation pathways.`
+          },
+          {
+            role: 'user',
+            content: `Generate detailed AI-Suggested Policy Improvements based on this analysis:
+
+QUERY: "${prompt}"
+
+DATA INSIGHTS: ${JSON.stringify(parsedChartData?.diagnostics || {}, null, 2)}
+
+${knowledgeBaseContext ? `CONTEXT: ${knowledgeBaseContext.slice(0, 800)}` : ''}
+
+Create comprehensive improvement recommendations including:
+
+**Strategic Policy Recommendations**
+- Data-driven improvement priorities
+- Evidence-based policy interventions
+- Alignment with current trends
+
+**Implementation Framework**
+- Specific actionable steps
+- Timeline and milestones
+- Resource requirements
+- Success metrics
+
+**Innovation Opportunities**
+- Technology integration possibilities
+- Digital transformation initiatives
+- AI and automation considerations
+
+**Stakeholder Engagement Strategy**
+- Public-private partnership opportunities
+- Multi-sector collaboration frameworks
+- Community involvement mechanisms
+
+**Expected Outcomes**
+- Quantifiable benefits and impacts
+- Risk mitigation strategies
+- Long-term sustainability measures
+
+**Monitoring and Evaluation**
+- Key performance indicators
+- Regular assessment protocols
+- Continuous improvement mechanisms
+
+Provide specific, actionable recommendations with clear justification from the data analysis.`
+          }
+        ],
+        max_completion_tokens: 2000
+      }),
+    });
+
+    let policyImprovementsReport = null;
+    if (policyImprovementsResponse.ok) {
+      try {
+        const improvementsData = await policyImprovementsResponse.json();
+        policyImprovementsReport = improvementsData.choices[0].message.content;
+      } catch (error) {
+        console.error('Failed to generate policy improvements report:', error);
+      }
+    }
+
     // Save to chart history with proper user context
     if (parsedChartData.charts && parsedChartData.charts.length > 0) {
       try {
@@ -534,7 +747,12 @@ Ensure each policy item is detailed, specific, and clearly connected to the data
       charts: parsedChartData.charts || [],
       diagnostics: parsedChartData.diagnostics || {},
       insights: insights || [],
-      policyData: policyData
+      policyData: policyData,
+      detailedReports: {
+        skillsAnalysis: skillsAnalysisReport,
+        currentPolicies: currentPoliciesReport,
+        policyImprovements: policyImprovementsReport
+      }
     };
 
     return new Response(JSON.stringify(result), {
