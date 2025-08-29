@@ -39,19 +39,21 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
   const formatPolicyReport = (report: string) => {
     if (!report) return '';
     
-    // Format policy reports as bullet points with references
+    // Format policy reports as minimal bullet points with clickable references
     return report
-      // Convert policy entries to bullet points with references
-      .replace(/^(.+?)(\s*\[Ref:\s*(.+?)\])/gim, '<li class="mb-3 text-foreground leading-relaxed"><div class="flex flex-col"><span class="font-medium">• $1</span><span class="text-xs text-muted-foreground mt-1 ml-4 italic">Reference: $3</span></div></li>')
+      // Convert policy entries with references and links
+      .replace(/^(.+?)\s*\[Ref:\s*(.+?)\]\s*\(([^)]+)\)/gim, '<li class="mb-4 text-foreground leading-relaxed"><div class="flex flex-col"><span class="font-medium text-sm">• $1</span><div class="mt-2 ml-4"><a href="$3" target="_blank" rel="noopener noreferrer" class="text-xs text-accent hover:text-accent/80 underline transition-colors">📖 $2</a></div></div></li>')
+      // Convert policy entries with references but no links
+      .replace(/^(.+?)\s*\[Ref:\s*(.+?)\]/gim, '<li class="mb-4 text-foreground leading-relaxed"><div class="flex flex-col"><span class="font-medium text-sm">• $1</span><span class="text-xs text-muted-foreground mt-2 ml-4 italic">📖 Reference: $2</span></div></li>')
       // Handle basic bullet points without references
-      .replace(/^• (.*$)/gim, '<li class="mb-3 text-foreground leading-relaxed"><span class="font-medium">• $1</span></li>')
-      .replace(/^- (.*$)/gim, '<li class="mb-3 text-foreground leading-relaxed"><span class="font-medium">• $1</span></li>')
-      // Headers
-      .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold text-accent mb-3 mt-6 first:mt-0">$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold text-accent mb-4 mt-8 first:mt-0">$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold text-accent mb-5 mt-10 first:mt-0">$1</h1>')
-      // Paragraphs with better spacing
-      .replace(/\n\n/g, '</p><p class="mb-4 text-foreground leading-relaxed">')
+      .replace(/^• (.*$)/gim, '<li class="mb-3 text-foreground leading-relaxed"><span class="font-medium text-sm">• $1</span></li>')
+      .replace(/^- (.*$)/gim, '<li class="mb-3 text-foreground leading-relaxed"><span class="font-medium text-sm">• $1</span></li>')
+      // Headers with minimal styling
+      .replace(/^### (.*$)/gim, '<h3 class="text-base font-bold text-accent mb-3 mt-6 first:mt-0">$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2 class="text-lg font-bold text-accent mb-4 mt-8 first:mt-0">$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1 class="text-xl font-bold text-accent mb-5 mt-10 first:mt-0">$1</h1>')
+      // Minimal paragraph spacing
+      .replace(/\n\n/g, '</p><p class="mb-3 text-foreground leading-relaxed text-sm">')
       .replace(/\n/g, '<br/>');
   };
 

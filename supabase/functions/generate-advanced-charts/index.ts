@@ -135,7 +135,15 @@ serve(async (req) => {
       }
     }
 
-    console.log('Starting chart generation for:', prompt);
+    // Create dynamic system prompt ensuring different chart types and colors
+    const chartTypes = ['bar', 'line', 'pie', 'scatter', 'radar'];
+    const colorSchemes = [
+      ['#3b82f6', '#06b6d4', '#8b5cf6', '#10b981'],
+      ['#ef4444', '#f59e0b', '#84cc16', '#ec4899'],  
+      ['#6366f1', '#14b8a6', '#f97316', '#a855f7'],
+      ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'],
+      ['#8b5cf6', '#06b6d4', '#84cc16', '#f97316']
+    ];
 
     // Generate charts with completely dynamic prompt based on user request
     const chartResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -153,9 +161,12 @@ serve(async (req) => {
 
 CRITICAL REQUIREMENTS:
 1. Return ONLY valid JSON - no markdown, no explanations, no text outside JSON
-2. Generate realistic, relevant data for the user's request
+2. Generate ${numberOfCharts} charts with DIFFERENT chart types and DIFFERENT color schemes
 3. Use proper ECharts structure with all required properties
 4. Include meaningful titles, proper axis labels, and appropriate chart types
+
+${numberOfCharts > 1 ? `CHART TYPE DISTRIBUTION (must use different types):
+${Array.from({length: numberOfCharts}, (_, i) => `- Chart ${i+1}: ${chartTypes[i % chartTypes.length]} with colors ${JSON.stringify(colorSchemes[i % colorSchemes.length])}`).join('\n')}` : ''}
 
 MANDATORY JSON STRUCTURE:
 {
@@ -166,7 +177,8 @@ MANDATORY JSON STRUCTURE:
       "legend": {"data": ["Series1", "Series2"]},
       "xAxis": {"type": "category", "data": ["Item1", "Item2"]},
       "yAxis": {"type": "value"},
-      "series": [{"name": "Series1", "type": "bar", "data": [10, 20]}]
+      "series": [{"name": "Series1", "type": "bar", "data": [10, 20]}],
+      "color": ${JSON.stringify(colorSchemes[0])}
     }
   ],
   "diagnostics": {
@@ -187,6 +199,7 @@ ${knowledgeBaseContext ? `Additional Context: ${knowledgeBaseContext.slice(0, 80
 
 Requirements:
 - Generate ${numberOfCharts} complete ECharts configurations
+- ${numberOfCharts > 1 ? 'Use DIFFERENT chart types and color schemes for each chart' : 'Use appropriate chart type and colors'}
 - Use realistic sample data relevant to "${prompt}"
 - Include proper titles, legends, and tooltips
 - Ensure all series have appropriate data arrays
@@ -243,17 +256,31 @@ Context: Chart generation for data visualization dashboard`
       
       // Validate and enhance chart structure
       if (parsedChartData.charts && Array.isArray(parsedChartData.charts)) {
+        const chartTypes = ['bar', 'line', 'pie', 'scatter', 'radar'];
+        const colorSchemes = [
+          ['#3b82f6', '#06b6d4', '#8b5cf6', '#10b981'],
+          ['#ef4444', '#f59e0b', '#84cc16', '#ec4899'],  
+          ['#6366f1', '#14b8a6', '#f97316', '#a855f7'],
+          ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'],
+          ['#8b5cf6', '#06b6d4', '#84cc16', '#f97316']
+        ];
+
         parsedChartData.charts = parsedChartData.charts.map((chart: any, index: number) => {
+          // Ensure different chart types for multiple charts
+          const chartType = numberOfCharts > 1 ? chartTypes[index % chartTypes.length] : (chart.series?.[0]?.type || 'bar');
+          const colors = colorSchemes[index % colorSchemes.length];
+
           // Ensure proper ECharts structure
           const enhancedChart = {
             ...chart,
+            color: colors, // Apply different color scheme for each chart
             title: {
               text: chart.title?.text || `Analysis Chart ${index + 1}`,
               subtext: chart.title?.subtext || 'Data visualization',
               ...chart.title
             },
             tooltip: {
-              trigger: chart.series?.[0]?.type === 'pie' ? 'item' : 'axis',
+              trigger: chartType === 'pie' ? 'item' : 'axis',
               ...chart.tooltip
             },
             legend: {
@@ -262,20 +289,24 @@ Context: Chart generation for data visualization dashboard`
             }
           };
 
-          // Ensure series is properly formatted
+          // Ensure series is properly formatted with correct chart type
           if (chart.series && Array.isArray(chart.series)) {
-            enhancedChart.series = chart.series.map((serie: any) => ({
+            enhancedChart.series = chart.series.map((serie: any, serieIndex: number) => ({
               ...serie,
               name: serie.name || 'Data',
-              type: serie.type || 'bar',
-              data: Array.isArray(serie.data) ? serie.data : []
+              type: numberOfCharts > 1 ? chartType : (serie.type || 'bar'), // Force different types for multiple charts
+              data: Array.isArray(serie.data) ? serie.data : [],
+              itemStyle: {
+                color: colors[serieIndex % colors.length], // Apply specific colors
+                ...serie.itemStyle
+              }
             }));
           }
 
           return enhancedChart;
         });
         
-        console.log('Successfully parsed and enhanced', parsedChartData.charts.length, 'charts');
+        console.log('Successfully parsed and enhanced', parsedChartData.charts.length, 'charts with different types and colors');
       }
       
     } catch (parseError) {

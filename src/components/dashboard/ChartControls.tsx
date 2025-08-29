@@ -68,59 +68,89 @@ const ChartControls: React.FC<ChartControlsProps> = ({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Settings2 className="h-5 w-5" />
-          Chart Configuration
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Number of Charts */}
-        <div className="space-y-2">
-          <Label htmlFor="number-of-charts">Number of Charts</Label>
-          <Select
-            value={numberOfCharts.toString()}
-            onValueChange={(value) => onNumberOfChartsChange(parseInt(value))}
-          >
-            <SelectTrigger id="number-of-charts">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[1, 2, 3, 4, 5].map((num) => (
-                <SelectItem key={num} value={num.toString()}>
-                  {num} Chart{num > 1 ? 's' : ''}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <div className="space-y-6">
+      {/* Number of Charts */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 mb-2">
+          <Settings2 className="h-4 w-4 text-primary" />
+          <Label className="text-sm font-medium text-primary">Number of Charts</Label>
         </div>
+        <Select
+          value={numberOfCharts.toString()}
+          onValueChange={(value) => onNumberOfChartsChange(parseInt(value))}
+        >
+          <SelectTrigger className="h-10 bg-background/50 border-primary/20 hover:border-primary/40 transition-colors">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[1, 2, 3, 4, 5].map((num) => (
+              <SelectItem key={num} value={num.toString()}>
+                {num} Chart{num > 1 ? 's' : ''}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-        {/* Chart Type Selectors */}
-        {numberOfCharts > 0 && (
-          <div className="space-y-4">
-            <Label className="text-base">Chart Types</Label>
-            {renderChartTypeSelectors()}
+      {/* Chart Type Selectors */}
+      {numberOfCharts > 0 && (
+        <div className="space-y-4">
+          <Label className="text-sm font-medium text-secondary flex items-center gap-2">
+            <span className="w-2 h-2 bg-secondary rounded-full"></span>
+            Chart Types
+          </Label>
+          <div className="grid gap-3">
+            {Array.from({ length: numberOfCharts }, (_, index) => (
+              <div key={index} className="group">
+                <Label htmlFor={`chart-type-${index}`} className="text-xs text-muted-foreground mb-2 block">
+                  Chart {index + 1}
+                </Label>
+                <Select
+                  value={chartTypes[index] || 'auto'}
+                  onValueChange={(value) => handleChartTypeChange(index, value)}
+                >
+                  <SelectTrigger 
+                    id={`chart-type-${index}`}
+                    className="h-9 bg-background/50 border-muted text-sm hover:border-primary/40 transition-colors group-hover:border-primary/30"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {chartTypeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value} className="text-sm">
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Knowledge Base Toggle */}
-        {knowledgeBaseFilesCount > 0 && (
-          <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+      {/* Knowledge Base Toggle */}
+      {knowledgeBaseFilesCount > 0 && (
+        <div className="p-4 bg-gradient-to-r from-accent/5 to-primary/5 rounded-xl border border-accent/20 hover:border-accent/30 transition-colors">
+          <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label className="text-sm font-medium">Use Knowledge Base</Label>
+              <Label className="text-sm font-medium text-accent flex items-center gap-2">
+                <span className="w-2 h-2 bg-accent rounded-full"></span>
+                Use Knowledge Base
+              </Label>
               <p className="text-xs text-muted-foreground">
-                Analyze {knowledgeBaseFilesCount} uploaded file{knowledgeBaseFilesCount > 1 ? 's' : ''}
+                Analyze {knowledgeBaseFilesCount} uploaded file{knowledgeBaseFilesCount > 1 ? 's' : ''} for enhanced insights
               </p>
             </div>
             <Switch
               checked={useKnowledgeBase}
               onCheckedChange={onUseKnowledgeBaseChange}
+              className="data-[state=checked]:bg-accent"
             />
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </div>
   );
 };
 
