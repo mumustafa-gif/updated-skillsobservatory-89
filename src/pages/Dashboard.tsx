@@ -577,10 +577,7 @@ const Dashboard = () => {
                   transition={{ duration: 0.5, delay: 0.4 }}
                 >
                   <DetailedReports
-                    detailedReport={generationResult.detailedReport}
-                    skillsIntelligence={generationResult.skillsIntelligence || ''}
-                    currentPolicies={generationResult.currentPoliciesReport || ''}
-                    suggestedImprovements={generationResult.suggestedImprovementsReport || ''}
+                    generationResult={generationResult}
                   />
                 </motion.div>
               )}
