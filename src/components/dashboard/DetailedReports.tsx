@@ -19,50 +19,46 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
   const formatReport = (report: string) => {
     if (!report) return '';
     
-    // Enhanced bullet point formatting for detailed reports
+    // Simple paragraph formatting for concise content - no bullet points
     return report
       // Headers with minimal styling
-      .replace(/^### (.*$)/gim, '<h3 class="text-base font-bold text-primary mb-2 mt-4 first:mt-0">$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2 class="text-lg font-bold text-primary mb-3 mt-6 first:mt-0">$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1 class="text-xl font-bold text-primary mb-4 mt-8 first:mt-0">$1</h1>')
-      // Convert paragraphs to bullet points for concise presentation
+      .replace(/^### (.*$)/gim, '<h3 class="text-base font-bold text-primary mb-3 mt-4 first:mt-0">$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2 class="text-lg font-bold text-primary mb-4 mt-6 first:mt-0">$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1 class="text-xl font-bold text-primary mb-5 mt-8 first:mt-0">$1</h1>')
+      // Keep content as clean paragraphs - remove excessive formatting
       .split('\n\n')
       .map(paragraph => {
-        if (paragraph.trim() && !paragraph.startsWith('#') && !paragraph.startsWith('•') && !paragraph.startsWith('-')) {
-          // Convert sentences to bullet points
-          const sentences = paragraph.split(/[.!?]+/).filter(s => s.trim().length > 10);
-          return sentences.map(sentence => `• ${sentence.trim()}`).join('\n');
+        if (paragraph.trim() && !paragraph.startsWith('#')) {
+          // Clean up the paragraph and keep it simple
+          return `<p class="mb-3 text-sm text-foreground leading-relaxed">${paragraph.trim()}</p>`;
         }
         return paragraph;
       })
-      .join('\n\n')
-      // Enhanced bullet point styling
-      .replace(/^• (.*$)/gim, '<li class="mb-3 text-sm text-foreground leading-relaxed flex items-start"><div class="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></div><span>$1</span></li>')
-      .replace(/^- (.*$)/gim, '<li class="mb-3 text-sm text-foreground leading-relaxed flex items-start"><div class="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0"></div><span>$1</span></li>')
+      .join('')
       // Bold text with solid colors
       .replace(/\*\*(.*?)\*\*/g, '<strong class="text-primary font-semibold">$1</strong>')
-      // Line breaks
+      // Simple line breaks
       .replace(/\n/g, '<br/>');
   };
 
   const formatPolicyReport = (report: string) => {
     if (!report) return '';
     
-    // Format policy reports as clean bullet points with clickable references
+    // Enhanced format policy reports with better reference link handling
     return report
-      // Convert policy entries with references and links
-      .replace(/^(.+?)\s*\[Ref:\s*(.+?)\]\s*\(([^)]+)\)/gim, '<li class="mb-4 text-sm text-foreground leading-relaxed border-l-2 border-accent/30 pl-4"><div class="flex flex-col space-y-2"><div class="flex items-start"><div class="w-2 h-2 bg-accent rounded-full mt-1.5 mr-3 flex-shrink-0"></div><span class="font-medium">$1</span></div><div class="ml-5"><a href="$3" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-xs text-accent hover:text-accent/80 underline transition-colors bg-accent/10 px-2 py-1 rounded-md"><span class="mr-1">📖</span>$2</a></div></div></li>')
+      // Convert policy entries with references and links - improved pattern matching
+      .replace(/(.+?)\s*\[Ref:\s*([^\]]+)\]\s*\(([^)]+)\)/gim, '<div class="mb-4 p-3 border-l-4 border-accent bg-accent/5 rounded-r-lg"><div class="flex items-start"><span class="w-2 h-2 bg-accent rounded-full mt-2 mr-3 flex-shrink-0"></span><div class="flex-1"><p class="text-sm text-foreground font-medium mb-2">$1</p><a href="$3" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-xs text-accent hover:text-accent/80 underline transition-colors bg-accent/10 px-2 py-1 rounded-md hover:bg-accent/20"><span class="mr-1">🔗</span>$2</a></div></div></div>')
       // Convert policy entries with references but no links
-      .replace(/^(.+?)\s*\[Ref:\s*(.+?)\]/gim, '<li class="mb-4 text-sm text-foreground leading-relaxed border-l-2 border-accent/30 pl-4"><div class="flex flex-col space-y-2"><div class="flex items-start"><div class="w-2 h-2 bg-accent rounded-full mt-1.5 mr-3 flex-shrink-0"></div><span class="font-medium">$1</span></div><div class="ml-5"><span class="text-xs text-muted-foreground italic bg-muted/50 px-2 py-1 rounded-md">📖 Reference: $2</span></div></div></li>')
-      // Handle basic bullet points without references
-      .replace(/^• (.*$)/gim, '<li class="mb-3 text-sm text-foreground leading-relaxed flex items-start"><div class="w-2 h-2 bg-accent rounded-full mt-1.5 mr-3 flex-shrink-0"></div><span class="font-medium">$1</span></li>')
-      .replace(/^- (.*$)/gim, '<li class="mb-3 text-sm text-foreground leading-relaxed flex items-start"><div class="w-2 h-2 bg-accent rounded-full mt-1.5 mr-3 flex-shrink-0"></div><span class="font-medium">$1</span></li>')
+      .replace(/(.+?)\s*\[Ref:\s*([^\]]+)\]/gim, '<div class="mb-4 p-3 border-l-4 border-accent bg-accent/5 rounded-r-lg"><div class="flex items-start"><span class="w-2 h-2 bg-accent rounded-full mt-2 mr-3 flex-shrink-0"></span><div class="flex-1"><p class="text-sm text-foreground font-medium mb-2">$1</p><span class="text-xs text-muted-foreground italic bg-muted/50 px-2 py-1 rounded-md">📖 Reference: $2</span></div></div></div>')
+      // Handle basic bullet points
+      .replace(/^• (.+)$/gim, '<div class="mb-3 flex items-start"><span class="w-2 h-2 bg-accent rounded-full mt-2 mr-3 flex-shrink-0"></span><p class="text-sm text-foreground">$1</p></div>')
+      .replace(/^- (.+)$/gim, '<div class="mb-3 flex items-start"><span class="w-2 h-2 bg-accent rounded-full mt-2 mr-3 flex-shrink-0"></span><p class="text-sm text-foreground">$1</p></div>')
       // Headers with solid colors
       .replace(/^### (.*$)/gim, '<h3 class="text-base font-bold text-accent mb-3 mt-6 first:mt-0">$1</h3>')
       .replace(/^## (.*$)/gim, '<h2 class="text-lg font-bold text-accent mb-4 mt-8 first:mt-0">$1</h2>')
       .replace(/^# (.*$)/gim, '<h1 class="text-xl font-bold text-accent mb-5 mt-10 first:mt-0">$1</h1>')
       // Clean line breaks
-      .replace(/\n\n/g, '<br/><br/>')
+      .replace(/\n\n/g, '<br/>')
       .replace(/\n/g, '<br/>');
   };
 
@@ -97,14 +93,12 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
         transition={{ duration: 0.4 }}
         className="space-y-4"
       >
-        <ul className="space-y-2">
-          <div 
-            className="text-foreground"
-            dangerouslySetInnerHTML={{ 
-              __html: formatReport(content) 
-            }}
-          />
-        </ul>
+        <div 
+          className="text-foreground space-y-3"
+          dangerouslySetInnerHTML={{ 
+            __html: formatReport(content) 
+          }}
+        />
       </motion.div>
     );
   };
@@ -145,7 +139,7 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
                 <FileText className="h-6 w-6 text-primary" />
               </div>
               <span className="text-xl font-bold text-primary">
-                Skills Intelligence & Analysis
+                Technical Report
               </span>
             </div>
             <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 sm:ml-auto">
@@ -251,13 +245,12 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
                       transition={{ duration: 0.4 }}
                       className="space-y-4"
                     >
-                      <ul className="space-y-2">
-                        <div 
-                          dangerouslySetInnerHTML={{ 
-                            __html: formatPolicyReport(generationResult.currentPoliciesReport) 
-                          }}
-                        />
-                      </ul>
+                      <div 
+                        className="space-y-3"
+                        dangerouslySetInnerHTML={{ 
+                          __html: formatPolicyReport(generationResult.currentPoliciesReport) 
+                        }}
+                      />
                     </motion.div>
                   ) : (
                     <ReportContent 
@@ -295,26 +288,22 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
                       transition={{ duration: 0.4 }}
                       className="space-y-4"
                     >
-                      <ul className="space-y-2">
-                        <div 
-                          dangerouslySetInnerHTML={{ 
-                            __html: generationResult.suggestedImprovementsReport
-                              .split('\n\n')
-                              .map(paragraph => {
-                                if (paragraph.trim() && !paragraph.startsWith('#') && !paragraph.startsWith('•') && !paragraph.startsWith('-')) {
-                                  const sentences = paragraph.split(/[.!?]+/).filter(s => s.trim().length > 10);
-                                  return sentences.map(sentence => `• ${sentence.trim()}`).join('\n');
-                                }
-                                return paragraph;
-                              })
-                              .join('\n\n')
-                              .replace(/^• (.*$)/gim, '<li class="mb-3 text-sm text-foreground leading-relaxed flex items-start border-l-2 border-emerald-500/30 pl-4"><div class="w-2 h-2 bg-emerald-600 rounded-full mt-1.5 mr-3 flex-shrink-0"></div><span>$1</span></li>')
-                              .replace(/^- (.*$)/gim, '<li class="mb-3 text-sm text-foreground leading-relaxed flex items-start border-l-2 border-emerald-500/30 pl-4"><div class="w-2 h-2 bg-emerald-600 rounded-full mt-1.5 mr-3 flex-shrink-0"></div><span>$1</span></li>')
-                              .replace(/\*\*(.*?)\*\*/g, '<strong class="text-emerald-600 font-semibold">$1</strong>')
-                              .replace(/\n/g, '<br/>')
-                          }}
-                        />
-                      </ul>
+                      <div 
+                        className="space-y-3"
+                        dangerouslySetInnerHTML={{ 
+                          __html: generationResult.suggestedImprovementsReport
+                            .split('\n\n')
+                            .map(paragraph => {
+                              if (paragraph.trim() && !paragraph.startsWith('#')) {
+                                return `<div class="mb-4 p-3 border-l-4 border-emerald-600 bg-emerald-50 rounded-r-lg"><div class="flex items-start"><span class="w-2 h-2 bg-emerald-600 rounded-full mt-2 mr-3 flex-shrink-0"></span><p class="text-sm text-foreground">${paragraph.trim()}</p></div></div>`;
+                              }
+                              return paragraph;
+                            })
+                            .join('')
+                            .replace(/\*\*(.*?)\*\*/g, '<strong class="text-emerald-600 font-semibold">$1</strong>')
+                            .replace(/\n/g, '<br/>')
+                        }}
+                      />
                     </motion.div>
                   ) : (
                     <ReportContent 

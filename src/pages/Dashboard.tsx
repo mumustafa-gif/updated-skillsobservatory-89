@@ -571,10 +571,10 @@ const Dashboard = () => {
               )}
             </motion.div>
 
-            {/* Main Content - Left: Charts, Right: Analysis */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              {/* Left Side - Charts */}
-              <div className="xl:col-span-2 space-y-6">
+            {/* Main Content - Left: Charts, Right: Analysis - Equal Width */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Side - Charts - Equal Width */}
+              <div className="space-y-6">
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -620,8 +620,8 @@ const Dashboard = () => {
                 </motion.div>
               </div>
 
-              {/* Right Side - Skills Intelligence & Analysis */}
-              <div className="xl:col-span-1">
+              {/* Right Side - Technical Report - Equal Width */}
+              <div className="">
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}

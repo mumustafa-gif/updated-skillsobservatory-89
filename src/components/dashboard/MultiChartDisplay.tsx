@@ -39,10 +39,8 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
   }
 
   const getGridCols = (count: number) => {
-    if (count === 1) return 'grid-cols-1';
-    if (count === 2) return 'grid-cols-1 xl:grid-cols-2';
-    if (count === 3) return 'grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3';
-    return 'grid-cols-1 lg:grid-cols-2';
+    // Always use single column layout
+    return 'grid-cols-1';
   };
 
   const getChartHeight = (screenSize: string) => {
