@@ -136,7 +136,7 @@ serve(async (req) => {
     }
 
     // Create dynamic system prompt ensuring different chart types and colors
-    const chartTypes = ['bar', 'line', 'pie', 'scatter', 'radar'];
+    const availableChartTypes = ['bar', 'line', 'pie', 'scatter', 'radar'];
     const colorSchemes = [
       ['#3b82f6', '#06b6d4', '#8b5cf6', '#10b981'],
       ['#ef4444', '#f59e0b', '#84cc16', '#ec4899'],  
@@ -166,7 +166,7 @@ CRITICAL REQUIREMENTS:
 4. Include meaningful titles, proper axis labels, and appropriate chart types
 
 ${numberOfCharts > 1 ? `CHART TYPE DISTRIBUTION (must use different types):
-${Array.from({length: numberOfCharts}, (_, i) => `- Chart ${i+1}: ${chartTypes[i % chartTypes.length]} with colors ${JSON.stringify(colorSchemes[i % colorSchemes.length])}`).join('\n')}` : ''}
+${Array.from({length: numberOfCharts}, (_, i) => `- Chart ${i+1}: ${availableChartTypes[i % availableChartTypes.length]} with colors ${JSON.stringify(colorSchemes[i % colorSchemes.length])}`).join('\n')}` : ''}
 
 MANDATORY JSON STRUCTURE:
 {
@@ -256,7 +256,7 @@ Context: Chart generation for data visualization dashboard`
       
       // Validate and enhance chart structure
       if (parsedChartData.charts && Array.isArray(parsedChartData.charts)) {
-        const chartTypes = ['bar', 'line', 'pie', 'scatter', 'radar'];
+        const availableChartTypes = ['bar', 'line', 'pie', 'scatter', 'radar'];
         const colorSchemes = [
           ['#3b82f6', '#06b6d4', '#8b5cf6', '#10b981'],
           ['#ef4444', '#f59e0b', '#84cc16', '#ec4899'],  
@@ -267,7 +267,7 @@ Context: Chart generation for data visualization dashboard`
 
         parsedChartData.charts = parsedChartData.charts.map((chart: any, index: number) => {
           // Ensure different chart types for multiple charts
-          const chartType = numberOfCharts > 1 ? chartTypes[index % chartTypes.length] : (chart.series?.[0]?.type || 'bar');
+          const chartType = numberOfCharts > 1 ? availableChartTypes[index % availableChartTypes.length] : (chart.series?.[0]?.type || 'bar');
           const colors = colorSchemes[index % colorSchemes.length];
 
           // Ensure proper ECharts structure
