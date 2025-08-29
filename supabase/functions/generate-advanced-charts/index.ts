@@ -23,13 +23,30 @@ serve(async (req) => {
     
     let requestData;
     try {
-      requestData = await req.json();
+      const rawBody = await req.text();
+      console.log('Raw request body:', rawBody);
+      console.log('Request body length:', rawBody.length);
+      
+      if (!rawBody || rawBody.trim() === '') {
+        console.error('Empty request body received');
+        return new Response(JSON.stringify({ 
+          error: 'Empty request body',
+          details: 'Request body cannot be empty. Please provide a valid JSON payload.' 
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      requestData = JSON.parse(rawBody);
       console.log('Parsed request data successfully:', requestData);
     } catch (parseError) {
       console.error('JSON parsing error:', parseError);
+      console.error('Error details:', parseError.message);
       return new Response(JSON.stringify({ 
         error: 'Invalid JSON in request body',
-        details: parseError.message 
+        details: parseError.message,
+        received: 'Unable to parse request body as JSON' 
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

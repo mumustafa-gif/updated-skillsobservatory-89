@@ -127,16 +127,26 @@ const Dashboard = () => {
         numberOfCharts,
         chartTypes,
         useKnowledgeBase,
-        knowledgeBaseFiles: useKnowledgeBase ? uploadedFiles.map(f => f.id) : []
+        knowledgeBaseFiles: useKnowledgeBase ? uploadedFiles.map(f => f.id) : [],
+        generateDetailedReports: true
       };
 
       console.log('Request body:', requestBody);
+      console.log('Request body stringified:', JSON.stringify(requestBody));
+
+      // Validate request body before sending
+      if (!prompt || prompt.trim() === '') {
+        toast({
+          title: "Error",
+          description: "Please enter a prompt for chart generation",
+          variant: "destructive",
+        });
+        setGenerating(false);
+        return;
+      }
 
       const response = await supabase.functions.invoke('generate-advanced-charts', {
-        body: requestBody,
-        headers: {
-          'Content-Type': 'application/json',
-        }
+        body: requestBody
       });
 
       console.log('Response received:', response);
