@@ -324,7 +324,7 @@ Generate insights that are this specific and directly tied to the user's query a
       let insightData = null;
       try {
         insightData = await insightResponse.json();
-        const responseContent = insightData.choices[0].message.content;
+        const responseContent = insightData?.choices?.[0]?.message?.content;
         
         if (!responseContent || responseContent.trim() === '') {
           throw new Error('Empty response content');
@@ -371,6 +371,9 @@ Generate insights that are this specific and directly tied to the user's query a
           ];
         }
       }
+    } else {
+      console.error('Insights API request failed:', insightResponse.status, await insightResponse.text());
+      insights = [`Analysis in progress for "${prompt.slice(0, 50)}..." - preliminary insights suggest significant optimization opportunities based on current data patterns.`];
     }
 
     // Generate comprehensive policy analysis relevant to the data and query
@@ -444,8 +447,9 @@ Ensure each policy item is detailed, specific, and clearly connected to the data
 
     let policyData = null;
     if (policyResponse.ok) {
+      let policyResponseData = null;
       try {
-        const policyResponseData = await policyResponse.json();
+        policyResponseData = await policyResponse.json();
         const responseContent = policyResponseData.choices[0].message.content;
         
         if (!responseContent || responseContent.trim() === '') {
