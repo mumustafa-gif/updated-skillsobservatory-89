@@ -27,22 +27,35 @@ serve(async (req) => {
     // Get the user's JWT from the Authorization header
     const authHeader = req.headers.get('authorization');
     if (!authHeader) {
+      console.error('No authorization header provided');
       return new Response(JSON.stringify({ error: 'No authorization header' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Verify the JWT token using service role client
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const serviceSupabase = createClient(supabaseUrl, serviceRoleKey);
-    
+    // Create supabase client with the user's JWT for authentication
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await serviceSupabase.auth.getUser(token);
+    console.log('Token received, length:', token.length);
+    
+    const userSupabase = createClient(supabaseUrl, supabaseKey, {
+      global: {
+        headers: {
+          Authorization: authHeader,
+        },
+      },
+    });
+
+    // Verify the user exists and get user info
+    const { data: { user }, error: userError } = await userSupabase.auth.getUser(token);
     
     if (userError || !user) {
-      console.error('Auth verification failed:', userError);
-      return new Response(JSON.stringify({ error: 'Invalid token or user not found' }), {
+      console.error('Auth verification failed:', userError?.message || 'No user found');
+      console.error('User data:', user);
+      return new Response(JSON.stringify({ 
+        error: 'Invalid token or user not found',
+        details: userError?.message || 'No user found'
+      }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
