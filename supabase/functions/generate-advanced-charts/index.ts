@@ -206,14 +206,6 @@ serve(async (req) => {
       generateDetailedReports ? generateInsights(prompt, numberOfCharts) : Promise.resolve([])
     ]);
 
-    let charts: any[] = [];
-    let diagnostics: any = {
-      chartTypes: chartTypes,
-      dimensions: ["Category", "Value", "Time"],
-      notes: "",
-      sources: []
-    };
-
     // Handle charts result
     if (chartsResult.status === 'fulfilled' && chartsResult.value.success) {
       charts = chartsResult.value.charts;
