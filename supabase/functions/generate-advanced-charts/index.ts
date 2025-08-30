@@ -12,7 +12,7 @@ const corsHeaders = {
 };
 
 // Helper function to make requests with timeout - optimized for speed
-const requestWithTimeout = async (url: string, options: any, timeoutMs: number = 25000): Promise<Response | null> => {
+const requestWithTimeout = async (url: string, options: any, timeoutMs: number = 15000): Promise<Response | null> => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   
@@ -22,10 +22,21 @@ const requestWithTimeout = async (url: string, options: any, timeoutMs: number =
       signal: controller.signal
     });
     clearTimeout(timeoutId);
-    return response.ok ? response : null;
+    
+    if (!response.ok) {
+      console.error(`OpenAI API Error ${response.status}: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
+      return null;
+    }
+    
+    return response;
   } catch (error) {
     clearTimeout(timeoutId);
     console.error('Request failed or timed out:', error);
+    if (error.name === 'AbortError') {
+      console.error('Request timed out after', timeoutMs, 'ms');
+    }
     return null;
   }
 };
@@ -133,7 +144,7 @@ Include quantitative insights and specific recommendations.`
             ],
             max_completion_tokens: 800
           }),
-        }, 20000),
+        }, 15000),
         
         // Current Policies & Regulations (independent of chart data)
         requestWithTimeout('https://api.openai.com/v1/chat/completions', {
@@ -163,10 +174,9 @@ Generate a Current Policies & Regulations report covering:
 Focus on UAE-specific policies and regulations where relevant.`
               }
             ],
-            max_tokens: 800,
-            temperature: 0.2
+            max_tokens: 800
           }),
-        }, 20000),
+        }, 15000),
         
         // AI-Suggested Policy Improvements (independent of chart data)
         requestWithTimeout('https://api.openai.com/v1/chat/completions', {
@@ -197,10 +207,9 @@ Generate AI-Suggested Policy Improvements covering:
 Provide specific, actionable recommendations with clear implementation paths.`
               }
             ],
-            max_tokens: 800,
-            temperature: 0.2
+            max_tokens: 800
           }),
-        }, 20000)
+        }, 15000)
       ]);
     }
 
@@ -304,9 +313,10 @@ Context: Chart generation for data visualization dashboard`
           type: "json_object"
         }
       }),
-    }, 20000);
+    }, 15000);
 
     if (!chartResponse) {
+      console.error('Chart generation failed: No response from OpenAI');
       throw new Error('Chart generation timed out or failed');
     }
 
@@ -533,10 +543,9 @@ Context: Chart generation for data visualization dashboard`
                 }
               ],
               max_tokens: 800,
-              temperature: 0.2,
               response_format: { type: "json_object" }
             }),
-          }, 30000);
+          }, 15000);
 
           if (!insightResponse) {
             throw new Error('Request failed or timed out');
@@ -635,10 +644,9 @@ Generate a comprehensive detailed report with:
 Use proper formatting with headings, bullet points, and structured content.`
               }
             ],
-            max_tokens: 1500,
-            temperature: 0.2
+            max_tokens: 1500
           }),
-        }, 35000)
+        }, 15000)
       ];
 
       try {
