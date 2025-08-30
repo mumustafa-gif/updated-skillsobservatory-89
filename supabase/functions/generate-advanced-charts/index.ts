@@ -397,6 +397,25 @@ Context: Chart generation for data visualization dashboard`
       console.log(`Created ${fallbackCharts.length} fallback charts`);
     }
 
+    // Helper function to make requests with timeout
+    const requestWithTimeout = async (url: string, options: any, timeoutMs: number = 45000): Promise<Response | null> => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      
+      try {
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        return response.ok ? response : null;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        console.error('Request failed or timed out:', error);
+        return null;
+      }
+    };
+
     // Generate insights with retry logic
     let insights = [];
     const fallbackInsights = [
@@ -414,7 +433,7 @@ Context: Chart generation for data visualization dashboard`
         try {
           console.log(`Attempting insights generation (attempt ${attempt}/${retries})`);
           
-          const insightResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          const insightResponse = await requestWithTimeout('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${openAIApiKey}`,
@@ -452,8 +471,8 @@ Context: Chart generation for data visualization dashboard`
             }),
           });
 
-          if (!insightResponse.ok) {
-            throw new Error(`OpenAI API error: ${insightResponse.status} ${insightResponse.statusText}`);
+          if (!insightResponse) {
+            throw new Error('Request failed or timed out');
           }
 
           const insightData = await insightResponse.json();
@@ -496,19 +515,23 @@ Context: Chart generation for data visualization dashboard`
       }
       return fallbackInsights;
     }
-    
-    insights = await generateInsightsWithRetry();
 
-    // Generate detailed reports using GPT-5 mini
+    // Generate all reports in parallel for improved performance
     let detailedReport = '';
     let skillsIntelligence = '';
     let currentPoliciesReport = '';
     let suggestedImprovementsReport = '';
 
     if (generateDetailedReports) {
-      try {
-        // Generate comprehensive detailed report
-        const detailedReportResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      console.log('Starting parallel report generation...');
+      
+      // Create all promises for parallel execution
+      const reportPromises = [
+        // Insights with retry
+        generateInsightsWithRetry(),
+        
+        // Detailed Report
+        requestWithTimeout('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${openAIApiKey}`,
@@ -547,16 +570,10 @@ Use proper formatting with headings, bullet points, and structured content.`
             max_tokens: 2000,
             temperature: 0.2
           }),
-        });
-
-        if (detailedReportResponse.ok) {
-          const reportData = await detailedReportResponse.json();
-          detailedReport = reportData.choices[0].message.content;
-          console.log('Generated detailed report');
-        }
-
-        // Generate Skills Intelligence & Analysis
-        const skillsResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        }),
+        
+        // Skills Intelligence & Analysis
+        requestWithTimeout('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${openAIApiKey}`,
@@ -586,16 +603,10 @@ Include quantitative insights and specific recommendations.`
             max_tokens: 1500,
             temperature: 0.2
           }),
-        });
-
-        if (skillsResponse.ok) {
-          const skillsData = await skillsResponse.json();
-          skillsIntelligence = skillsData.choices[0].message.content;
-          console.log('Generated skills intelligence report');
-        }
-
-        // Generate Current Policies & Regulations
-        const policiesResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        }),
+        
+        // Current Policies & Regulations
+        requestWithTimeout('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${openAIApiKey}`,
@@ -625,16 +636,10 @@ Focus on UAE-specific policies and regulations where relevant.`
             max_tokens: 1500,
             temperature: 0.2
           }),
-        });
-
-        if (policiesResponse.ok) {
-          const policiesData = await policiesResponse.json();
-          currentPoliciesReport = policiesData.choices[0].message.content;
-          console.log('Generated current policies report');
-        }
-
-        // Generate AI-Suggested Policy Improvements
-        const improvementsResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        }),
+        
+        // AI-Suggested Policy Improvements
+        requestWithTimeout('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${openAIApiKey}`,
@@ -665,22 +670,78 @@ Provide specific, actionable recommendations with clear implementation paths.`
             max_tokens: 1500,
             temperature: 0.2
           }),
-        });
+        })
+      ];
 
-        if (improvementsResponse.ok) {
-          const improvementsData = await improvementsResponse.json();
+      try {
+        // Execute all promises in parallel
+        const results = await Promise.allSettled(reportPromises);
+        
+        // Process results
+        const [insightsResult, detailedResult, skillsResult, policiesResult, improvementsResult] = results;
+        
+        // Handle insights
+        if (insightsResult.status === 'fulfilled') {
+          insights = insightsResult.value || fallbackInsights;
+        } else {
+          console.error('Insights generation failed:', insightsResult.reason);
+          insights = fallbackInsights;
+        }
+        
+        // Handle detailed report
+        if (detailedResult.status === 'fulfilled' && detailedResult.value) {
+          const reportData = await detailedResult.value.json();
+          detailedReport = reportData.choices[0].message.content;
+          console.log('Generated detailed report');
+        } else {
+          console.error('Detailed report generation failed');
+          detailedReport = `**Executive Summary**\n\nBased on the analysis of "${prompt}", this comprehensive report provides data-driven insights and strategic recommendations.\n\n**Key Findings**\n\n• Analysis reveals significant opportunities for optimization\n• Data patterns indicate strategic areas for improvement\n• Performance metrics suggest targeted intervention strategies\n\n**Strategic Recommendations**\n\n• Implement data-driven decision making processes\n• Focus on high-impact areas identified in the analysis\n• Establish monitoring frameworks for continuous improvement`;
+        }
+        
+        // Handle skills intelligence
+        if (skillsResult.status === 'fulfilled' && skillsResult.value) {
+          const skillsData = await skillsResult.value.json();
+          skillsIntelligence = skillsData.choices[0].message.content;
+          console.log('Generated skills intelligence report');
+        } else {
+          console.error('Skills intelligence generation failed');
+          skillsIntelligence = `**Skills Demand Analysis**\n\nThe current market analysis indicates strong demand for emerging skills in technology and digital transformation.\n\n**Key Skills Insights**\n\n• High demand for AI and machine learning capabilities\n• Growing need for data analysis and interpretation skills\n• Increased focus on digital literacy across sectors\n\n**Training Recommendations**\n\n• Develop comprehensive upskilling programs\n• Partner with educational institutions for curriculum development\n• Implement mentorship and knowledge transfer initiatives`;
+        }
+        
+        // Handle current policies
+        if (policiesResult.status === 'fulfilled' && policiesResult.value) {
+          const policiesData = await policiesResult.value.json();
+          currentPoliciesReport = policiesData.choices[0].message.content;
+          console.log('Generated current policies report');
+        } else {
+          console.error('Current policies generation failed');
+          currentPoliciesReport = `**Current Policy Framework**\n\nExisting workforce policies provide a foundation for strategic development while highlighting areas for enhancement.\n\n**Policy Assessment**\n\n• Current regulations support basic workforce development\n• Compliance frameworks are established but require modernization\n• Gaps exist in emerging technology skill requirements\n\n**Regulatory Analysis**\n\n• Labor laws provide worker protection mechanisms\n• Skills certification processes need digitization\n• Cross-sector coordination could be improved`;
+        }
+        
+        // Handle policy improvements
+        if (improvementsResult.status === 'fulfilled' && improvementsResult.value) {
+          const improvementsData = await improvementsResult.value.json();
           suggestedImprovementsReport = improvementsData.choices[0].message.content;
           console.log('Generated policy improvements report');
+        } else {
+          console.error('Policy improvements generation failed');
+          suggestedImprovementsReport = `**Recommended Policy Enhancements**\n\nBased on current analysis, strategic policy improvements can drive significant workforce development outcomes.\n\n**Priority Recommendations**\n\n• Establish AI and digital skills certification frameworks\n• Create industry-education partnership incentives\n• Implement flexible work arrangement policies\n\n**Implementation Strategy**\n\n• Phase 1: Stakeholder engagement and consultation\n• Phase 2: Pilot program development and testing\n• Phase 3: Full-scale implementation and monitoring\n\n**Expected Benefits**\n\n• Enhanced workforce competitiveness\n• Improved skill-job matching efficiency\n• Increased economic productivity and innovation`;
         }
-
+        
+        console.log('Parallel report generation completed');
+        
       } catch (error) {
-        console.error('Error generating detailed reports:', error);
-        // Set fallback content
+        console.error('Error in parallel report generation:', error);
+        // Set all fallback content
+        insights = fallbackInsights;
         detailedReport = `**Executive Summary**\n\nBased on the analysis of "${prompt}", this comprehensive report provides data-driven insights and strategic recommendations.\n\n**Key Findings**\n\n• Analysis reveals significant opportunities for optimization\n• Data patterns indicate strategic areas for improvement\n• Performance metrics suggest targeted intervention strategies\n\n**Strategic Recommendations**\n\n• Implement data-driven decision making processes\n• Focus on high-impact areas identified in the analysis\n• Establish monitoring frameworks for continuous improvement`;
         skillsIntelligence = `**Skills Demand Analysis**\n\nThe current market analysis indicates strong demand for emerging skills in technology and digital transformation.\n\n**Key Skills Insights**\n\n• High demand for AI and machine learning capabilities\n• Growing need for data analysis and interpretation skills\n• Increased focus on digital literacy across sectors\n\n**Training Recommendations**\n\n• Develop comprehensive upskilling programs\n• Partner with educational institutions for curriculum development\n• Implement mentorship and knowledge transfer initiatives`;
         currentPoliciesReport = `**Current Policy Framework**\n\nExisting workforce policies provide a foundation for strategic development while highlighting areas for enhancement.\n\n**Policy Assessment**\n\n• Current regulations support basic workforce development\n• Compliance frameworks are established but require modernization\n• Gaps exist in emerging technology skill requirements\n\n**Regulatory Analysis**\n\n• Labor laws provide worker protection mechanisms\n• Skills certification processes need digitization\n• Cross-sector coordination could be improved`;
         suggestedImprovementsReport = `**Recommended Policy Enhancements**\n\nBased on current analysis, strategic policy improvements can drive significant workforce development outcomes.\n\n**Priority Recommendations**\n\n• Establish AI and digital skills certification frameworks\n• Create industry-education partnership incentives\n• Implement flexible work arrangement policies\n\n**Implementation Strategy**\n\n• Phase 1: Stakeholder engagement and consultation\n• Phase 2: Pilot program development and testing\n• Phase 3: Full-scale implementation and monitoring\n\n**Expected Benefits**\n\n• Enhanced workforce competitiveness\n• Improved skill-job matching efficiency\n• Increased economic productivity and innovation`;
       }
+    } else {
+      // If detailed reports are disabled, still generate insights
+      insights = await generateInsightsWithRetry();
     }
 
     const result = {
