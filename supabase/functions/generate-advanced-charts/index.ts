@@ -11,8 +11,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Helper function to make requests with timeout
-const requestWithTimeout = async (url: string, options: any, timeoutMs: number = 45000): Promise<Response | null> => {
+// Helper function to make requests with timeout - optimized for speed
+const requestWithTimeout = async (url: string, options: any, timeoutMs: number = 25000): Promise<Response | null> => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   
@@ -38,34 +38,10 @@ serve(async (req) => {
 
   try {
     const startTime = performance.now();
-    console.log('🚀 Request started:', req.method);
     
-    let requestData;
-    try {
-      const rawBody = await req.text();
-      console.log('📥 Request body length:', rawBody.length);
-      
-      if (!rawBody || rawBody.trim() === '') {
-        console.error('Empty request body received');
-        return new Response(JSON.stringify({ 
-          error: 'Empty request body',
-          details: 'Request body cannot be empty. Please provide a valid JSON payload.' 
-        }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      
-      requestData = JSON.parse(rawBody);
-      console.log('✅ Request parsed successfully');
-    } catch (parseError) {
-      console.error('JSON parsing error:', parseError);
-      console.error('Error details:', parseError.message);
-      return new Response(JSON.stringify({ 
-        error: 'Invalid JSON in request body',
-        details: parseError.message,
-        received: 'Unable to parse request body as JSON' 
-      }), {
+    const requestData = await req.json();
+    if (!requestData) {
+      return new Response(JSON.stringify({ error: 'Empty request body' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -101,13 +77,8 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    console.log('🔐 Auth token received');
-    
-    // Create supabase client with service role key for authentication
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-    
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    console.log('👤 User authenticated:', user?.email);
     
     if (authError) {
       console.error('Auth verification failed:', authError.message);
@@ -128,14 +99,9 @@ serve(async (req) => {
       });
     }
     
-    // Start independent reports early (don't need chart data)
-    const authTime = performance.now();
-    console.log(`⚡ Auth completed in ${(authTime - startTime).toFixed(0)}ms`);
-    
     // Start independent OpenAI calls immediately (parallel with chart generation)
     let earlyReportsPromise = null;
     if (generateDetailedReports) {
-      console.log('🚀 Starting early report generation...');
       earlyReportsPromise = Promise.allSettled([
         // Skills Intelligence & Analysis (independent of chart data)
         requestWithTimeout('https://api.openai.com/v1/chat/completions', {
@@ -145,7 +111,7 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-4o-mini',
+            model: 'gpt-5-mini-2025-08-07',
             messages: [
               { 
                 role: 'system', 
@@ -165,10 +131,9 @@ Generate a Skills Intelligence & Analysis report covering:
 Include quantitative insights and specific recommendations.`
               }
             ],
-            max_tokens: 1200,
-            temperature: 0.2
+            max_completion_tokens: 800
           }),
-        }, 40000),
+        }, 20000),
         
         // Current Policies & Regulations (independent of chart data)
         requestWithTimeout('https://api.openai.com/v1/chat/completions', {
@@ -198,10 +163,10 @@ Generate a Current Policies & Regulations report covering:
 Focus on UAE-specific policies and regulations where relevant.`
               }
             ],
-            max_tokens: 1200,
+            max_tokens: 800,
             temperature: 0.2
           }),
-        }, 40000),
+        }, 20000),
         
         // AI-Suggested Policy Improvements (independent of chart data)
         requestWithTimeout('https://api.openai.com/v1/chat/completions', {
@@ -232,10 +197,10 @@ Generate AI-Suggested Policy Improvements covering:
 Provide specific, actionable recommendations with clear implementation paths.`
               }
             ],
-            max_tokens: 1200,
+            max_tokens: 800,
             temperature: 0.2
           }),
-        }, 40000)
+        }, 20000)
       ]);
     }
 
@@ -255,7 +220,6 @@ Provide specific, actionable recommendations with clear implementation paths.`
           knowledgeBaseContext = files.map(file => 
             `File: ${file.original_filename}\nContent: ${file.extracted_content}`
           ).join('\n\n');
-          console.log('📚 Loaded knowledge base context from', files.length, 'files');
         }
       } catch (error) {
         console.error('Failed to load knowledge base files:', error);
@@ -272,10 +236,7 @@ Provide specific, actionable recommendations with clear implementation paths.`
       ['#8b5cf6', '#06b6d4', '#84cc16', '#f97316']
     ];
 
-    // Generate charts with completely dynamic prompt based on user request
-    console.log('📊 Starting chart generation...');
-    const chartStartTime = performance.now();
-    
+    // Generate charts with optimized model for speed
     const chartResponse = await requestWithTimeout('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -283,7 +244,7 @@ Provide specific, actionable recommendations with clear implementation paths.`
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5-mini-2025-08-07',
         messages: [
           { 
             role: 'system', 
@@ -338,13 +299,12 @@ Requirements:
 Context: Chart generation for data visualization dashboard` 
           }
         ],
-        max_tokens: 4000,
-        temperature: 0.3,
+        max_completion_tokens: 2000,
         response_format: { 
           type: "json_object"
         }
       }),
-    }, 35000);
+    }, 20000);
 
     if (!chartResponse) {
       throw new Error('Chart generation timed out or failed');
@@ -355,7 +315,6 @@ Context: Chart generation for data visualization dashboard`
     
     try {
       const responseContent = chartData.choices[0].message.content.trim();
-      console.log('📊 Chart response received, length:', responseContent.length);
       
       // Enhanced JSON parsing with multiple strategies
       let jsonContent = responseContent;
@@ -364,7 +323,6 @@ Context: Chart generation for data visualization dashboard`
       try {
         parsedChartData = JSON.parse(jsonContent);
       } catch (directParseError) {
-        console.log('Direct parsing failed, trying extraction methods');
         
         // Strategy 2: Extract JSON from markdown code blocks
         const markdownMatch = jsonContent.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
@@ -434,9 +392,6 @@ Context: Chart generation for data visualization dashboard`
 
           return enhancedChart;
         });
-        
-        const chartEndTime = performance.now();
-        console.log(`✅ Generated ${parsedChartData.charts.length} charts in ${(chartEndTime - chartStartTime).toFixed(0)}ms`);
       }
       
     } catch (parseError) {
