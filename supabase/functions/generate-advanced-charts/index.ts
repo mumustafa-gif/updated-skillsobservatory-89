@@ -391,7 +391,6 @@ Context: Chart generation for data visualization dashboard`
       
       // Validate and enhance chart structure
       if (parsedChartData.charts && Array.isArray(parsedChartData.charts)) {
-        const availableChartTypes = ['bar', 'line', 'pie', 'scatter', 'radar'];
         const colorSchemes = [
           ['#3b82f6', '#06b6d4', '#8b5cf6', '#10b981'],
           ['#ef4444', '#f59e0b', '#84cc16', '#ec4899'],  
@@ -401,9 +400,12 @@ Context: Chart generation for data visualization dashboard`
         ];
 
         parsedChartData.charts = parsedChartData.charts.map((chart: any, index: number) => {
-          // Ensure different chart types for multiple charts
-          const chartType = numberOfCharts > 1 ? availableChartTypes[index % availableChartTypes.length] : (chart.series?.[0]?.type || 'bar');
+          // Use user-selected chart type or fallback to parsed type
+          const userSelectedType = finalChartTypes[index] || finalChartTypes[0] || 'bar';
+          const chartType = userSelectedType !== 'auto' ? userSelectedType : (chart.series?.[0]?.type || 'bar');
           const colors = colorSchemes[index % colorSchemes.length];
+          
+          console.log(`Chart ${index + 1}: User selected "${userSelectedType}", using "${chartType}"`);
 
           // Ensure proper ECharts structure
           const enhancedChart = {
@@ -426,16 +428,24 @@ Context: Chart generation for data visualization dashboard`
 
           // Ensure series is properly formatted with correct chart type
           if (chart.series && Array.isArray(chart.series)) {
-            enhancedChart.series = chart.series.map((serie: any, serieIndex: number) => ({
-              ...serie,
-              name: serie.name || 'Data',
-              type: numberOfCharts > 1 ? chartType : (serie.type || 'bar'), // Force different types for multiple charts
-              data: Array.isArray(serie.data) ? serie.data : [],
-              itemStyle: {
-                color: colors[serieIndex % colors.length], // Apply specific colors
-                ...serie.itemStyle
-              }
-            }));
+            enhancedChart.series = chart.series.map((serie: any, serieIndex: number) => {
+              const finalSeriesType = chartType; // Always use the determined chart type
+              return {
+                ...serie,
+                name: serie.name || 'Data',
+                type: finalSeriesType,
+                data: Array.isArray(serie.data) ? serie.data : [],
+                // Add pie chart specific properties
+                ...(finalSeriesType === 'pie' ? {
+                  radius: '60%',
+                  center: ['50%', '50%']
+                } : {}),
+                itemStyle: {
+                  color: colors[serieIndex % colors.length],
+                  ...serie.itemStyle
+                }
+              };
+            });
           }
 
           return enhancedChart;
@@ -507,12 +517,67 @@ Context: Chart generation for data visualization dashboard`
       };
       
       for (let i = 0; i < numberOfCharts; i++) {
-        const chartData = getFallbackData(i);
+        const baseChartData = getFallbackData(i);
+        const userSelectedType = finalChartTypes[i] || finalChartTypes[0] || 'bar';
+        const fallbackType = userSelectedType !== 'auto' ? userSelectedType : baseChartData.series?.[0]?.type || 'bar';
+        
+        console.log(`Fallback Chart ${i + 1}: User selected "${userSelectedType}", using "${fallbackType}"`);
+        
+        // Adapt the fallback data to match user-selected chart type
+        let adaptedChartData = { ...baseChartData };
+        
+        if (fallbackType === 'pie' && baseChartData.series?.[0]?.type !== 'pie') {
+          // Convert non-pie data to pie format
+          const xAxisData = baseChartData.xAxis?.data || [];
+          const seriesData = baseChartData.series?.[0]?.data || [];
+          
+          adaptedChartData = {
+            title: baseChartData.title,
+            series: [{
+              name: baseChartData.series?.[0]?.name || 'Data',
+              type: 'pie',
+              radius: '60%',
+              center: ['50%', '50%'],
+              data: xAxisData.map((name: string, idx: number) => ({
+                value: seriesData[idx] || 0,
+                name: name
+              }))
+            }],
+            legend: {
+              data: xAxisData
+            }
+          };
+        } else if (fallbackType !== 'pie' && baseChartData.series?.[0]?.type === 'pie') {
+          // Convert pie data to other chart types
+          const pieData = baseChartData.series?.[0]?.data || [];
+          const xAxisData = pieData.map((item: any) => item.name || item);
+          const seriesData = pieData.map((item: any) => item.value || item);
+          
+          adaptedChartData = {
+            title: baseChartData.title,
+            xAxis: { type: 'category', data: xAxisData },
+            yAxis: { type: 'value', name: 'Value' },
+            series: [{
+              name: baseChartData.series?.[0]?.name || 'Data',
+              type: fallbackType,
+              data: seriesData
+            }],
+            legend: { data: [baseChartData.series?.[0]?.name || 'Data'] }
+          };
+        } else {
+          // Just update the chart type if needed
+          adaptedChartData.series = adaptedChartData.series?.map((serie: any) => ({
+            ...serie,
+            type: fallbackType,
+            ...(fallbackType === 'pie' ? { radius: '60%', center: ['50%', '50%'] } : {})
+          }));
+        }
+        
         fallbackCharts.push({
-          ...chartData,
+          ...adaptedChartData,
           tooltip: {
-            trigger: chartData.series?.[0]?.type === 'pie' ? 'item' : 'axis',
-            ...chartData.tooltip
+            trigger: fallbackType === 'pie' ? 'item' : 'axis',
+            ...adaptedChartData.tooltip
           }
         });
       }
