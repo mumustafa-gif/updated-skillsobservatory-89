@@ -87,22 +87,110 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
   const formatPolicyReport = (report: string) => {
     if (!report) return '';
     
-    // Enhanced format policy reports with better reference link handling
-    return report
-      // Convert policy entries with references and links - improved pattern matching
-      .replace(/(.+?)\s*\[Ref:\s*([^\]]+)\]\s*\(([^)]+)\)/gim, '<div class="mb-4 p-3 border-l-4 border-accent bg-accent/5 rounded-r-lg"><div class="flex items-start"><span class="w-2 h-2 bg-accent rounded-full mt-2 mr-3 flex-shrink-0"></span><div class="flex-1"><p class="text-sm text-foreground font-medium mb-2">$1</p><a href="$3" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-xs text-accent hover:text-accent/80 underline transition-colors bg-accent/10 px-2 py-1 rounded-md hover:bg-accent/20"><span class="mr-1">🔗</span>$2</a></div></div></div>')
-      // Convert policy entries with references but no links
-      .replace(/(.+?)\s*\[Ref:\s*([^\]]+)\]/gim, '<div class="mb-4 p-3 border-l-4 border-accent bg-accent/5 rounded-r-lg"><div class="flex items-start"><span class="w-2 h-2 bg-accent rounded-full mt-2 mr-3 flex-shrink-0"></span><div class="flex-1"><p class="text-sm text-foreground font-medium mb-2">$1</p><span class="text-xs text-muted-foreground italic bg-muted/50 px-2 py-1 rounded-md">📖 Reference: $2</span></div></div></div>')
-      // Handle basic bullet points
-      .replace(/^• (.+)$/gim, '<div class="mb-3 flex items-start"><span class="w-2 h-2 bg-accent rounded-full mt-2 mr-3 flex-shrink-0"></span><p class="text-sm text-foreground">$1</p></div>')
-      .replace(/^- (.+)$/gim, '<div class="mb-3 flex items-start"><span class="w-2 h-2 bg-accent rounded-full mt-2 mr-3 flex-shrink-0"></span><p class="text-sm text-foreground">$1</p></div>')
-      // Headers with solid colors
-      .replace(/^### (.*$)/gim, '<h3 class="text-base font-bold text-accent mb-3 mt-6 first:mt-0">$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2 class="text-lg font-bold text-accent mb-4 mt-8 first:mt-0">$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1 class="text-xl font-bold text-accent mb-5 mt-10 first:mt-0">$1</h1>')
-      // Clean line breaks
-      .replace(/\n\n/g, '<br/>')
-      .replace(/\n/g, '<br/>');
+    // Enhanced policy report formatting with comprehensive structure
+    let formattedReport = report
+      // Main headers (H1) - Large blue headers for major policy sections
+      .replace(/^# (.*$)/gim, '<div class="mb-8 mt-10 first:mt-0"><h1 class="text-2xl font-bold text-blue-600 mb-4 pb-3 border-b-2 border-blue-200 bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-t-lg">$1</h1></div>')
+      
+      // Section headers (H2) - Medium blue headers with background
+      .replace(/^## (.*$)/gim, '<div class="mb-6 mt-8 first:mt-0"><h2 class="text-xl font-bold text-blue-600 mb-3 p-4 bg-gradient-to-r from-blue-100/80 to-blue-50/80 rounded-lg border-l-4 border-blue-500 shadow-sm">$1</h2></div>')
+      
+      // Subsection headers (H3) - Smaller blue headers
+      .replace(/^### (.*$)/gim, '<div class="mb-5 mt-6 first:mt-0"><h3 class="text-lg font-bold text-blue-600 mb-3 pl-4 border-l-3 border-blue-400 bg-blue-50/50 py-2 rounded-r-md">$1</h3></div>')
+      
+      // Sub-subsection headers (H4) - Minor blue headers
+      .replace(/^#### (.*$)/gim, '<h4 class="text-base font-semibold text-blue-600 mb-2 mt-4 pl-2 border-l-2 border-blue-300">$1</h4>')
+      
+      // Policy entries with reference links - Enhanced with better styling
+      .replace(/(.+?)\s*\[Ref:\s*([^\]]+)\]\s*\(([^)]+)\)/gim, 
+        '<div class="mb-5 p-4 border-l-4 border-blue-400 bg-gradient-to-r from-blue-50/80 to-white rounded-r-lg shadow-sm hover:shadow-md transition-shadow">' +
+        '<div class="flex items-start gap-3">' +
+        '<span class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>' +
+        '<div class="flex-1">' +
+        '<p class="text-sm text-gray-800 font-medium mb-3 leading-relaxed">$1</p>' +
+        '<a href="$3" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-xs text-blue-600 hover:text-blue-800 font-medium underline decoration-2 underline-offset-2 transition-colors bg-blue-100/60 hover:bg-blue-200/60 px-3 py-2 rounded-md border border-blue-200/60">' +
+        '<span class="text-sm">🔗</span>' +
+        '<span>$2</span>' +
+        '<span class="text-xs opacity-75">↗</span>' +
+        '</a>' +
+        '</div></div></div>')
+      
+      // Policy entries with references but no links
+      .replace(/(.+?)\s*\[Ref:\s*([^\]]+)\]/gim, 
+        '<div class="mb-5 p-4 border-l-4 border-blue-400 bg-gradient-to-r from-blue-50/60 to-white rounded-r-lg">' +
+        '<div class="flex items-start gap-3">' +
+        '<span class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>' +
+        '<div class="flex-1">' +
+        '<p class="text-sm text-gray-800 font-medium mb-3 leading-relaxed">$1</p>' +
+        '<span class="inline-flex items-center gap-2 text-xs text-blue-700 bg-blue-100/80 px-3 py-2 rounded-md border border-blue-200/60 font-medium">' +
+        '<span>📖</span>' +
+        '<span>Reference: $2</span>' +
+        '</span>' +
+        '</div></div></div>')
+      
+      // Numbered lists with enhanced styling and blue accents
+      .replace(/^(\d+)\.\s+(.+)$/gim, 
+        '<div class="mb-4 flex items-start gap-3">' +
+        '<span class="inline-flex items-center justify-center w-7 h-7 text-xs font-bold text-white bg-blue-600 rounded-full mr-2 flex-shrink-0">$1</span>' +
+        '<div class="flex-1 bg-blue-50/30 p-3 rounded-lg border-l-2 border-blue-300">' +
+        '<p class="text-sm text-gray-800 leading-relaxed font-medium">$2</p>' +
+        '</div></div>')
+      
+      // Primary bullet points with enhanced blue styling
+      .replace(/^[•\-\*]\s+(.+)$/gim, 
+        '<div class="mb-4 flex items-start gap-3">' +
+        '<span class="w-3 h-3 bg-blue-600 rounded-full mt-1.5 flex-shrink-0"></span>' +
+        '<div class="flex-1 bg-blue-50/40 p-3 rounded-lg border-l-2 border-blue-400">' +
+        '<p class="text-sm text-gray-800 leading-relaxed font-medium">$1</p>' +
+        '</div></div>')
+      
+      // Sub-bullet points (indented) with lighter blue styling
+      .replace(/^\s{2,}[•\-\*]\s+(.+)$/gim, 
+        '<div class="mb-3 ml-6 flex items-start gap-2">' +
+        '<span class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>' +
+        '<div class="flex-1 bg-blue-50/20 p-2 rounded border-l border-blue-300">' +
+        '<p class="text-xs text-gray-700 leading-relaxed">$1</p>' +
+        '</div></div>')
+      
+      // Bold text with blue color emphasis
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-blue-700 font-bold bg-blue-100/40 px-1 rounded">$1</strong>')
+      
+      // Italic text with blue tint
+      .replace(/\*(.*?)\*/g, '<em class="text-blue-600 italic font-medium">$1</em>')
+      
+      // Code or technical terms with blue accent
+      .replace(/`([^`]+)`/g, '<code class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded font-mono font-semibold border border-blue-200">$1</code>')
+      
+      // UAE Vision references with special highlighting
+      .replace(/(UAE Vision 2071|Vision 2071|National Strategy|Emirates Strategy)/gi, 
+        '<span class="inline-flex items-center gap-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-2 py-1 rounded-md text-xs font-bold">' +
+        '<span>🇦🇪</span>' +
+        '<span>$1</span>' +
+        '</span>')
+      
+      // Ministry and government body references
+      .replace(/(Ministry of [^,.\n]+|MOHRE|MOEI|MOE|Federal Authority[^,.\n]+)/gi, 
+        '<span class="bg-blue-200/60 text-blue-800 px-2 py-1 rounded text-xs font-semibold border border-blue-300">$1</span>');
+
+    // Process paragraphs with enhanced spacing
+    const paragraphs = formattedReport.split('\n\n').map(paragraph => {
+      paragraph = paragraph.trim();
+      if (!paragraph) return '';
+      
+      // Skip already formatted elements
+      if (paragraph.startsWith('<div') || paragraph.startsWith('<h') || paragraph.startsWith('<span')) {
+        return paragraph;
+      }
+      
+      // Regular paragraphs with blue-tinted background
+      if (paragraph && !paragraph.match(/^<[^>]+>/)) {
+        return `<div class="mb-4 p-3 bg-blue-50/20 rounded-lg border-l-2 border-blue-200"><p class="text-sm text-gray-800 leading-relaxed">${paragraph}</p></div>`;
+      }
+      
+      return paragraph;
+    }).filter(p => p.trim()).join('\n');
+
+    return paragraphs.replace(/\n/g, '');
   };
 
   const ReportContent = ({ content, defaultMessage, icon: Icon, colorClass = "text-primary" }: { 
