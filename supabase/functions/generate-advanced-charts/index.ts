@@ -264,8 +264,10 @@ Provide specific, actionable recommendations with clear implementation paths.`
     // Start chart generation timing
     const chartStartTime = performance.now();
     
-    // Create dynamic system prompt ensuring different chart types and colors
-    const availableChartTypes = ['bar', 'line', 'pie', 'scatter', 'radar'];
+    // Use user-selected chart types or fallback to available types
+    const selectedChartTypes = chartTypes.filter(type => type !== 'auto');
+    const finalChartTypes = selectedChartTypes.length > 0 ? selectedChartTypes : ['bar', 'line', 'pie', 'scatter', 'radar'];
+    
     const colorSchemes = [
       ['#3b82f6', '#06b6d4', '#8b5cf6', '#10b981'],
       ['#ef4444', '#f59e0b', '#84cc16', '#ec4899'],  
@@ -273,6 +275,12 @@ Provide specific, actionable recommendations with clear implementation paths.`
       ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'],
       ['#8b5cf6', '#06b6d4', '#84cc16', '#f97316']
     ];
+
+    // Build chart type instructions for system prompt
+    const chartTypeInstructions = Array.from({length: numberOfCharts}, (_, i) => {
+      const chartType = finalChartTypes[i] || finalChartTypes[i % finalChartTypes.length];
+      return `- Chart ${i+1}: MUST be type "${chartType}" with colors ${JSON.stringify(colorSchemes[i % colorSchemes.length])}`;
+    }).join('\n');
 
     // Generate charts with optimized model for speed
     const chartResponse = await requestWithTimeout('https://api.openai.com/v1/chat/completions', {
@@ -290,12 +298,13 @@ Provide specific, actionable recommendations with clear implementation paths.`
 
 CRITICAL REQUIREMENTS:
 1. Return ONLY valid JSON - no markdown, no explanations, no text outside JSON
-2. Generate ${numberOfCharts} charts with DIFFERENT chart types and DIFFERENT color schemes
+2. Generate ${numberOfCharts} charts with SPECIFIC chart types as instructed
 3. Use proper ECharts structure with all required properties
 4. Include meaningful titles, proper axis labels, and appropriate chart types
+5. STRICTLY follow the chart type requirements below
 
-${numberOfCharts > 1 ? `CHART TYPE DISTRIBUTION (must use different types):
-${Array.from({length: numberOfCharts}, (_, i) => `- Chart ${i+1}: ${availableChartTypes[i % availableChartTypes.length]} with colors ${JSON.stringify(colorSchemes[i % colorSchemes.length])}`).join('\n')}` : ''}
+REQUIRED CHART TYPES:
+${chartTypeInstructions}
 
 MANDATORY JSON STRUCTURE:
 {
