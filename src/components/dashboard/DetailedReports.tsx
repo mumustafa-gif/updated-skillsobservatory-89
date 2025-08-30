@@ -10,6 +10,9 @@ interface DetailedReportsProps {
   generationResult: {
     detailedReport?: {
       report: string;
+      overview?: string;
+      currentPolicies?: string;
+      aiSuggestions?: string;
     };
   } | null;
 }
@@ -143,6 +146,47 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
     );
   };
 
+  const PolicyReportContent = ({ content, defaultMessage, icon: Icon, colorClass = "text-accent" }: { 
+    content?: string; 
+    defaultMessage: string;
+    icon?: React.ComponentType<{ className?: string }>;
+    colorClass?: string;
+  }) => {
+    if (!content) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="text-center py-12 rounded-xl bg-gradient-to-br from-muted/30 to-muted/10 border border-muted-foreground/10"
+        >
+          {Icon && (
+            <div className={`mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-${colorClass.split('-')[1]}/10 to-${colorClass.split('-')[1]}/20 flex items-center justify-center`}>
+              <Icon className={`h-8 w-8 ${colorClass}`} />
+            </div>
+          )}
+          <p className="text-muted-foreground text-base">{defaultMessage}</p>
+        </motion.div>
+      );
+    }
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="space-y-4"
+      >
+        <div 
+          className="text-foreground space-y-3"
+          dangerouslySetInnerHTML={{ 
+            __html: formatPolicyReport(content) 
+          }}
+        />
+      </motion.div>
+    );
+  };
+
   const hasAnyReport = generationResult?.detailedReport;
 
   if (!hasAnyReport) {
@@ -188,13 +232,27 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
         </CardHeader>
         <CardContent className="p-6">
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-1 mb-8 bg-muted/50 p-1 h-12">
+            <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50 p-1 h-12">
               <TabsTrigger 
                 value="overview" 
                 className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/10 data-[state=active]:to-secondary/10 data-[state=active]:text-primary font-medium"
               >
                 <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">Technical Analysis Report</span>
+                <span className="hidden sm:inline">Overview</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="policies" 
+                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/10 data-[state=active]:to-accent/5 data-[state=active]:text-accent font-medium"
+              >
+                <Shield className="h-4 w-4" />
+                <span className="hidden sm:inline">Current Policies</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="suggestions" 
+                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-secondary/10 data-[state=active]:to-secondary/5 data-[state=active]:text-secondary font-medium"
+              >
+                <Lightbulb className="h-4 w-4" />
+                <span className="hidden sm:inline">AI Suggestions</span>
               </TabsTrigger>
             </TabsList>
 
@@ -216,10 +274,64 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
                 <Separator className="mb-6" />
                 <CardContent className="pt-0">
                   <ReportContent 
-                    content={generationResult?.detailedReport?.report}
+                    content={generationResult?.detailedReport?.overview || generationResult?.detailedReport?.report}
                     defaultMessage="Comprehensive workforce skills analysis will appear here after chart generation."
                     icon={FileText}
                     colorClass="text-primary"
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="policies" className="mt-6">
+              <Card className="bg-gradient-to-br from-accent/5 to-accent/10 border-accent/20">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-xl flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-accent/10">
+                      <Shield className="h-5 w-5 text-accent" />
+                    </div>
+                    <div>
+                      <span className="text-accent font-bold">Current Policy Landscape</span>
+                      <p className="text-sm text-muted-foreground font-normal mt-1">
+                        Existing policies and regulatory framework analysis
+                      </p>
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <Separator className="mb-6" />
+                <CardContent className="pt-0">
+                  <PolicyReportContent 
+                    content={generationResult?.detailedReport?.currentPolicies}
+                    defaultMessage="Current policy analysis will appear here when available from knowledge base or AI generation."
+                    icon={Shield}
+                    colorClass="text-accent"
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="suggestions" className="mt-6">
+              <Card className="bg-gradient-to-br from-secondary/5 to-secondary/10 border-secondary/20">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-xl flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-secondary/10">
+                      <Lightbulb className="h-5 w-5 text-secondary" />
+                    </div>
+                    <div>
+                      <span className="text-secondary font-bold">AI-Powered Recommendations</span>
+                      <p className="text-sm text-muted-foreground font-normal mt-1">
+                        Strategic suggestions for workforce development and policy improvements
+                      </p>
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <Separator className="mb-6" />
+                <CardContent className="pt-0">
+                  <ReportContent 
+                    content={generationResult?.detailedReport?.aiSuggestions}
+                    defaultMessage="AI-generated policy suggestions and strategic recommendations will appear here."
+                    icon={Lightbulb}
+                    colorClass="text-secondary"
                   />
                 </CardContent>
               </Card>
