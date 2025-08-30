@@ -525,7 +525,7 @@ async function generateDetailedReport(charts: any[], insights: string[]) {
   }
 
   try {
-    if suggestionsResult.status === 'fulfilled' && suggestionsResult.value.ok) {
+    if (suggestionsResult.status === 'fulfilled' && suggestionsResult.value.ok) {
       const data = await suggestionsResult.value.json();
       aiSuggestions = data.choices[0].message.content;
     }
