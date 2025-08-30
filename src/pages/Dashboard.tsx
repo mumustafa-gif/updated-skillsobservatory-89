@@ -31,16 +31,9 @@ interface GenerationResult {
   charts: any[];
   diagnostics: any;
   insights: string[];
-  policyData: {
-    currentPolicies: string[];
-    suggestedImprovements: string[];
-    region: string;
-    country: string;
-  } | null;
-  detailedReport?: string;
-  skillsIntelligence?: string;
-  currentPoliciesReport?: string;
-  suggestedImprovementsReport?: string;
+  detailedReport?: {
+    report: string;
+  };
 }
 
 const Dashboard = () => {
@@ -155,13 +148,28 @@ const Dashboard = () => {
       if (response.error) {
         console.error('Function error:', response.error);
         
-        // Check if it's a network/timeout error and provide better error handling
-        if (response.error.message?.includes('Failed to fetch') || 
-            response.error.message?.includes('NetworkError') ||
-            response.error.message?.includes('Failed to send a request')) {
+        // Provide specific error handling for different error types
+        if (response.error.message?.includes('Unauthorized')) {
+          toast({
+            title: "Authentication Error",
+            description: "Please sign in again to continue",
+            variant: "destructive",
+          });
+          navigate('/auth');
+          return;
+        } else if (response.error.message?.includes('Failed to fetch') || 
+                   response.error.message?.includes('NetworkError') ||
+                   response.error.message?.includes('Failed to send a request')) {
           toast({
             title: "Network Error",
-            description: "Please check your connection and try again. The chart generation service may be temporarily unavailable.",
+            description: "Connection issue. The service may be temporarily unavailable - please try again in a moment.",
+            variant: "destructive",
+          });
+          return;
+        } else if (response.error.message?.includes('OpenAI')) {
+          toast({
+            title: "AI Service Error", 
+            description: "Chart generation service is temporarily unavailable. Please try again later.",
             variant: "destructive",
           });
           return;
@@ -600,22 +608,11 @@ const Dashboard = () => {
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
                 >
                   <DataInsights 
                     insights={generationResult?.insights || []}
                     visible={!!(generationResult?.insights && generationResult.insights.length > 0)}
-                  />
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                >
-                  <PolicyAnalysis 
-                    policyData={generationResult?.policyData}
-                    visible={!!generationResult?.policyData}
                   />
                 </motion.div>
               </div>

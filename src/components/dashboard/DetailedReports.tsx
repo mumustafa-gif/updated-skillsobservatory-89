@@ -8,11 +8,10 @@ import { FileText, Brain, Shield, Lightbulb, TrendingUp, BarChart3, Users, Targe
 
 interface DetailedReportsProps {
   generationResult: {
-    detailedReport?: string;
-    skillsIntelligence?: string;
-    currentPoliciesReport?: string;
-    suggestedImprovementsReport?: string;
-  };
+    detailedReport?: {
+      report: string;
+    };
+  } | null;
 }
 
 const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) => {
@@ -134,9 +133,7 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
     );
   };
 
-  const hasAnyReport = generationResult.detailedReport || 
-                      generationResult.currentPoliciesReport || 
-                      generationResult.suggestedImprovementsReport;
+  const hasAnyReport = generationResult?.detailedReport;
 
   if (!hasAnyReport) {
     return (
@@ -181,27 +178,13 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
         </CardHeader>
         <CardContent className="p-6">
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50 p-1 h-12">
+            <TabsList className="grid w-full grid-cols-1 mb-8 bg-muted/50 p-1 h-12">
               <TabsTrigger 
                 value="overview" 
                 className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/10 data-[state=active]:to-secondary/10 data-[state=active]:text-primary font-medium"
               >
                 <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">Overview</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="policies" 
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/10 data-[state=active]:to-primary/10 data-[state=active]:text-accent font-medium"
-              >
-                <Shield className="h-4 w-4" />
-                <span className="hidden sm:inline">Current Policies</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="improvements" 
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500/10 data-[state=active]:to-green-500/10 data-[state=active]:text-emerald-600 font-medium"
-              >
-                <Lightbulb className="h-4 w-4" />
-                <span className="hidden sm:inline">AI Suggestions</span>
+                <span className="hidden sm:inline">Technical Analysis Report</span>
               </TabsTrigger>
             </TabsList>
 
@@ -213,9 +196,9 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
                       <FileText className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <span className="text-primary font-bold">Complete Detailed Report</span>
+                      <span className="text-primary font-bold">UAE Workforce Skills Analysis</span>
                       <p className="text-sm text-muted-foreground font-normal mt-1">
-                        Comprehensive workforce and skills analysis
+                        AI-generated comprehensive analysis and strategic insights
                       </p>
                     </div>
                   </CardTitle>
@@ -223,127 +206,11 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
                 <Separator className="mb-6" />
                 <CardContent className="pt-0">
                   <ReportContent 
-                    content={generationResult.detailedReport}
-                    defaultMessage="Complete detailed report will appear here after chart generation."
+                    content={generationResult?.detailedReport?.report}
+                    defaultMessage="Comprehensive workforce skills analysis will appear here after chart generation."
                     icon={FileText}
                     colorClass="text-primary"
                   />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-
-            <TabsContent value="policies" className="mt-6">
-              <Card className="bg-gradient-to-br from-accent/5 to-primary/5 border-accent/20">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-xl flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-accent/10">
-                      <Shield className="h-5 w-5 text-accent" />
-                    </div>
-                    <div>
-                      <span className="text-accent font-bold">Current Policies & Regulations</span>
-                      <p className="text-sm text-muted-foreground font-normal mt-1">
-                        Active workforce development policies and regulatory framework
-                      </p>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <Separator className="mb-6" />
-                <CardContent className="pt-0">
-                  {/* Policy Status Indicators */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl p-4 border border-green-500/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        <span className="text-sm font-medium text-green-700">Active Policies</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Currently implemented workforce policies</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-xl p-4 border border-amber-500/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <AlertCircle className="h-4 w-4 text-amber-600" />
-                        <span className="text-sm font-medium text-amber-700">Policy Gaps</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Areas requiring policy attention</p>
-                    </div>
-                  </div>
-                  
-                  {/* Policy Content with Custom Formatting */}
-                  {generationResult.currentPoliciesReport ? (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4 }}
-                      className="space-y-4"
-                    >
-                      <div 
-                        className="space-y-3"
-                        dangerouslySetInnerHTML={{ 
-                          __html: formatPolicyReport(generationResult.currentPoliciesReport) 
-                        }}
-                      />
-                    </motion.div>
-                  ) : (
-                    <ReportContent 
-                      content={undefined}
-                      defaultMessage="Current policies and regulatory analysis will appear here after chart generation. Each policy will be presented as concise bullet points with proper references."
-                      icon={Shield}
-                      colorClass="text-accent"
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="improvements" className="mt-6">
-              <Card className="bg-gradient-to-br from-emerald-500/5 to-green-500/5 border-emerald-500/20">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-xl flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-emerald-500/10">
-                      <Lightbulb className="h-5 w-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <span className="text-emerald-600 font-bold">AI-Suggested Policy Improvements</span>
-                      <p className="text-sm text-muted-foreground font-normal mt-1">
-                        Strategic recommendations for workforce development enhancement
-                      </p>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <Separator className="mb-6" />
-                <CardContent className="pt-0">
-                  {generationResult.suggestedImprovementsReport ? (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4 }}
-                      className="space-y-4"
-                    >
-                      <div 
-                        className="space-y-3"
-                        dangerouslySetInnerHTML={{ 
-                          __html: generationResult.suggestedImprovementsReport
-                            .split('\n\n')
-                            .map(paragraph => {
-                              if (paragraph.trim() && !paragraph.startsWith('#')) {
-                                return `<div class="mb-4 p-3 border-l-4 border-emerald-600 bg-emerald-50 rounded-r-lg"><div class="flex items-start"><span class="w-2 h-2 bg-emerald-600 rounded-full mt-2 mr-3 flex-shrink-0"></span><p class="text-sm text-foreground">${paragraph.trim()}</p></div></div>`;
-                              }
-                              return paragraph;
-                            })
-                            .join('')
-                            .replace(/\*\*(.*?)\*\*/g, '<strong class="text-emerald-600 font-semibold">$1</strong>')
-                            .replace(/\n/g, '<br/>')
-                        }}
-                      />
-                    </motion.div>
-                  ) : (
-                    <ReportContent 
-                      content={undefined}
-                      defaultMessage="AI-generated policy improvement suggestions will appear here after chart generation. This section will provide strategic recommendations for enhancing workforce development policies."
-                      icon={Lightbulb}
-                      colorClass="text-emerald-600"
-                    />
-                  )}
                 </CardContent>
               </Card>
             </TabsContent>

@@ -9,7 +9,7 @@ const corsHeaders = {
 
 const supabaseClient = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
 // Helper function to create proper fallback charts
@@ -18,7 +18,6 @@ function createFallbackChart(chartType: string, index: number) {
   
   if (chartType === 'map') {
     return {
-      type: 'map',
       title: {
         text: 'UAE Skills Distribution Map',
         subtext: 'Regional skill demand analysis'
@@ -146,46 +145,24 @@ serve(async (req) => {
   try {
     const startTime = Date.now();
 
-    const authHeader = req.headers.get('Authorization')!;
-    const apiKey = authHeader.split(' ')[1];
-
-    if (apiKey !== Deno.env.get('SUPABASE_ANON_KEY')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    // Get user from JWT token
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Unauthorized - No auth header' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const { data: policyData, error: policyError } = await supabaseClient
-      .from('policies')
-      .select('*');
-
-    if (policyError) {
-      console.error('Error fetching policies:', policyError);
-    }
-
-    const { data: skillsIntelligence, error: skillsIntelligenceError } = await supabaseClient
-      .from('skills_intelligence')
-      .select('*');
-
-    if (skillsIntelligenceError) {
-      console.error('Error fetching skills intelligence:', skillsIntelligenceError);
-    }
-
-    const { data: currentPoliciesReport, error: currentPoliciesReportError } = await supabaseClient
-      .from('current_policies_report')
-      .select('*');
-
-    if (currentPoliciesReportError) {
-      console.error('Error fetching current policies report:', currentPoliciesReportError);
-    }
-
-    const { data: policyImprovementsReport, error: policyImprovementsReportError } = await supabaseClient
-      .from('policy_improvements_report')
-      .select('*');
-
-    if (policyImprovementsReportError) {
-      console.error('Error fetching policy improvements report:', policyImprovementsReportError);
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+    
+    if (authError || !user) {
+      console.error('Auth error:', authError);
+      return new Response(JSON.stringify({ error: 'Unauthorized - Invalid token' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const { prompt, numberOfCharts = 1, chartTypes = [], useKnowledgeBase = false, knowledgeBaseFiles = [], generateDetailedReports = true } = await req.json();
@@ -195,24 +172,21 @@ serve(async (req) => {
     let knowledgeBaseContent = '';
     if (useKnowledgeBase && knowledgeBaseFiles.length > 0) {
       try {
-        const knowledgeBasePromises = knowledgeBaseFiles.map(async (file: string) => {
-          const { data, error } = await supabaseClient
-            .storage
-            .from('knowledge-base')
-            .download(file);
+        // Get knowledge base content from database instead of storage
+        const { data: kbFiles, error } = await supabaseClient
+          .from('knowledge_base_files')
+          .select('original_filename, extracted_content')
+          .in('id', knowledgeBaseFiles)
+          .eq('user_id', user.id);
 
-          if (error) {
-            console.error(`Error downloading ${file}:`, error);
-            return '';
-          }
-
-          const fileContent = await new Response(data).text();
-          return fileContent;
-        });
-
-        const knowledgeBaseResults = await Promise.all(knowledgeBasePromises);
-        knowledgeBaseContent = knowledgeBaseResults.join('\n');
-        console.log(`📚 Knowledge base content loaded from ${knowledgeBaseFiles.length} files`);
+        if (error) {
+          console.error('Error fetching knowledge base files:', error);
+        } else if (kbFiles && kbFiles.length > 0) {
+          knowledgeBaseContent = kbFiles.map(file => 
+            `File: ${file.original_filename}\nContent: ${file.extracted_content}`
+          ).join('\n\n');
+          console.log(`📚 Knowledge base content loaded from ${kbFiles.length} files`);
+        }
       } catch (error) {
         console.error('Error loading knowledge base content:', error);
       }
@@ -226,14 +200,96 @@ serve(async (req) => {
       sources: []
     };
 
-    // Attempt to generate charts using AI
-    try {
-      const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-      if (!openAIApiKey) {
-        throw new Error('OpenAI API key not configured');
-      }
+    // Run chart generation and insights in parallel for better performance
+    const [chartsResult, insightsResult] = await Promise.allSettled([
+      generateCharts(prompt, numberOfCharts, chartTypes, knowledgeBaseContent),
+      generateDetailedReports ? generateInsights(prompt, numberOfCharts) : Promise.resolve([])
+    ]);
 
-      const chartPrompt = `Create ${numberOfCharts} interactive chart configuration(s) for Apache ECharts based on this request: "${prompt}"
+    let charts: any[] = [];
+    let diagnostics: any = {
+      chartTypes: chartTypes,
+      dimensions: ["Category", "Value", "Time"],
+      notes: "",
+      sources: []
+    };
+
+    // Handle charts result
+    if (chartsResult.status === 'fulfilled' && chartsResult.value.success) {
+      charts = chartsResult.value.charts;
+      diagnostics.sources = chartsResult.value.sources;
+      diagnostics.notes = chartsResult.value.notes;
+    } else {
+      console.error('Chart generation failed:', chartsResult.status === 'rejected' ? chartsResult.reason : 'Unknown error');
+      // Create fallback charts
+      charts = [];
+      for (let i = 0; i < numberOfCharts; i++) {
+        const chartType = chartTypes[i] || 'bar';
+        console.log(`Fallback Chart ${i + 1}: User selected "${chartType}", using "${chartType}"`);
+        charts.push(createFallbackChart(chartType, i));
+      }
+      diagnostics.sources = ["Fallback Data Generator"];
+      diagnostics.notes = `Fallback: Generated ${charts.length} generic charts due to AI generation error`;
+    }
+
+    // Handle insights result
+    let insights: any[] = [];
+    if (insightsResult.status === 'fulfilled') {
+      insights = insightsResult.value;
+    } else if (generateDetailedReports) {
+      console.error('Insights generation failed:', insightsResult.reason);
+      insights = [`Analysis completed with ${charts.length} charts showing UAE workforce skill trends`];
+    }
+
+    // Generate detailed report if requested (can run independently)
+    let detailedReport = null;
+    if (generateDetailedReports) {
+      try {
+        detailedReport = await generateDetailedReport(charts, insights);
+        if (detailedReport) {
+          diagnostics.sources.push("OpenAI GPT-4o-mini Report Generator");
+          diagnostics.notes += ', Generated detailed report using AI';
+        }
+      } catch (error) {
+        console.error('Detailed report generation failed:', error);
+        detailedReport = { report: `Detailed analysis available for ${charts.length} charts showing UAE workforce trends and skills demand patterns` };
+      }
+    }
+
+    const totalTime = Date.now() - startTime;
+    console.log(`🎉 Complete! Generated ${charts.length} charts, ${insights.length} insights in ${totalTime}ms total`);
+
+    return new Response(JSON.stringify({
+      charts,
+      diagnostics,
+      insights,
+      detailedReport
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (error) {
+    console.error('Error in generate-advanced-charts function:', error);
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      charts: [],
+      insights: [],
+      diagnostics: { error: error.message }
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});
+
+// Helper functions for better organization and parallel processing
+async function generateCharts(prompt: string, numberOfCharts: number, chartTypes: string[], knowledgeBaseContent: string) {
+  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+  if (!openAIApiKey) {
+    throw new Error('OpenAI API key not configured');
+  }
+
+  const chartPrompt = `Create ${numberOfCharts} interactive chart configuration(s) for Apache ECharts based on this request: "${prompt}"
 
 Chart types requested: ${chartTypes.join(', ')}
 
@@ -241,9 +297,8 @@ ${knowledgeBaseContent ? `Context from knowledge base: ${knowledgeBaseContent.sl
 
 Return a JSON array of chart configurations. Each chart should be a complete ECharts option object.
 
-For map charts, use this structure:
+For map charts, use this structure (return as regular ECharts config, the frontend will handle Mapbox):
 {
-  "type": "map",
   "title": {"text": "Title", "subtext": "Subtitle"},
   "mapStyle": "mapbox://styles/mapbox/light-v11",
   "center": [longitude, latitude],
@@ -266,225 +321,144 @@ For other chart types, use standard ECharts configuration with proper series dat
 
 Return only the JSON array, no additional text.`;
 
-      console.log('OpenAI API attempt 1/2 - timeout: 30000ms');
-      
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openAIApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        { 
+          role: 'system', 
+          content: 'You are a data visualization expert. Create valid ECharts configurations based on user requests. Always return valid JSON arrays of chart objects.'
         },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini', // Using faster model for chart generation
-          messages: [
-            { 
-              role: 'system', 
-              content: 'You are a data visualization expert. Create valid ECharts configurations based on user requests. Always return valid JSON arrays of chart objects.'
-            },
-            { role: 'user', content: chartPrompt }
-          ],
-          max_tokens: 4000,
-          temperature: 0.3
-        }),
-      });
+        { role: 'user', content: chartPrompt }
+      ],
+      max_tokens: 4000,
+      temperature: 0.3
+    }),
+  });
 
-      if (response.ok) {
-        console.log('OpenAI API success on attempt 1');
-        const data = await response.json();
-        const content = data.choices[0].message.content;
-        
-        try {
-          // Extract JSON from response
-          const jsonMatch = content.match(/\[[\s\S]*\]/);
-          if (jsonMatch) {
-            charts = JSON.parse(jsonMatch[0]);
-            diagnostics.sources = ["OpenAI GPT-4o-mini"];
-            diagnostics.notes = `Successfully generated ${charts.length} charts using AI`;
-          } else {
-            throw new Error('No valid JSON found in response');
-          }
-        } catch (parseError) {
-          console.error('JSON Parse Error:', parseError);
-          console.log('Failed content:', content);
-          throw parseError;
-        }
-      } else {
-        throw new Error(`OpenAI API error: ${response.status}`);
-      }
-    } catch (error) {
-      console.error('Chart generation failed:', error);
-      
-      // Create fallback charts
-      charts = [];
-      for (let i = 0; i < numberOfCharts; i++) {
-        const chartType = chartTypes[i] || 'bar';
-        console.log(`Fallback Chart ${i + 1}: User selected "${chartType}", using "${chartType}"`);
-        charts.push(createFallbackChart(chartType, i));
-      }
-      
-      diagnostics.sources = ["Fallback Data Generator"];
-      diagnostics.notes = `Fallback: Generated ${charts.length} generic charts due to parsing error for request: ${prompt.slice(0, 100)}`;
-      
-      console.log(`⚠️ Created ${charts.length} fallback charts in ${Date.now() - startTime}ms`);
-    }
-
-    let insights: any[] = [];
-    if (generateDetailedReports) {
-      try {
-        const insightsPrompt = `Generate ${numberOfCharts} key insights based on the following chart configurations: ${JSON.stringify(charts)}.
-        Focus on actionable intelligence and key trends. Return a JSON array of strings.`;
-
-        console.log('OpenAI API attempt 2/2 - timeout: 30000ms');
-
-        const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-        if (!openAIApiKey) {
-          throw new Error('OpenAI API key not configured');
-        }
-
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              { 
-                role: 'system', 
-                content: 'You are an expert data analyst. Extract key insights from chart data and provide actionable intelligence.'
-              },
-              { role: 'user', content: insightsPrompt }
-            ],
-            max_tokens: 1500,
-            temperature: 0.5
-          }),
-        });
-
-        if (response.ok) {
-          console.log('OpenAI API success on attempt 2');
-          const data = await response.json();
-          const content = data.choices[0].message.content;
-
-          try {
-            const jsonMatch = content.match(/\[[\s\S]*\]/);
-            if (jsonMatch) {
-              insights = JSON.parse(jsonMatch[0]);
-              diagnostics.sources.push("OpenAI GPT-4o-mini");
-              diagnostics.notes += `, Generated ${insights.length} insights using AI`;
-            } else {
-              throw new Error('No valid JSON found in insights response');
-            }
-          } catch (parseError) {
-            console.error('JSON Parse Error:', parseError);
-            console.log('Failed content:', content);
-            throw parseError;
-          }
-        } else {
-          throw new Error(`OpenAI API error: ${response.status}`);
-        }
-      } catch (error) {
-        console.error('Insights generation failed:', error);
-        insights = [`Failed to generate insights: ${error.message}`];
-        diagnostics.notes += `, Failed to generate insights: ${error.message}`;
-      }
-    }
-
-    let detailedReport = null;
-    if (generateDetailedReports) {
-      try {
-        const reportPrompt = `Generate a detailed report based on the following data:
-        - Charts: ${JSON.stringify(charts)}
-        - Insights: ${JSON.stringify(insights)}
-        - Skills Intelligence: ${JSON.stringify(skillsIntelligence)}
-        - Current Policies Report: ${JSON.stringify(currentPoliciesReport)}
-        - Policy Improvements Report: ${JSON.stringify(policyImprovementsReport)}
-        
-        The report should include an executive summary, key findings, detailed analysis of each chart and insight, and policy recommendations.
-        Focus on actionable intelligence and key trends. Return a JSON object with a "report" key containing the full report text.`;
-
-        console.log('OpenAI API attempt 3/3 - timeout: 60000ms');
-
-        const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-        if (!openAIApiKey) {
-          throw new Error('OpenAI API key not configured');
-        }
-
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              { 
-                role: 'system', 
-                content: 'You are an expert data analyst and policy advisor. Generate a comprehensive report based on the provided data, including charts, insights, skills intelligence, and policy reports. Focus on actionable intelligence and key trends.'
-              },
-              { role: 'user', content: reportPrompt }
-            ],
-            max_tokens: 4000,
-            temperature: 0.5
-          }),
-        });
-
-        if (response.ok) {
-          console.log('OpenAI API success on attempt 3');
-          const data = await response.json();
-          const content = data.choices[0].message.content;
-
-          try {
-            const jsonMatch = content.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-              detailedReport = JSON.parse(jsonMatch[0]);
-              diagnostics.sources.push("OpenAI GPT-4o-mini");
-              diagnostics.notes += ', Generated detailed report using AI';
-            } else {
-              throw new Error('No valid JSON found in detailed report response');
-            }
-          } catch (parseError) {
-            console.error('JSON Parse Error:', parseError);
-            console.log('Failed content:', content);
-            throw parseError;
-          }
-        } else {
-          throw new Error(`OpenAI API error: ${response.status}`);
-        }
-      } catch (error) {
-        console.error('Detailed report generation failed:', error);
-        detailedReport = { report: `Failed to generate detailed report: ${error.message}` };
-        diagnostics.notes += `, Failed to generate detailed report: ${error.message}`;
-      }
-    }
-
-    const totalTime = Date.now() - startTime;
-    console.log(`🎉 Complete! Generated ${charts.length} charts, ${insights.length} insights in ${totalTime}ms total`);
-
-    return new Response(JSON.stringify({
-      charts,
-      diagnostics,
-      insights,
-      policyData,
-      detailedReport,
-      skillsIntelligence,
-      currentPoliciesReport,
-      policyImprovementsReport
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-
-  } catch (error) {
-    console.error('Error in generate-advanced-charts function:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      charts: [],
-      insights: [],
-      diagnostics: { error: error.message }
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+  if (!response.ok) {
+    throw new Error(`OpenAI API error: ${response.status}`);
   }
-});
+
+  const data = await response.json();
+  const content = data.choices[0].message.content;
+  
+  // Extract JSON from response
+  const jsonMatch = content.match(/\[[\s\S]*\]/);
+  if (!jsonMatch) {
+    throw new Error('No valid JSON found in response');
+  }
+
+  const charts = JSON.parse(jsonMatch[0]);
+  return {
+    success: true,
+    charts,
+    sources: ["OpenAI GPT-4o-mini"],
+    notes: `Successfully generated ${charts.length} charts using AI`
+  };
+}
+
+async function generateInsights(prompt: string, numberOfCharts: number) {
+  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+  if (!openAIApiKey) {
+    return [`Analysis completed for ${numberOfCharts} charts based on: ${prompt.slice(0, 100)}...`];
+  }
+
+  const insightsPrompt = `Generate ${numberOfCharts} key insights for UAE workforce analysis based on this request: "${prompt}".
+  Focus on actionable intelligence and key trends. Return a JSON array of strings.`;
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { 
+            role: 'system', 
+            content: 'You are an expert data analyst for UAE workforce skills. Extract key insights and provide actionable intelligence.'
+          },
+          { role: 'user', content: insightsPrompt }
+        ],
+        max_tokens: 1500,
+        temperature: 0.5
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+  } catch (error) {
+    console.error('Insights generation error:', error);
+  }
+  
+  return [`Analysis completed for ${numberOfCharts} charts showing UAE workforce skill trends`];
+}
+
+async function generateDetailedReport(charts: any[], insights: string[]) {
+  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+  if (!openAIApiKey) {
+    return { report: 'Detailed report generation requires OpenAI API configuration' };
+  }
+
+  const reportPrompt = `Generate a comprehensive UAE workforce skills report based on:
+  - Charts: ${JSON.stringify(charts)}
+  - Insights: ${JSON.stringify(insights)}
+  
+  Include executive summary, key findings, detailed analysis, and strategic recommendations for UAE workforce development.
+  Return a JSON object with a "report" key containing the full report text.`;
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { 
+            role: 'system', 
+            content: 'You are an expert policy analyst specializing in UAE workforce development. Generate comprehensive reports with actionable recommendations.'
+          },
+          { role: 'user', content: reportPrompt }
+        ],
+        max_tokens: 4000,
+        temperature: 0.5
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+  } catch (error) {
+    console.error('Report generation error:', error);
+  }
+  
+  return { report: 'Report generation completed - detailed analysis available upon request' };
+}

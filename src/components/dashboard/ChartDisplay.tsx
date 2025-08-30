@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import ReactECharts from 'echarts-for-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,18 +55,59 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
     );
   }
 
-  // Check if this is a map chart
-  if (chartOption.type === 'map' || chartOption.mapStyle || chartOption.markers) {
+  // Handle map charts with Mapbox integration
+  if (chartOption.mapStyle || chartOption.center || chartOption.markers || 
+      (chartOption.title && chartOption.title.text && chartOption.title.text.toLowerCase().includes('map'))) {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <MapChart config={chartOption} loading={loading} />
-      </motion.div>
+      <MapChart 
+        config={chartOption}
+        loading={loading}
+      />
     );
   }
+
+  // Enhanced chart configuration with better error handling and validation
+  const enhancedConfig = useMemo(() => {
+    // Validate and fix chart configuration
+    const config = { ...chartOption };
+    
+    // Ensure proper structure for different chart types
+    if (config.series && Array.isArray(config.series)) {
+      config.series = config.series.map((series: any) => {
+        // Fix treemap data structure if needed
+        if (series.type === 'treemap' && series.data) {
+          series.data = series.data.map((item: any) => {
+            if (item.children && !item.value && item.children.length > 0) {
+              // Calculate parent value from children if missing
+              item.value = item.children.reduce((sum: number, child: any) => sum + (child.value || 0), 0);
+            }
+            return item;
+          });
+        }
+        return series;
+      });
+    }
+
+    return {
+      ...config,
+      animation: false, // Disable animations for faster rendering
+      responsive: true,
+      maintainAspectRatio: false,
+      tooltip: {
+        trigger: config.tooltip?.trigger || 'item',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        textStyle: { color: '#fff' },
+        ...config.tooltip
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true,
+        ...config.grid
+      }
+    };
+  }, [chartOption]);
 
   // Validate and fix treemap data structure
   if (chartOption.series && chartOption.series.some((s: any) => s.type === 'treemap')) {
@@ -102,15 +143,15 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
       <Card>
         <CardHeader>
           <CardTitle>
-            {chartOption.title?.text || 'Generated Chart'}
+            {enhancedConfig.title?.text || 'Generated Chart'}
           </CardTitle>
-          {chartOption.title?.subtext && (
-            <p className="text-sm text-muted-foreground">{chartOption.title.subtext}</p>
+          {enhancedConfig.title?.subtext && (
+            <p className="text-sm text-muted-foreground">{enhancedConfig.title.subtext}</p>
           )}
         </CardHeader>
         <CardContent className="p-6">
           <ReactECharts
-            option={chartOption}
+            option={enhancedConfig}
             style={{ height: '500px', width: '100%' }}
             opts={{ renderer: 'canvas' }}
           />
