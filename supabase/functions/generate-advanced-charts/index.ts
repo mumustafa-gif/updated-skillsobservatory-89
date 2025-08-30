@@ -244,7 +244,11 @@ serve(async (req) => {
         }
       } catch (error) {
         console.error('Detailed report generation failed:', error);
-        detailedReport = { report: `Detailed analysis available for ${charts.length} charts showing UAE workforce trends and skills demand patterns` };
+        detailedReport = { 
+          overview: `Detailed analysis available for ${charts.length} charts showing UAE workforce trends and skills demand patterns`,
+          currentPolicies: `Analysis of current UAE policies and frameworks supporting workforce development initiatives`,
+          aiSuggestions: `Strategic recommendations for enhancing UAE workforce capabilities and addressing skill gaps`
+        };
       }
     }
 
@@ -406,18 +410,39 @@ async function generateInsights(prompt: string, numberOfCharts: number) {
 async function generateDetailedReport(charts: any[], insights: string[]) {
   const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
   if (!openAIApiKey) {
-    return { report: 'Detailed report generation requires OpenAI API configuration' };
+    return { 
+      overview: 'Overview generation requires OpenAI API configuration',
+      currentPolicies: 'Current policies analysis requires OpenAI API configuration',
+      aiSuggestions: 'AI suggestions generation requires OpenAI API configuration'
+    };
   }
 
-  const reportPrompt = `Generate a comprehensive UAE workforce skills report based on:
-  - Charts: ${JSON.stringify(charts)}
-  - Insights: ${JSON.stringify(insights)}
+  // Create specific prompts for each section
+  const overviewPrompt = `Generate a comprehensive overview and analysis of UAE workforce skills based on:
+  - Charts Data: ${JSON.stringify(charts).slice(0, 1000)}
+  - Key Insights: ${JSON.stringify(insights)}
   
-  Include executive summary, key findings, detailed analysis, and strategic recommendations for UAE workforce development.
-  Return a JSON object with a "report" key containing the full report text.`;
+  Focus on: Executive summary, market trends, key findings, skill demand patterns, and workforce development status.
+  Return only the content text, no JSON wrapping.`;
 
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const currentPoliciesPrompt = `Analyze current UAE workforce and skill development policies based on the context:
+  - Analysis Context: ${JSON.stringify(insights)}
+  
+  Focus on: Existing UAE government policies, Vision 2071, National Skills Framework, current regulations, 
+  educational initiatives, and workforce development programs. Include specific policy names and frameworks.
+  Return only the content text, no JSON wrapping.`;
+
+  const aiSuggestionsPrompt = `Generate strategic AI-powered recommendations for UAE workforce development based on:
+  - Current Analysis: ${JSON.stringify(insights)}
+  - Market Data: ${JSON.stringify(charts).slice(0, 1000)}
+  
+  Focus on: Actionable recommendations, future-oriented strategies, policy improvements, 
+  skill development initiatives, and strategic workforce planning suggestions.
+  Return only the content text, no JSON wrapping.`;
+
+  // Run all three API calls in parallel for better performance
+  const [overviewResult, policiesResult, suggestionsResult] = await Promise.allSettled([
+    fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
@@ -428,29 +453,89 @@ async function generateDetailedReport(charts: any[], insights: string[]) {
         messages: [
           { 
             role: 'system', 
-            content: 'You are an expert policy analyst specializing in UAE workforce development. Generate comprehensive reports with actionable recommendations.'
+            content: 'You are an expert workforce analyst specializing in UAE market trends and skill development. Provide comprehensive analysis.'
           },
-          { role: 'user', content: reportPrompt }
+          { role: 'user', content: overviewPrompt }
         ],
-        max_tokens: 4000,
+        max_tokens: 2000,
+        temperature: 0.4
+      }),
+    }),
+    fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { 
+            role: 'system', 
+            content: 'You are a UAE policy expert with deep knowledge of government initiatives, Vision 2071, and workforce development policies.'
+          },
+          { role: 'user', content: currentPoliciesPrompt }
+        ],
+        max_tokens: 2000,
+        temperature: 0.3
+      }),
+    }),
+    fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { 
+            role: 'system', 
+            content: 'You are a strategic workforce development consultant specializing in AI-driven recommendations for UAE skill development.'
+          },
+          { role: 'user', content: aiSuggestionsPrompt }
+        ],
+        max_tokens: 2000,
         temperature: 0.5
       }),
-    });
+    })
+  ]);
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
-    }
+  // Process results with fallbacks
+  let overview = 'Comprehensive workforce analysis showing current UAE skill market trends and demand patterns.';
+  let currentPolicies = 'Analysis of UAE Vision 2071, National Skills Framework, and current workforce development policies.';
+  let aiSuggestions = 'Strategic recommendations for enhancing UAE workforce capabilities and skill development initiatives.';
 
-    const data = await response.json();
-    const content = data.choices[0].message.content;
-
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+  try {
+    if (overviewResult.status === 'fulfilled' && overviewResult.value.ok) {
+      const data = await overviewResult.value.json();
+      overview = data.choices[0].message.content;
     }
   } catch (error) {
-    console.error('Report generation error:', error);
+    console.error('Overview generation error:', error);
   }
-  
-  return { report: 'Report generation completed - detailed analysis available upon request' };
+
+  try {
+    if (policiesResult.status === 'fulfilled' && policiesResult.value.ok) {
+      const data = await policiesResult.value.json();
+      currentPolicies = data.choices[0].message.content;
+    }
+  } catch (error) {
+    console.error('Policies generation error:', error);
+  }
+
+  try {
+    if suggestionsResult.status === 'fulfilled' && suggestionsResult.value.ok) {
+      const data = await suggestionsResult.value.json();
+      aiSuggestions = data.choices[0].message.content;
+    }
+  } catch (error) {
+    console.error('Suggestions generation error:', error);
+  }
+
+  return {
+    overview,
+    currentPolicies,
+    aiSuggestions
+  };
 }
