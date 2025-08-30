@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import ReactECharts from 'echarts-for-react';
@@ -55,7 +56,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
   }
 
   // Check if this is a map chart
-  if (chartOption.type === 'map' || chartOption.mapStyle) {
+  if (chartOption.type === 'map' || chartOption.mapStyle || chartOption.markers) {
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -67,6 +68,31 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
     );
   }
 
+  // Validate and fix treemap data structure
+  if (chartOption.series && chartOption.series.some((s: any) => s.type === 'treemap')) {
+    chartOption.series = chartOption.series.map((series: any) => {
+      if (series.type === 'treemap' && series.data) {
+        // Ensure data is properly structured for treemap
+        series.data = series.data.map((item: any) => {
+          if (typeof item === 'number') {
+            // Convert plain numbers to proper treemap format
+            return { name: `Item ${item}`, value: item };
+          }
+          if (typeof item === 'object' && item !== null) {
+            // Ensure required properties exist
+            return {
+              name: item.name || 'Unknown',
+              value: typeof item.value === 'number' ? item.value : 0,
+              ...item
+            };
+          }
+          return { name: 'Unknown', value: 0 };
+        });
+      }
+      return series;
+    });
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -75,7 +101,12 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
     >
       <Card>
         <CardHeader>
-          <CardTitle>Generated Chart</CardTitle>
+          <CardTitle>
+            {chartOption.title?.text || 'Generated Chart'}
+          </CardTitle>
+          {chartOption.title?.subtext && (
+            <p className="text-sm text-muted-foreground">{chartOption.title.subtext}</p>
+          )}
         </CardHeader>
         <CardContent className="p-6">
           <ReactECharts

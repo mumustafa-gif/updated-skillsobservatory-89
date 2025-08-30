@@ -63,16 +63,38 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
     const titleFontSize = isMobile ? 12 : isTablet ? 14 : 16;
     const legendFontSize = isMobile ? 9 : isTablet ? 10 : 11;
 
+    // Validate and fix treemap data structure before applying responsive config
+    if (chartOption.series && chartOption.series.some((s: any) => s.type === 'treemap')) {
+      chartOption.series = chartOption.series.map((series: any) => {
+        if (series.type === 'treemap' && series.data) {
+          series.data = series.data.map((item: any) => {
+            if (typeof item === 'number') {
+              return { name: `Item ${item}`, value: item };
+            }
+            if (typeof item === 'object' && item !== null) {
+              return {
+                name: item.name || 'Unknown',
+                value: typeof item.value === 'number' ? item.value : 0,
+                ...item
+              };
+            }
+            return { name: 'Unknown', value: 0 };
+          });
+        }
+        return series;
+      });
+    }
+
     return {
       ...chartOption,
       animation: false, // Disable animation for better performance
       
-      // Grid configuration for proper spacing (adjusted for bottom-right legend)
+      // Grid configuration for proper spacing
       grid: {
         left: isMobile ? '12%' : '10%',
-        right: isMobile ? '25%' : '22%', // More space for bottom-right legend
-        top: chartOption.title ? (isMobile ? '15%' : '12%') : (isMobile ? '8%' : '6%'), // Less top space since legend moved
-        bottom: isMobile ? '25%' : '22%', // More bottom space for legend
+        right: isMobile ? '25%' : '22%',
+        top: chartOption.title ? (isMobile ? '15%' : '12%') : (isMobile ? '8%' : '6%'),
+        bottom: isMobile ? '25%' : '22%',
         containLabel: true,
         ...chartOption.grid
       },
@@ -141,7 +163,6 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         },
         confine: true,
         position: function (point: number[], params: any, dom: any, rect: any, size: any) {
-          // Smart positioning to avoid overflow
           const x = point[0] < size.viewSize[0] / 2 ? point[0] + 20 : point[0] - dom.offsetWidth - 20;
           const y = point[1] < size.viewSize[1] / 2 ? point[1] + 20 : point[1] - dom.offsetHeight - 20;
           return [Math.max(10, Math.min(x, size.viewSize[0] - dom.offsetWidth - 10)), 
@@ -293,7 +314,7 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
     >
       {chartOptions.map((chartOption, index) => {
         // Check if this is a map chart
-        const isMapChart = chartOption.type === 'map' || chartOption.mapStyle;
+        const isMapChart = chartOption.type === 'map' || chartOption.mapStyle || chartOption.markers;
         
         return (
           <motion.div
