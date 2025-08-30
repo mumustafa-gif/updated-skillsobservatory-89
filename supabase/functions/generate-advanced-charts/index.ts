@@ -11,34 +11,60 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Helper function to make requests with timeout - optimized for speed
-const requestWithTimeout = async (url: string, options: any, timeoutMs: number = 15000): Promise<Response | null> => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
+// Helper function to make requests with timeout - with retry logic
+const requestWithTimeout = async (url: string, options: any, timeoutMs: number = 30000, maxRetries: number = 2): Promise<Response | null> => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     
-    if (!response.ok) {
-      console.error(`OpenAI API Error ${response.status}: ${response.statusText}`);
-      const errorText = await response.text();
-      console.error('Error response:', errorText);
+    try {
+      console.log(`OpenAI API attempt ${attempt}/${maxRetries} - timeout: ${timeoutMs}ms`);
+      
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        console.error(`OpenAI API Error ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        
+        // Don't retry on 4xx errors (client errors)
+        if (response.status >= 400 && response.status < 500) {
+          return null;
+        }
+        
+        // Retry on 5xx errors if we have attempts left
+        if (attempt < maxRetries) {
+          console.log(`Retrying in 2 seconds... (attempt ${attempt + 1})`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          continue;
+        }
+        return null;
+      }
+      
+      console.log(`OpenAI API success on attempt ${attempt}`);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.error(`Request failed on attempt ${attempt}:`, error);
+      
+      if (error.name === 'AbortError') {
+        console.error(`Request timed out after ${timeoutMs}ms on attempt ${attempt}`);
+      }
+      
+      // Retry on network errors if we have attempts left
+      if (attempt < maxRetries) {
+        console.log(`Retrying in 2 seconds... (attempt ${attempt + 1})`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        continue;
+      }
       return null;
     }
-    
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    console.error('Request failed or timed out:', error);
-    if (error.name === 'AbortError') {
-      console.error('Request timed out after', timeoutMs, 'ms');
-    }
-    return null;
   }
+  return null;
 };
 
 serve(async (req) => {
@@ -144,7 +170,7 @@ Include quantitative insights and specific recommendations.`
             ],
             max_completion_tokens: 800
           }),
-        }, 15000),
+        }, 30000),
         
         // Current Policies & Regulations (independent of chart data)
         requestWithTimeout('https://api.openai.com/v1/chat/completions', {
@@ -176,7 +202,7 @@ Focus on UAE-specific policies and regulations where relevant.`
             ],
             max_tokens: 800
           }),
-        }, 15000),
+        }, 30000),
         
         // AI-Suggested Policy Improvements (independent of chart data)
         requestWithTimeout('https://api.openai.com/v1/chat/completions', {
@@ -209,7 +235,7 @@ Provide specific, actionable recommendations with clear implementation paths.`
             ],
             max_tokens: 800
           }),
-        }, 15000)
+        }, 30000)
       ]);
     }
 
@@ -313,7 +339,7 @@ Context: Chart generation for data visualization dashboard`
           type: "json_object"
         }
       }),
-    }, 15000);
+    }, 30000);
 
     if (!chartResponse) {
       console.error('Chart generation failed: No response from OpenAI');
@@ -545,7 +571,7 @@ Context: Chart generation for data visualization dashboard`
               max_tokens: 800,
               response_format: { type: "json_object" }
             }),
-          }, 15000);
+          }, 30000);
 
           if (!insightResponse) {
             throw new Error('Request failed or timed out');
@@ -646,7 +672,7 @@ Use proper formatting with headings, bullet points, and structured content.`
             ],
             max_tokens: 1500
           }),
-        }, 15000)
+        }, 30000)
       ];
 
       try {
