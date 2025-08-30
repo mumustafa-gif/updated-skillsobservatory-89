@@ -19,26 +19,57 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
   const formatReport = (report: string) => {
     if (!report) return '';
     
-    // Simple paragraph formatting for concise content - no bullet points
-    return report
-      // Headers with minimal styling
-      .replace(/^### (.*$)/gim, '<h3 class="text-base font-bold text-primary mb-3 mt-4 first:mt-0">$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2 class="text-lg font-bold text-primary mb-4 mt-6 first:mt-0">$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1 class="text-xl font-bold text-primary mb-5 mt-8 first:mt-0">$1</h1>')
-      // Keep content as clean paragraphs - remove excessive formatting
-      .split('\n\n')
-      .map(paragraph => {
-        if (paragraph.trim() && !paragraph.startsWith('#')) {
-          // Clean up the paragraph and keep it simple
-          return `<p class="mb-3 text-sm text-foreground leading-relaxed">${paragraph.trim()}</p>`;
-        }
-        return paragraph;
-      })
-      .join('')
-      // Bold text with solid colors
+    // Enhanced professional formatting with proper structure
+    let formattedReport = report
+      // Main headers (H1) - Large, prominent styling
+      .replace(/^# (.*$)/gim, '<div class="mb-6 mt-8 first:mt-0"><h1 class="text-2xl font-bold text-primary mb-2 pb-2 border-b-2 border-primary/20">$1</h1></div>')
+      
+      // Section headers (H2) - Medium styling with background
+      .replace(/^## (.*$)/gim, '<div class="mb-5 mt-6 first:mt-0"><h2 class="text-xl font-bold text-primary mb-3 p-3 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border-l-4 border-primary">$1</h2></div>')
+      
+      // Subsection headers (H3) - Smaller but distinct
+      .replace(/^### (.*$)/gim, '<div class="mb-4 mt-5 first:mt-0"><h3 class="text-lg font-semibold text-primary mb-2 pl-4 border-l-2 border-primary/40">$1</h3></div>')
+      
+      // Sub-subsection headers (H4) - Minimal styling
+      .replace(/^#### (.*$)/gim, '<h4 class="text-base font-medium text-primary/80 mb-2 mt-3">$1</h4>')
+      
+      // Numbered lists with proper formatting
+      .replace(/^(\d+\.\s+)(.+)$/gim, '<div class="mb-3 flex items-start"><span class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-primary rounded-full mr-3 mt-0.5 flex-shrink-0">$1</span><p class="text-sm text-foreground leading-relaxed flex-1">$2</p></div>')
+      
+      // Bullet points with enhanced styling
+      .replace(/^[•\-\*]\s+(.+)$/gim, '<div class="mb-3 flex items-start"><span class="w-2 h-2 bg-primary rounded-full mr-3 mt-2 flex-shrink-0"></span><p class="text-sm text-foreground leading-relaxed">$1</p></div>')
+      
+      // Sub-bullet points (indented)
+      .replace(/^\s{2,}[•\-\*]\s+(.+)$/gim, '<div class="mb-2 ml-5 flex items-start"><span class="w-1.5 h-1.5 bg-primary/60 rounded-full mr-2 mt-2.5 flex-shrink-0"></span><p class="text-xs text-foreground/80 leading-relaxed">$1</p></div>')
+      
+      // Bold text with primary color
       .replace(/\*\*(.*?)\*\*/g, '<strong class="text-primary font-semibold">$1</strong>')
-      // Simple line breaks
-      .replace(/\n/g, '<br/>');
+      
+      // Italic text
+      .replace(/\*(.*?)\*/g, '<em class="text-foreground/80 italic">$1</em>')
+      
+      // Code or technical terms
+      .replace(/`([^`]+)`/g, '<code class="px-2 py-1 text-xs bg-muted rounded font-mono text-primary">$1</code>');
+
+    // Process paragraphs and add proper spacing
+    const paragraphs = formattedReport.split('\n\n').map(paragraph => {
+      paragraph = paragraph.trim();
+      if (!paragraph) return '';
+      
+      // Skip already formatted elements
+      if (paragraph.startsWith('<div') || paragraph.startsWith('<h') || paragraph.startsWith('<ul') || paragraph.startsWith('<ol')) {
+        return paragraph;
+      }
+      
+      // Regular paragraphs
+      if (paragraph && !paragraph.match(/^<[^>]+>/)) {
+        return `<p class="mb-4 text-sm text-foreground leading-relaxed text-justify">${paragraph}</p>`;
+      }
+      
+      return paragraph;
+    }).filter(p => p.trim()).join('\n');
+
+    return paragraphs.replace(/\n/g, '');
   };
 
   const formatPolicyReport = (report: string) => {

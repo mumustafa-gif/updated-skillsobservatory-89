@@ -158,14 +158,44 @@ serve(async (req) => {
                 role: 'user', 
                 content: `For this analysis: "${prompt}"
 
-Generate a Skills Intelligence & Analysis report covering:
-**Skills Demand Analysis**
-**Talent Gap Assessment**  
-**Training & Development Needs**
-**Skill Enhancement Strategies**
-**Future Skills Requirements**
+Generate a comprehensive Skills Intelligence & Analysis report with the following structure:
 
-Include quantitative insights and specific recommendations.`
+# Skills Intelligence & Analysis Report
+
+## Executive Summary
+Provide a brief overview of key findings and recommendations.
+
+## Skills Demand Analysis
+• Current market demand for various skills
+• Trending skills in the industry
+• Skill demand forecasting
+• Regional skill requirements
+
+## Talent Gap Assessment
+• Identified skill gaps in the workforce
+• Critical shortage areas
+• Impact assessment of skill gaps
+• Priority areas for development
+
+## Training & Development Needs
+• Specific training programs required
+• Learning pathways and curricula
+• Training delivery methods
+• Budget and resource requirements
+
+## Skill Enhancement Strategies
+• Strategic recommendations for skill development
+• Implementation roadmap
+• Success metrics and KPIs
+• Risk mitigation strategies
+
+## Future Skills Requirements
+• Emerging skill requirements
+• Technology impact on skills
+• Long-term workforce planning
+• Preparation strategies
+
+Include quantitative insights, specific actionable recommendations, and proper formatting with headers and bullet points.`
               }
             ],
             max_completion_tokens: 800
@@ -190,14 +220,44 @@ Include quantitative insights and specific recommendations.`
                 role: 'user', 
                 content: `For this workforce analysis: "${prompt}"
 
-Generate a Current Policies & Regulations report covering:
-**Existing Labor Policies**
-**Regulatory Framework Analysis**
-**Compliance Requirements**
-**Policy Impact Assessment**
-**Regulatory Challenges**
+Generate a structured Current Policies & Regulations analysis with the following format:
 
-Focus on UAE-specific policies and regulations where relevant.`
+# Current Policies & Regulations Report
+
+## Policy Overview
+Brief summary of the current regulatory landscape.
+
+## Existing Labor Policies
+• Active workforce development policies
+• Employment regulations and standards
+• Skills development initiatives
+• Training and certification requirements
+
+## Regulatory Framework Analysis
+• Government agencies and their roles
+• Policy implementation mechanisms
+• Compliance monitoring systems
+• Inter-agency coordination
+
+## Compliance Requirements
+• Mandatory compliance standards
+• Reporting and documentation needs
+• Audit and assessment procedures
+• Penalties and enforcement measures
+
+## Policy Impact Assessment
+• Effectiveness of current policies
+• Measurable outcomes and results
+• Stakeholder feedback and satisfaction
+• Areas of successful implementation
+
+## Regulatory Challenges
+• Implementation gaps and barriers
+• Resource constraints and limitations
+• Coordination and communication issues
+• Recommendations for improvement
+
+Focus on UAE-specific policies and regulations where relevant. Use proper formatting with clear headers and bullet points.`
               }
             ],
             max_tokens: 800
@@ -222,15 +282,50 @@ Focus on UAE-specific policies and regulations where relevant.`
                 role: 'user', 
                 content: `Based on this workforce analysis: "${prompt}"
 
-Generate AI-Suggested Policy Improvements covering:
-**Recommended Policy Changes**
-**Implementation Strategies**
-**Expected Benefits**
-**Timeline for Implementation**
-**Success Metrics**
-**Risk Mitigation**
+Generate comprehensive AI-Suggested Policy Improvements with the following professional structure:
 
-Provide specific, actionable recommendations with clear implementation paths.`
+# AI-Suggested Policy Improvements Report
+
+## Executive Summary
+High-level overview of recommended improvements and expected impact.
+
+## Recommended Policy Changes
+• Specific policy modifications and updates
+• New policy initiatives and frameworks
+• Policy alignment and harmonization suggestions
+• Regulatory modernization recommendations
+
+## Implementation Strategies
+• Phased implementation approach
+• Stakeholder engagement and consultation
+• Resource allocation and budgeting
+• Change management and communication plans
+
+## Expected Benefits
+• Quantified benefits and outcomes
+• Efficiency improvements and cost savings
+• Enhanced service delivery and quality
+• Improved stakeholder satisfaction
+
+## Timeline for Implementation
+• Short-term initiatives (0-6 months)
+• Medium-term projects (6-18 months)
+• Long-term strategic goals (18+ months)
+• Critical milestones and dependencies
+
+## Success Metrics and KPIs
+• Measurable performance indicators
+• Data collection and monitoring systems
+• Reporting and evaluation frameworks
+• Continuous improvement mechanisms
+
+## Risk Mitigation
+• Identified implementation risks
+• Risk assessment and impact analysis
+• Mitigation strategies and contingency plans
+• Monitoring and early warning systems
+
+Provide specific, actionable recommendations with clear implementation paths, proper formatting, and professional presentation.`
               }
             ],
             max_tokens: 800
@@ -266,7 +361,7 @@ Provide specific, actionable recommendations with clear implementation paths.`
     
     // Use user-selected chart types or fallback to available types
     const selectedChartTypes = chartTypes.filter(type => type !== 'auto');
-    const finalChartTypes = selectedChartTypes.length > 0 ? selectedChartTypes : ['bar', 'line', 'pie', 'scatter', 'radar'];
+    const finalChartTypes = selectedChartTypes.length > 0 ? selectedChartTypes : ['bar', 'line', 'pie', 'heatmap', 'treemap'];
     
     const colorSchemes = [
       ['#3b82f6', '#06b6d4', '#8b5cf6', '#10b981'],
@@ -299,9 +394,10 @@ Provide specific, actionable recommendations with clear implementation paths.`
 CRITICAL REQUIREMENTS:
 1. Return ONLY valid JSON - no markdown, no explanations, no text outside JSON
 2. Generate ${numberOfCharts} charts with SPECIFIC chart types as instructed
-3. Use proper ECharts structure with all required properties
-4. Include meaningful titles, proper axis labels, and appropriate chart types
+3. Use proper ECharts structure with all required properties for advanced chart types
+4. Include meaningful titles, proper axis labels, and appropriate chart configurations
 5. STRICTLY follow the chart type requirements below
+6. For advanced charts (heatmap, treemap, sunburst, sankey, etc.), include proper data structures and configurations
 
 REQUIRED CHART TYPES:
 ${chartTypeInstructions}
@@ -430,21 +526,135 @@ Context: Chart generation for data visualization dashboard`
           if (chart.series && Array.isArray(chart.series)) {
             enhancedChart.series = chart.series.map((serie: any, serieIndex: number) => {
               const finalSeriesType = chartType; // Always use the determined chart type
-              return {
+              
+              // Base series configuration
+              const baseSeries = {
                 ...serie,
                 name: serie.name || 'Data',
                 type: finalSeriesType,
                 data: Array.isArray(serie.data) ? serie.data : [],
-                // Add pie chart specific properties
-                ...(finalSeriesType === 'pie' ? {
-                  radius: '60%',
-                  center: ['50%', '50%']
-                } : {}),
                 itemStyle: {
                   color: colors[serieIndex % colors.length],
                   ...serie.itemStyle
                 }
               };
+
+              // Add chart-specific configurations
+              switch (finalSeriesType) {
+                case 'pie':
+                  return {
+                    ...baseSeries,
+                    radius: '60%',
+                    center: ['50%', '50%'],
+                    emphasis: { scale: true, scaleSize: 10 }
+                  };
+                
+                case 'heatmap':
+                  return {
+                    ...baseSeries,
+                    label: { show: true },
+                    emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0, 0, 0, 0.5)' } }
+                  };
+                
+                case 'treemap':
+                  return {
+                    ...baseSeries,
+                    leafDepth: 1,
+                    label: { show: true, position: 'inside' },
+                    upperLabel: { show: true, height: 30 }
+                  };
+                
+                case 'sunburst':
+                  return {
+                    ...baseSeries,
+                    radius: [0, '90%'],
+                    center: ['50%', '50%'],
+                    label: { rotate: 'radial' }
+                  };
+                
+                case 'sankey':
+                  return {
+                    ...baseSeries,
+                    layout: 'none',
+                    focusNodeAdjacency: 'allEdges',
+                    label: { position: 'right' }
+                  };
+                
+                case 'graph':
+                  return {
+                    ...baseSeries,
+                    layout: 'force',
+                    force: { repulsion: 100, gravity: 0.03, edgeLength: 200 },
+                    roam: true,
+                    draggable: true
+                  };
+                
+                case 'boxplot':
+                  return {
+                    ...baseSeries,
+                    boxWidth: [7, 50]
+                  };
+                
+                case 'candlestick':
+                  return {
+                    ...baseSeries,
+                    itemStyle: {
+                      color: '#ec0000',
+                      color0: '#00da3c',
+                      borderColor: '#8A0000',
+                      borderColor0: '#008F28'
+                    }
+                  };
+                
+                case 'parallel':
+                  return {
+                    ...baseSeries,
+                    smooth: true,
+                    lineStyle: { width: 1, opacity: 0.5 }
+                  };
+                
+                case 'gauge':
+                  return {
+                    ...baseSeries,
+                    radius: '80%',
+                    center: ['50%', '60%'],
+                    startAngle: 200,
+                    endAngle: -40,
+                    min: 0,
+                    max: 100,
+                    splitNumber: 5,
+                    itemStyle: { color: '#58D9F9', shadowColor: 'rgba(0,138,255,0.45)', shadowBlur: 10, shadowOffsetX: 2, shadowOffsetY: 2 }
+                  };
+                
+                case 'funnel':
+                  return {
+                    ...baseSeries,
+                    left: '10%',
+                    top: 60,
+                    bottom: 60,
+                    width: '80%',
+                    sort: 'descending',
+                    gap: 2
+                  };
+                
+                case 'themeriver':
+                  return {
+                    ...baseSeries,
+                    label: { show: false },
+                    singleAxisIndex: 0
+                  };
+                
+                case 'polar':
+                  return {
+                    ...baseSeries,
+                    coordinateSystem: 'polar',
+                    angleAxisIndex: 0,
+                    radiusAxisIndex: 0
+                  };
+                
+                default:
+                  return baseSeries;
+              }
             });
           }
 
@@ -460,13 +670,57 @@ Context: Chart generation for data visualization dashboard`
       const fallbackCharts = [];
       const promptLower = prompt.toLowerCase();
       
-      // Generate domain-specific fallback data
-      const getFallbackData = (chartIndex: number) => {
-        if (promptLower.includes('skill') || promptLower.includes('talent') || promptLower.includes('job')) {
-          if (chartIndex === 0) {
-            return {
-              title: { text: 'Top Skills in Demand', subtext: 'Market analysis based on current trends' },
-              xAxis: { type: 'category', data: ['AI/ML', 'Cloud Computing', 'Data Science', 'Cybersecurity', 'DevOps'] },
+        // Generate domain-specific fallback data with advanced chart support
+        const getFallbackData = (chartIndex: number) => {
+          const chartType = finalChartTypes[chartIndex] || finalChartTypes[0] || 'bar';
+          console.log(`Fallback Chart ${chartIndex + 1}: User selected "${chartType}", using "${chartType}"`);
+          
+          if (promptLower.includes('skill') || promptLower.includes('talent') || promptLower.includes('job')) {
+            if (chartIndex === 0) {
+              // Generate appropriate data structure based on chart type
+              if (chartType === 'heatmap') {
+                return {
+                  title: { text: 'Skills Demand Heatmap', subtext: 'Skills by industry and experience level' },
+                  tooltip: { position: 'top' },
+                  grid: { height: '50%', top: '10%' },
+                  xAxis: { type: 'category', data: ['Entry', 'Mid', 'Senior', 'Lead'], splitArea: { show: true } },
+                  yAxis: { type: 'category', data: ['AI/ML', 'Cloud', 'DevOps', 'Security', 'Data Science'], splitArea: { show: true } },
+                  visualMap: { min: 0, max: 10, calculable: true, orient: 'horizontal', left: 'center', bottom: '15%' },
+                  series: [{ name: 'Skills Demand', type: 'heatmap', data: [[0,0,5],[0,1,1],[0,2,0],[0,3,0],[1,0,7],[1,1,9],[1,2,4],[1,3,2],[2,0,8],[2,1,8],[2,2,6],[2,3,4],[3,0,9],[3,1,10],[3,2,8],[3,3,6]] }]
+                };
+              } else if (chartType === 'treemap') {
+                return {
+                  title: { text: 'Skills Portfolio Distribution', subtext: 'Hierarchical view of skill categories' },
+                  series: [{ name: 'Skills', type: 'treemap', data: [
+                    { name: 'Technical Skills', value: 40, children: [
+                      { name: 'AI/ML', value: 15 }, { name: 'Cloud Computing', value: 12 }, { name: 'DevOps', value: 8 }, { name: 'Cybersecurity', value: 5 }
+                    ]},
+                    { name: 'Soft Skills', value: 30, children: [
+                      { name: 'Leadership', value: 10 }, { name: 'Communication', value: 8 }, { name: 'Problem Solving', value: 7 }, { name: 'Teamwork', value: 5 }
+                    ]},
+                    { name: 'Domain Skills', value: 30, children: [
+                      { name: 'Finance', value: 12 }, { name: 'Healthcare', value: 10 }, { name: 'Education', value: 8 }
+                    ]}
+                  ]}]
+                };
+              } else if (chartType === 'sunburst') {
+                return {
+                  title: { text: 'Skills Hierarchy', subtext: 'Multi-level skill categorization' },
+                  series: [{ name: 'Skills', type: 'sunburst', data: [
+                    { name: 'Technical', itemStyle: { color: '#3b82f6' }, children: [
+                      { name: 'AI/ML', value: 15, itemStyle: { color: '#06b6d4' } },
+                      { name: 'Cloud', value: 12, itemStyle: { color: '#8b5cf6' } }
+                    ]},
+                    { name: 'Business', itemStyle: { color: '#10b981' }, children: [
+                      { name: 'Strategy', value: 10, itemStyle: { color: '#84cc16' } },
+                      { name: 'Finance', value: 8, itemStyle: { color: '#f59e0b' } }
+                    ]}
+                  ]}]
+                };
+              } else {
+                return {
+                  title: { text: 'Top Skills in Demand', subtext: 'Market analysis based on current trends' },
+                  xAxis: { type: 'category', data: ['AI/ML', 'Cloud Computing', 'Data Science', 'Cybersecurity', 'DevOps'] },
               yAxis: { type: 'value', name: 'Demand Level' },
               series: [{ name: 'Skill Demand', type: 'bar', data: [95, 88, 82, 78, 75] }],
               legend: { data: ['Skill Demand'] }

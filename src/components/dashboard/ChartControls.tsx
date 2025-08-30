@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Settings2 } from 'lucide-react';
+import ChartTypePreview from './ChartTypePreview';
 
 interface ChartControlsProps {
   numberOfCharts: number;
@@ -17,14 +18,26 @@ interface ChartControlsProps {
 
 const chartTypeOptions = [
   { value: 'auto', label: 'Auto (Best choice)' },
+  // Basic Charts
   { value: 'bar', label: 'Bar Chart' },
   { value: 'line', label: 'Line Chart' },
   { value: 'pie', label: 'Pie Chart' },
-  { value: 'scatter', label: 'Scatter Plot' },
   { value: 'area', label: 'Area Chart' },
+  { value: 'scatter', label: 'Scatter Plot' },
+  // Advanced Charts
+  { value: 'heatmap', label: 'Heatmap' },
+  { value: 'treemap', label: 'Treemap' },
+  { value: 'sunburst', label: 'Sunburst' },
+  { value: 'sankey', label: 'Sankey Diagram' },
+  { value: 'graph', label: 'Graph/Network' },
+  { value: 'boxplot', label: 'Box Plot' },
+  { value: 'candlestick', label: 'Candlestick' },
+  { value: 'parallel', label: 'Parallel Coordinates' },
   { value: 'radar', label: 'Radar Chart' },
   { value: 'gauge', label: 'Gauge Chart' },
   { value: 'funnel', label: 'Funnel Chart' },
+  { value: 'themeriver', label: 'Theme River' },
+  { value: 'polar', label: 'Polar Chart' },
 ];
 
 const ChartControls: React.FC<ChartControlsProps> = ({
@@ -99,33 +112,38 @@ const ChartControls: React.FC<ChartControlsProps> = ({
             <span className="w-2 h-2 bg-secondary rounded-full"></span>
             Chart Types
           </Label>
-          <div className="grid gap-3">
-            {Array.from({ length: numberOfCharts }, (_, index) => (
-              <div key={index} className="group">
-                <Label htmlFor={`chart-type-${index}`} className="text-xs text-muted-foreground mb-2 block">
-                  Chart {index + 1}
-                </Label>
-                <Select
-                  value={chartTypes[index] || 'auto'}
-                  onValueChange={(value) => handleChartTypeChange(index, value)}
-                >
-                  <SelectTrigger 
-                    id={`chart-type-${index}`}
-                    className="h-9 bg-background/50 border-muted text-sm hover:border-primary/40 transition-colors group-hover:border-primary/30"
+            <div className="grid gap-3">
+              {Array.from({ length: numberOfCharts }, (_, index) => (
+                <div key={index} className="group">
+                  <Label htmlFor={`chart-type-${index}`} className="text-xs text-muted-foreground mb-2 block">
+                    Chart {index + 1}
+                  </Label>
+                  <Select
+                    value={chartTypes[index] || 'auto'}
+                    onValueChange={(value) => handleChartTypeChange(index, value)}
                   >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {chartTypeOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value} className="text-sm">
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ))}
-          </div>
+                    <SelectTrigger 
+                      id={`chart-type-${index}`}
+                      className="h-9 bg-background/50 border-muted text-sm hover:border-primary/40 transition-colors group-hover:border-primary/30"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {chartTypeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value} className="text-sm">
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  {/* Show preview for first chart */}
+                  {index === 0 && (chartTypes[0] || 'auto') !== 'auto' && (
+                    <ChartTypePreview selectedType={chartTypes[0] || 'auto'} />
+                  )}
+                </div>
+              ))}
+            </div>
         </div>
       )}
 
