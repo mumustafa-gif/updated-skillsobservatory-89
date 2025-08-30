@@ -261,6 +261,9 @@ Provide specific, actionable recommendations with clear implementation paths.`
       }
     }
 
+    // Start chart generation timing
+    const chartStartTime = performance.now();
+    
     // Create dynamic system prompt ensuring different chart types and colors
     const availableChartTypes = ['bar', 'line', 'pie', 'scatter', 'radar'];
     const colorSchemes = [
