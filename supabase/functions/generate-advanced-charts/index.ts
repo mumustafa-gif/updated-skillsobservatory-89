@@ -361,7 +361,7 @@ Provide specific, actionable recommendations with clear implementation paths, pr
     
     // Use user-selected chart types or fallback to available types
     const selectedChartTypes = chartTypes.filter(type => type !== 'auto');
-    const finalChartTypes = selectedChartTypes.length > 0 ? selectedChartTypes : ['bar', 'line', 'pie', 'heatmap', 'treemap'];
+    const finalChartTypes = selectedChartTypes.length > 0 ? selectedChartTypes : ['bar', 'line', 'pie', 'heatmap', 'treemap', 'map'];
     
     const colorSchemes = [
       ['#3b82f6', '#06b6d4', '#8b5cf6', '#10b981'],
@@ -652,6 +652,21 @@ Context: Chart generation for data visualization dashboard`
                     radiusAxisIndex: 0
                   };
                 
+                case 'map':
+                  // For map charts, return a special configuration
+                  return {
+                    type: 'map',
+                    mapStyle: 'mapbox://styles/mapbox/light-v11',
+                    center: [0, 0],
+                    zoom: 2,
+                    markers: Array.isArray(serie.data) ? serie.data.map((item: any, idx: number) => ({
+                      coordinates: [Math.random() * 360 - 180, Math.random() * 180 - 90],
+                      title: `Location ${idx + 1}`,
+                      description: `Data point: ${item}`,
+                      color: colors[idx % colors.length]
+                    })) : []
+                  };
+                
                 default:
                   return baseSeries;
               }
@@ -716,6 +731,21 @@ Context: Chart generation for data visualization dashboard`
                       { name: 'Finance', value: 8, itemStyle: { color: '#f59e0b' } }
                     ]}
                   ]}]
+                };
+              } else if (chartType === 'map') {
+                return {
+                  type: 'map',
+                  title: { text: 'Skills Distribution Map', subtext: 'Geographic distribution of skills demand' },
+                  mapStyle: 'mapbox://styles/mapbox/light-v11',
+                  center: [0, 20],
+                  zoom: 2,
+                  markers: [
+                    { coordinates: [-74.0059, 40.7128], title: 'New York', description: 'AI/ML Skills: High demand', color: '#3b82f6' },
+                    { coordinates: [-122.4194, 37.7749], title: 'San Francisco', description: 'Tech Skills: Very High', color: '#10b981' },
+                    { coordinates: [0.1278, 51.5074], title: 'London', description: 'Finance Skills: High', color: '#f59e0b' },
+                    { coordinates: [2.3522, 48.8566], title: 'Paris', description: 'Creative Skills: Medium', color: '#8b5cf6' },
+                    { coordinates: [139.6917, 35.6895], title: 'Tokyo', description: 'Technology: High', color: '#06b6d4' }
+                  ]
                 };
               } else {
                 return {
@@ -1098,7 +1128,8 @@ Use proper formatting with headings, bullet points, and structured content.`
     };
 
     const totalEndTime = performance.now();
-    console.log(`🎉 Complete! Generated ${result.charts.length} charts, ${result.insights.length} insights in ${(totalEndTime - startTime).toFixed(0)}ms total`);
+    const totalTimeMs = (totalEndTime - startTime).toFixed(0);
+    console.log(`Complete! Generated ${result.charts.length} charts, ${result.insights.length} insights in ${totalTimeMs}ms total`);
 
     return new Response(JSON.stringify(result), {
       status: 200,

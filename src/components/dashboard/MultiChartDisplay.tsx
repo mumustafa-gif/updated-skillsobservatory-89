@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import ReactECharts from 'echarts-for-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import MapChart from './MapChart';
 
 interface MultiChartDisplayProps {
   chartOptions: any[];
@@ -290,66 +291,75 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
       transition={{ duration: 0.4 }}
       className={`grid ${getGridCols(chartOptions.length)} gap-3 sm:gap-4 lg:gap-6 w-full`}
     >
-      {chartOptions.map((chartOption, index) => (
-        <motion.div
-          key={index}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: index * 0.1 }}
-          className="w-full"
-        >
-          <Card className="w-full h-auto overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
-            <CardHeader className="pb-2 px-3 sm:px-4 lg:px-6 pt-3 sm:pt-4">
-              <CardTitle className="text-sm sm:text-base lg:text-lg font-semibold text-gray-800 dark:text-gray-200 line-clamp-2 leading-tight">
-                {chartOption.title?.text || `Skills Analysis Chart ${index + 1}`}
-              </CardTitle>
-              {chartOption.title?.subtext && (
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2 leading-tight">
-                  {chartOption.title.subtext}
-                </p>
-              )}
-            </CardHeader>
-            <CardContent className="p-0 w-full">
-              <div 
-                className="w-full relative"
-                style={{ 
-                  height: 'clamp(280px, 20vw + 200px, 420px)', // Dynamic height based on viewport
-                  minHeight: '280px',
-                  maxHeight: '420px'
-                }}
-              >
-                <ReactECharts
-                  ref={(ref) => { chartRefs.current[index] = ref; }}
-                  option={getResponsiveConfig(chartOption, index)}
-                  style={{ 
-                    height: '100%', 
-                    width: '100%',
-                    minHeight: '280px'
-                  }}
-                  opts={{ 
-                    renderer: 'canvas',
-                    locale: 'en',
-                    devicePixelRatio: window.devicePixelRatio || 1
-                  }}
-                  onEvents={{
-                    'finished': () => {
-                      // Ensure proper sizing after chart finishes rendering
-                      setTimeout(() => {
-                        if (chartRefs.current[index]) {
-                          const instance = chartRefs.current[index].getEchartsInstance();
-                          if (instance) {
-                            instance.resize();
-                          }
+      {chartOptions.map((chartOption, index) => {
+        // Check if this is a map chart
+        const isMapChart = chartOption.type === 'map' || chartOption.mapStyle;
+        
+        return (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+            className="w-full"
+          >
+            {isMapChart ? (
+              <MapChart config={chartOption} />
+            ) : (
+              <Card className="w-full h-auto overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
+                <CardHeader className="pb-2 px-3 sm:px-4 lg:px-6 pt-3 sm:pt-4">
+                  <CardTitle className="text-sm sm:text-base lg:text-lg font-semibold text-gray-800 dark:text-gray-200 line-clamp-2 leading-tight">
+                    {chartOption.title?.text || `Skills Analysis Chart ${index + 1}`}
+                  </CardTitle>
+                  {chartOption.title?.subtext && (
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2 leading-tight">
+                      {chartOption.title.subtext}
+                    </p>
+                  )}
+                </CardHeader>
+                <CardContent className="p-0 w-full">
+                  <div 
+                    className="w-full relative"
+                    style={{ 
+                      height: 'clamp(280px, 20vw + 200px, 420px)', // Dynamic height based on viewport
+                      minHeight: '280px',
+                      maxHeight: '420px'
+                    }}
+                  >
+                    <ReactECharts
+                      ref={(ref) => { chartRefs.current[index] = ref; }}
+                      option={getResponsiveConfig(chartOption, index)}
+                      style={{ 
+                        height: '100%', 
+                        width: '100%',
+                        minHeight: '280px'
+                      }}
+                      opts={{ 
+                        renderer: 'canvas',
+                        locale: 'en',
+                        devicePixelRatio: window.devicePixelRatio || 1
+                      }}
+                      onEvents={{
+                        'finished': () => {
+                          // Ensure proper sizing after chart finishes rendering
+                          setTimeout(() => {
+                            if (chartRefs.current[index]) {
+                              const instance = chartRefs.current[index].getEchartsInstance();
+                              if (instance) {
+                                instance.resize();
+                              }
+                            }
+                          }, 50);
                         }
-                      }, 50);
-                    }
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      ))}
+                      }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </motion.div>
+        );
+      })}
     </motion.div>
   );
 };

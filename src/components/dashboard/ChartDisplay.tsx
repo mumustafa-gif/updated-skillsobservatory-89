@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import ReactECharts from 'echarts-for-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import MapChart from './MapChart';
 
 interface ChartDisplayProps {
   chartOption: any;
@@ -50,6 +51,19 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
           </div>
         </CardContent>
       </Card>
+    );
+  }
+
+  // Check if this is a map chart
+  if (chartOption.type === 'map' || chartOption.mapStyle) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <MapChart config={chartOption} loading={loading} />
+      </motion.div>
     );
   }
 

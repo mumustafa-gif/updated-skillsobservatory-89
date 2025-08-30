@@ -18,6 +18,8 @@ interface ChartControlsProps {
 
 const chartTypeOptions = [
   { value: 'auto', label: 'Auto (Best choice)' },
+  // Geospatial Charts
+  { value: 'map', label: 'Map Visualization' },
   // Basic Charts
   { value: 'bar', label: 'Bar Chart' },
   { value: 'line', label: 'Line Chart' },

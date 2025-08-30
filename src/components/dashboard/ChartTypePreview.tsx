@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, BarChart3, PieChart, TrendingUp, Grid3X3, TreeDeciduous, Sun, Share2, Gauge, Zap, Activity, Target, Radar, CircleDot, Filter } from 'lucide-react';
+import { Sparkles, BarChart3, PieChart, TrendingUp, Grid3X3, TreeDeciduous, Sun, Share2, Gauge, Zap, Activity, Target, Radar, CircleDot, Filter, Map } from 'lucide-react';
 
 interface ChartTypePreviewProps {
   selectedType: string;
@@ -9,6 +9,9 @@ interface ChartTypePreviewProps {
 
 const chartTypeInfo = {
   auto: { icon: Sparkles, name: 'Auto Selection', category: 'Smart', description: 'AI chooses the best chart type for your data' },
+  
+  // Geospatial Charts
+  map: { icon: Map, name: 'Map Visualization', category: 'Geospatial', description: 'Interactive geographic data visualization with Mapbox' },
   
   // Basic Charts
   bar: { icon: BarChart3, name: 'Bar Chart', category: 'Basic', description: 'Compare values across categories' },
@@ -41,6 +44,7 @@ const ChartTypePreview: React.FC<ChartTypePreviewProps> = ({ selectedType }) => 
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'Smart': return 'bg-gradient-to-r from-purple-500/10 to-pink-500/10 text-purple-700 border-purple-200';
+      case 'Geospatial': return 'bg-gradient-to-r from-indigo-500/10 to-purple-500/10 text-indigo-700 border-indigo-200';
       case 'Basic': return 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10 text-blue-700 border-blue-200';
       case 'Advanced': return 'bg-gradient-to-r from-emerald-500/10 to-green-500/10 text-emerald-700 border-emerald-200';
       case 'Specialized': return 'bg-gradient-to-r from-orange-500/10 to-amber-500/10 text-orange-700 border-orange-200';
@@ -83,6 +87,18 @@ const ChartTypePreview: React.FC<ChartTypePreviewProps> = ({ selectedType }) => 
             </div>
             <p className="text-xs text-emerald-600 mt-1">
               Powered by Apache ECharts with enhanced interactivity and customization
+            </p>
+          </div>
+        )}
+        
+        {chartInfo.category === 'Geospatial' && (
+          <div className="mt-3 p-2 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 rounded-lg border border-indigo-200/50">
+            <div className="flex items-center gap-2">
+              <Map className="h-3 w-3 text-indigo-600" />
+              <span className="text-xs text-indigo-700 font-medium">Mapbox Integration</span>
+            </div>
+            <p className="text-xs text-indigo-600 mt-1">
+              Interactive maps powered by Mapbox with geographic data visualization
             </p>
           </div>
         )}
