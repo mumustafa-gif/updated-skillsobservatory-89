@@ -15,11 +15,21 @@ interface DetailedReportsProps {
 }
 
 const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) => {
-  const formatReport = (report: string) => {
+  const formatReport = (report: string | any) => {
     if (!report) return '';
     
+    // Ensure report is a string - handle different data types
+    let reportString: string;
+    if (typeof report === 'string') {
+      reportString = report;
+    } else if (typeof report === 'object' && report.report) {
+      reportString = typeof report.report === 'string' ? report.report : JSON.stringify(report.report);
+    } else {
+      reportString = String(report);
+    }
+    
     // Enhanced professional formatting with proper structure
-    let formattedReport = report
+    let formattedReport = reportString
       // Main headers (H1) - Large, prominent styling
       .replace(/^# (.*$)/gim, '<div class="mb-6 mt-8 first:mt-0"><h1 class="text-2xl font-bold text-primary mb-2 pb-2 border-b-2 border-primary/20">$1</h1></div>')
       
