@@ -11,6 +11,25 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to make requests with timeout
+const requestWithTimeout = async (url: string, options: any, timeoutMs: number = 45000): Promise<Response | null> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    return response.ok ? response : null;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.error('Request failed or timed out:', error);
+    return null;
+  }
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -18,14 +37,13 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Request method:', req.method);
-    console.log('Content-Type:', req.headers.get('content-type'));
+    const startTime = performance.now();
+    console.log('🚀 Request started:', req.method);
     
     let requestData;
     try {
       const rawBody = await req.text();
-      console.log('Raw request body:', rawBody);
-      console.log('Request body length:', rawBody.length);
+      console.log('📥 Request body length:', rawBody.length);
       
       if (!rawBody || rawBody.trim() === '') {
         console.error('Empty request body received');
@@ -39,7 +57,7 @@ serve(async (req) => {
       }
       
       requestData = JSON.parse(rawBody);
-      console.log('Parsed request data successfully:', requestData);
+      console.log('✅ Request parsed successfully');
     } catch (parseError) {
       console.error('JSON parsing error:', parseError);
       console.error('Error details:', parseError.message);
@@ -83,13 +101,13 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    console.log('Token received, length:', token.length);
+    console.log('🔐 Auth token received');
     
     // Create supabase client with service role key for authentication
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    console.log('User data:', user);
+    console.log('👤 User authenticated:', user?.email);
     
     if (authError) {
       console.error('Auth verification failed:', authError.message);
@@ -110,7 +128,116 @@ serve(async (req) => {
       });
     }
     
-    console.log('User authenticated successfully:', user.email);
+    // Start independent reports early (don't need chart data)
+    const authTime = performance.now();
+    console.log(`⚡ Auth completed in ${(authTime - startTime).toFixed(0)}ms`);
+    
+    // Start independent OpenAI calls immediately (parallel with chart generation)
+    let earlyReportsPromise = null;
+    if (generateDetailedReports) {
+      console.log('🚀 Starting early report generation...');
+      earlyReportsPromise = Promise.allSettled([
+        // Skills Intelligence & Analysis (independent of chart data)
+        requestWithTimeout('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              { 
+                role: 'system', 
+                content: `Generate a Skills Intelligence & Analysis report with specific focus on workforce skills, talent gaps, training needs, and skill development strategies. Use professional formatting with headings and bullet points.`
+              },
+              { 
+                role: 'user', 
+                content: `For this analysis: "${prompt}"
+
+Generate a Skills Intelligence & Analysis report covering:
+**Skills Demand Analysis**
+**Talent Gap Assessment**  
+**Training & Development Needs**
+**Skill Enhancement Strategies**
+**Future Skills Requirements**
+
+Include quantitative insights and specific recommendations.`
+              }
+            ],
+            max_tokens: 1200,
+            temperature: 0.2
+          }),
+        }, 40000),
+        
+        // Current Policies & Regulations (independent of chart data)
+        requestWithTimeout('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              { 
+                role: 'system', 
+                content: `Generate a Current Policies & Regulations analysis focused on existing workforce policies, regulatory frameworks, and compliance requirements relevant to the UAE labor market. Use professional formatting.`
+              },
+              { 
+                role: 'user', 
+                content: `For this workforce analysis: "${prompt}"
+
+Generate a Current Policies & Regulations report covering:
+**Existing Labor Policies**
+**Regulatory Framework Analysis**
+**Compliance Requirements**
+**Policy Impact Assessment**
+**Regulatory Challenges**
+
+Focus on UAE-specific policies and regulations where relevant.`
+              }
+            ],
+            max_tokens: 1200,
+            temperature: 0.2
+          }),
+        }, 40000),
+        
+        // AI-Suggested Policy Improvements (independent of chart data)
+        requestWithTimeout('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              { 
+                role: 'system', 
+                content: `Generate AI-powered policy improvement recommendations based on data analysis and best practices. Focus on actionable, specific policy suggestions with implementation strategies. Use professional formatting.`
+              },
+              { 
+                role: 'user', 
+                content: `Based on this workforce analysis: "${prompt}"
+
+Generate AI-Suggested Policy Improvements covering:
+**Recommended Policy Changes**
+**Implementation Strategies**
+**Expected Benefits**
+**Timeline for Implementation**
+**Success Metrics**
+**Risk Mitigation**
+
+Provide specific, actionable recommendations with clear implementation paths.`
+              }
+            ],
+            max_tokens: 1200,
+            temperature: 0.2
+          }),
+        }, 40000)
+      ]);
+    }
 
     // Get knowledge base content if files are specified
     let knowledgeBaseContext = '';
@@ -128,7 +255,7 @@ serve(async (req) => {
           knowledgeBaseContext = files.map(file => 
             `File: ${file.original_filename}\nContent: ${file.extracted_content}`
           ).join('\n\n');
-          console.log('Loaded knowledge base context from', files.length, 'files');
+          console.log('📚 Loaded knowledge base context from', files.length, 'files');
         }
       } catch (error) {
         console.error('Failed to load knowledge base files:', error);
@@ -146,7 +273,10 @@ serve(async (req) => {
     ];
 
     // Generate charts with completely dynamic prompt based on user request
-    const chartResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    console.log('📊 Starting chart generation...');
+    const chartStartTime = performance.now();
+    
+    const chartResponse = await requestWithTimeout('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
@@ -214,11 +344,10 @@ Context: Chart generation for data visualization dashboard`
           type: "json_object"
         }
       }),
-    });
+    }, 35000);
 
-    if (!chartResponse.ok) {
-      console.error('OpenAI API error (charts):', await chartResponse.text());
-      throw new Error('Failed to generate charts');
+    if (!chartResponse) {
+      throw new Error('Chart generation timed out or failed');
     }
 
     const chartData = await chartResponse.json();
@@ -226,7 +355,7 @@ Context: Chart generation for data visualization dashboard`
     
     try {
       const responseContent = chartData.choices[0].message.content.trim();
-      console.log('OpenAI JSON Response:', responseContent);
+      console.log('📊 Chart response received, length:', responseContent.length);
       
       // Enhanced JSON parsing with multiple strategies
       let jsonContent = responseContent;
@@ -306,7 +435,8 @@ Context: Chart generation for data visualization dashboard`
           return enhancedChart;
         });
         
-        console.log('Successfully parsed and enhanced', parsedChartData.charts.length, 'charts with different types and colors');
+        const chartEndTime = performance.now();
+        console.log(`✅ Generated ${parsedChartData.charts.length} charts in ${(chartEndTime - chartStartTime).toFixed(0)}ms`);
       }
       
     } catch (parseError) {
@@ -394,27 +524,9 @@ Context: Chart generation for data visualization dashboard`
         }
       };
       
-      console.log(`Created ${fallbackCharts.length} fallback charts`);
+      const chartEndTime = performance.now();
+      console.log(`⚠️ Created ${fallbackCharts.length} fallback charts in ${(chartEndTime - chartStartTime).toFixed(0)}ms`);
     }
-
-    // Helper function to make requests with timeout
-    const requestWithTimeout = async (url: string, options: any, timeoutMs: number = 45000): Promise<Response | null> => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-      
-      try {
-        const response = await fetch(url, {
-          ...options,
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        return response.ok ? response : null;
-      } catch (error) {
-        clearTimeout(timeoutId);
-        console.error('Request failed or timed out:', error);
-        return null;
-      }
-    };
 
     // Generate insights with retry logic
     let insights = [];
@@ -431,7 +543,7 @@ Context: Chart generation for data visualization dashboard`
     async function generateInsightsWithRetry(retries = 2) {
       for (let attempt = 1; attempt <= retries; attempt++) {
         try {
-          console.log(`Attempting insights generation (attempt ${attempt}/${retries})`);
+          console.log(`💡 Insights attempt ${attempt}/${retries}`);
           
           const insightResponse = await requestWithTimeout('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -465,11 +577,11 @@ Context: Chart generation for data visualization dashboard`
                   Generate 6 specific insights that directly address this query with actionable recommendations. Return ONLY the JSON object.`
                 }
               ],
-              max_tokens: 1000,
+              max_tokens: 800,
               temperature: 0.2,
               response_format: { type: "json_object" }
             }),
-          });
+          }, 30000);
 
           if (!insightResponse) {
             throw new Error('Request failed or timed out');
@@ -482,7 +594,7 @@ Context: Chart generation for data visualization dashboard`
             throw new Error('Empty response from OpenAI');
           }
           
-          console.log(`Raw insights response (attempt ${attempt}):`, responseContent);
+          console.log(`📝 Insights response length: ${responseContent?.length || 0}`);
           
           // Robust JSON parsing
           let parsedResponse;
@@ -499,7 +611,7 @@ Context: Chart generation for data visualization dashboard`
           }
           
           if (parsedResponse.insights && Array.isArray(parsedResponse.insights) && parsedResponse.insights.length > 0) {
-            console.log(`Successfully generated ${parsedResponse.insights.length} insights`);
+            console.log(`✅ Generated ${parsedResponse.insights.length} insights`);
             return parsedResponse.insights;
           } else {
             throw new Error('Invalid insights format in response');
@@ -523,14 +635,15 @@ Context: Chart generation for data visualization dashboard`
     let suggestedImprovementsReport = '';
 
     if (generateDetailedReports) {
-      console.log('Starting parallel report generation...');
+      console.log('📊 Starting chart-dependent reports...');
+      const reportStartTime = performance.now();
       
-      // Create all promises for parallel execution
-      const reportPromises = [
-        // Insights with retry
+      // Create promises for reports that depend on chart data
+      const chartDependentReports = [
+        // Insights with retry (depends on chart data)
         generateInsightsWithRetry(),
         
-        // Detailed Report
+        // Detailed Report (depends on chart data)
         requestWithTimeout('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -555,7 +668,7 @@ Return only the formatted report text, no JSON.`
                 role: 'user', 
                 content: `Based on this analysis request: "${prompt}"
 
-Chart data insights: ${JSON.stringify(parsedChartData?.charts?.[0] || {}, null, 2).slice(0, 600)}
+Chart data insights: ${JSON.stringify(parsedChartData?.charts?.[0] || {}, null, 2).slice(0, 500)}
 
 Generate a comprehensive detailed report with:
 **Executive Summary**
@@ -567,118 +680,26 @@ Generate a comprehensive detailed report with:
 Use proper formatting with headings, bullet points, and structured content.`
               }
             ],
-            max_tokens: 2000,
-            temperature: 0.2
-          }),
-        }),
-        
-        // Skills Intelligence & Analysis
-        requestWithTimeout('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              { 
-                role: 'system', 
-                content: `Generate a Skills Intelligence & Analysis report with specific focus on workforce skills, talent gaps, training needs, and skill development strategies. Use professional formatting with headings and bullet points.`
-              },
-              { 
-                role: 'user', 
-                content: `For this analysis: "${prompt}"
-
-Generate a Skills Intelligence & Analysis report covering:
-**Skills Demand Analysis**
-**Talent Gap Assessment**  
-**Training & Development Needs**
-**Skill Enhancement Strategies**
-**Future Skills Requirements**
-
-Include quantitative insights and specific recommendations.`
-              }
-            ],
             max_tokens: 1500,
             temperature: 0.2
           }),
-        }),
-        
-        // Current Policies & Regulations
-        requestWithTimeout('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              { 
-                role: 'system', 
-                content: `Generate a Current Policies & Regulations analysis focused on existing workforce policies, regulatory frameworks, and compliance requirements relevant to the UAE labor market. Use professional formatting.`
-              },
-              { 
-                role: 'user', 
-                content: `For this workforce analysis: "${prompt}"
-
-Generate a Current Policies & Regulations report covering:
-**Existing Labor Policies**
-**Regulatory Framework Analysis**
-**Compliance Requirements**
-**Policy Impact Assessment**
-**Regulatory Challenges**
-
-Focus on UAE-specific policies and regulations where relevant.`
-              }
-            ],
-            max_tokens: 1500,
-            temperature: 0.2
-          }),
-        }),
-        
-        // AI-Suggested Policy Improvements
-        requestWithTimeout('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              { 
-                role: 'system', 
-                content: `Generate AI-powered policy improvement recommendations based on data analysis and best practices. Focus on actionable, specific policy suggestions with implementation strategies. Use professional formatting.`
-              },
-              { 
-                role: 'user', 
-                content: `Based on this workforce analysis: "${prompt}"
-
-Generate AI-Suggested Policy Improvements covering:
-**Recommended Policy Changes**
-**Implementation Strategies**
-**Expected Benefits**
-**Timeline for Implementation**
-**Success Metrics**
-**Risk Mitigation**
-
-Provide specific, actionable recommendations with clear implementation paths.`
-              }
-            ],
-            max_tokens: 1500,
-            temperature: 0.2
-          }),
-        })
+        }, 35000)
       ];
 
       try {
-        // Execute all promises in parallel
-        const results = await Promise.allSettled(reportPromises);
+        // Execute chart-dependent and early reports in parallel  
+        const [chartDependentResults, earlyResults] = await Promise.allSettled([
+          Promise.allSettled(chartDependentReports),
+          earlyReportsPromise || Promise.resolve([])
+        ]);
         
-        // Process results
-        const [insightsResult, detailedResult, skillsResult, policiesResult, improvementsResult] = results;
+        // Process chart-dependent results
+        const chartResults = chartDependentResults.status === 'fulfilled' ? chartDependentResults.value : [];
+        const [insightsResult, detailedResult] = chartResults;
+        
+        // Process early results
+        const earlyReportsResults = earlyResults.status === 'fulfilled' ? earlyResults.value : [];
+        const [skillsResult, policiesResult, improvementsResult] = earlyReportsResults;
         
         // Handle insights
         if (insightsResult.status === 'fulfilled') {
@@ -689,46 +710,47 @@ Provide specific, actionable recommendations with clear implementation paths.`
         }
         
         // Handle detailed report
-        if (detailedResult.status === 'fulfilled' && detailedResult.value) {
+        if (detailedResult?.status === 'fulfilled' && detailedResult.value) {
           const reportData = await detailedResult.value.json();
           detailedReport = reportData.choices[0].message.content;
-          console.log('Generated detailed report');
+          console.log('✅ Generated detailed report');
         } else {
-          console.error('Detailed report generation failed');
+          console.error('❌ Detailed report generation failed');
           detailedReport = `**Executive Summary**\n\nBased on the analysis of "${prompt}", this comprehensive report provides data-driven insights and strategic recommendations.\n\n**Key Findings**\n\n• Analysis reveals significant opportunities for optimization\n• Data patterns indicate strategic areas for improvement\n• Performance metrics suggest targeted intervention strategies\n\n**Strategic Recommendations**\n\n• Implement data-driven decision making processes\n• Focus on high-impact areas identified in the analysis\n• Establish monitoring frameworks for continuous improvement`;
         }
         
         // Handle skills intelligence
-        if (skillsResult.status === 'fulfilled' && skillsResult.value) {
+        if (skillsResult?.status === 'fulfilled' && skillsResult.value) {
           const skillsData = await skillsResult.value.json();
           skillsIntelligence = skillsData.choices[0].message.content;
-          console.log('Generated skills intelligence report');
+          console.log('✅ Generated skills intelligence report');
         } else {
-          console.error('Skills intelligence generation failed');
+          console.error('❌ Skills intelligence generation failed');
           skillsIntelligence = `**Skills Demand Analysis**\n\nThe current market analysis indicates strong demand for emerging skills in technology and digital transformation.\n\n**Key Skills Insights**\n\n• High demand for AI and machine learning capabilities\n• Growing need for data analysis and interpretation skills\n• Increased focus on digital literacy across sectors\n\n**Training Recommendations**\n\n• Develop comprehensive upskilling programs\n• Partner with educational institutions for curriculum development\n• Implement mentorship and knowledge transfer initiatives`;
         }
         
         // Handle current policies
-        if (policiesResult.status === 'fulfilled' && policiesResult.value) {
+        if (policiesResult?.status === 'fulfilled' && policiesResult.value) {
           const policiesData = await policiesResult.value.json();
           currentPoliciesReport = policiesData.choices[0].message.content;
-          console.log('Generated current policies report');
+          console.log('✅ Generated current policies report');
         } else {
-          console.error('Current policies generation failed');
+          console.error('❌ Current policies generation failed');
           currentPoliciesReport = `**Current Policy Framework**\n\nExisting workforce policies provide a foundation for strategic development while highlighting areas for enhancement.\n\n**Policy Assessment**\n\n• Current regulations support basic workforce development\n• Compliance frameworks are established but require modernization\n• Gaps exist in emerging technology skill requirements\n\n**Regulatory Analysis**\n\n• Labor laws provide worker protection mechanisms\n• Skills certification processes need digitization\n• Cross-sector coordination could be improved`;
         }
         
         // Handle policy improvements
-        if (improvementsResult.status === 'fulfilled' && improvementsResult.value) {
+        if (improvementsResult?.status === 'fulfilled' && improvementsResult.value) {
           const improvementsData = await improvementsResult.value.json();
           suggestedImprovementsReport = improvementsData.choices[0].message.content;
-          console.log('Generated policy improvements report');
+          console.log('✅ Generated policy improvements report');
         } else {
-          console.error('Policy improvements generation failed');
+          console.error('❌ Policy improvements generation failed');
           suggestedImprovementsReport = `**Recommended Policy Enhancements**\n\nBased on current analysis, strategic policy improvements can drive significant workforce development outcomes.\n\n**Priority Recommendations**\n\n• Establish AI and digital skills certification frameworks\n• Create industry-education partnership incentives\n• Implement flexible work arrangement policies\n\n**Implementation Strategy**\n\n• Phase 1: Stakeholder engagement and consultation\n• Phase 2: Pilot program development and testing\n• Phase 3: Full-scale implementation and monitoring\n\n**Expected Benefits**\n\n• Enhanced workforce competitiveness\n• Improved skill-job matching efficiency\n• Increased economic productivity and innovation`;
         }
         
-        console.log('Parallel report generation completed');
+        const reportEndTime = performance.now();
+        console.log(`✅ All reports completed in ${(reportEndTime - reportStartTime).toFixed(0)}ms`);
         
       } catch (error) {
         console.error('Error in parallel report generation:', error);
@@ -755,7 +777,8 @@ Provide specific, actionable recommendations with clear implementation paths.`
       suggestedImprovementsReport
     };
 
-    console.log('Successfully generated response with', result.charts.length, 'charts,', result.insights.length, 'insights, and detailed reports');
+    const totalEndTime = performance.now();
+    console.log(`🎉 Complete! Generated ${result.charts.length} charts, ${result.insights.length} insights in ${(totalEndTime - startTime).toFixed(0)}ms total`);
 
     return new Response(JSON.stringify(result), {
       status: 200,
