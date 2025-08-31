@@ -1,12 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import ReactECharts from 'echarts-for-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Download, Maximize2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { downloadChartAsPDF } from '@/utils/pdfGenerator';
-import FullScreenChartModal from './FullScreenChartModal';
 import MapChart from './MapChart';
 
 interface MultiChartDisplayProps {
@@ -16,41 +11,6 @@ interface MultiChartDisplayProps {
 
 const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loading }) => {
   const chartRefs = useRef<any[]>([]);
-  const [fullscreenChart, setFullscreenChart] = useState<{ isOpen: boolean; chartOption: any; title: string }>({
-    isOpen: false,
-    chartOption: null,
-    title: ''
-  });
-
-  const handleDownloadPDF = async (index: number) => {
-    try {
-      const chartContainer = chartRefs.current[index]?.ele;
-      if (!chartContainer) {
-        toast.error('Chart not ready for download');
-        return;
-      }
-
-      const chartTitle = chartOptions[index]?.title?.text || `Skills Analysis Chart ${index + 1}`;
-      toast.loading('Generating PDF...');
-      await downloadChartAsPDF(chartContainer, chartTitle);
-      toast.dismiss();
-      toast.success('Chart downloaded successfully!');
-    } catch (error) {
-      toast.dismiss();
-      toast.error('Failed to download chart. Please try again.');
-      console.error('Download error:', error);
-    }
-  };
-
-  const handleFullscreen = (index: number) => {
-    const chartOption = chartOptions[index];
-    const title = chartOption?.title?.text || `Skills Analysis Chart ${index + 1}`;
-    setFullscreenChart({
-      isOpen: true,
-      chartOption,
-      title
-    });
-  };
 
   useEffect(() => {
     // Force resize after mount and on window resize
@@ -369,38 +329,14 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
             ) : (
               <Card className="w-full h-auto overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
                 <CardHeader className="pb-2 px-3 sm:px-4 lg:px-6 pt-3 sm:pt-4">
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-800 dark:text-gray-200 line-clamp-2 leading-tight">
-                        {chartOption.title?.text || `Skills Analysis Chart ${index + 1}`}
-                      </h3>
-                      {chartOption.title?.subtext && (
-                        <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2 leading-tight">
-                          {chartOption.title.subtext}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 ml-2">
-                      <Button
-                        onClick={() => handleDownloadPDF(index)}
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        title="Download as PDF"
-                      >
-                        <Download className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        onClick={() => handleFullscreen(index)}
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        title="View Fullscreen"
-                      >
-                        <Maximize2 className="h-3 w-3" />
-                      </Button>
-                    </div>
+                  <CardTitle className="text-sm sm:text-base lg:text-lg font-semibold text-gray-800 dark:text-gray-200 line-clamp-2 leading-tight">
+                    {chartOption.title?.text || `Skills Analysis Chart ${index + 1}`}
                   </CardTitle>
+                  {chartOption.title?.subtext && (
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2 leading-tight">
+                      {chartOption.title.subtext}
+                    </p>
+                  )}
                 </CardHeader>
                 <CardContent className="p-0 w-full">
                   <div 
@@ -445,13 +381,6 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
           </motion.div>
         );
       })}
-      
-      <FullScreenChartModal
-        isOpen={fullscreenChart.isOpen}
-        onClose={() => setFullscreenChart({ isOpen: false, chartOption: null, title: '' })}
-        chartOption={fullscreenChart.chartOption}
-        chartTitle={fullscreenChart.title}
-      />
     </motion.div>
   );
 };
