@@ -110,7 +110,7 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
         '<p class="text-sm text-gray-800 font-medium mb-3 leading-relaxed">$1</p>' +
         '<a href="$3" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-xs text-blue-600 hover:text-blue-800 font-medium underline decoration-2 underline-offset-2 transition-colors bg-blue-100/60 hover:bg-blue-200/60 px-3 py-2 rounded-md border border-blue-200/60">' +
         '<span class="text-sm">🔗</span>' +
-        '<span>$2</span>' +
+        '<span>View Source</span>' +
         '<span class="text-xs opacity-75">↗</span>' +
         '</a>' +
         '</div></div></div>')
