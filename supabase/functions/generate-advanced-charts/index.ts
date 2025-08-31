@@ -430,7 +430,19 @@ async function generateDetailedReport(charts: any[], insights: string[]) {
   
   Focus on: Existing UAE government policies, Vision 2071, National Skills Framework, current regulations, 
   educational initiatives, and workforce development programs. Include specific policy names and frameworks.
-  Return only the content text, no JSON wrapping.`;
+  
+  CRITICAL: Format each policy point with authentic reference links using this exact format:
+  Policy description text [Ref: Official Source Name](https://official-government-url.ae)
+  
+  Use these authentic UAE government sources for references:
+  - UAE Vision 2071: [Ref: UAE Government Official Portal](https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/federal-governments-strategies-and-plans/uae-vision-2071)
+  - National Skills Strategy: [Ref: Ministry of Human Resources & Emiratisation](https://www.mohre.gov.ae/en/services/national-skills-strategy)
+  - UAE Centennial 2071: [Ref: UAE Government Portal](https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/federal-governments-strategies-and-plans/uae-centennial-2071)
+  - National Programme for Coders: [Ref: UAE Government](https://u.ae/en/about-the-uae/digital-uae/digital-government/national-programme-for-coders)
+  - Emirates Skills Framework: [Ref: MOHRE Official](https://www.mohre.gov.ae/en/services/emirates-skills-framework)
+  - National AI Strategy 2031: [Ref: UAE AI Council](https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/federal-governments-strategies-and-plans/national-artificial-intelligence-strategy-2031)
+  
+  Return only the content text with proper reference formatting, no JSON wrapping.`;
 
   const aiSuggestionsPrompt = `Generate strategic AI-powered recommendations for UAE workforce development based on:
   - Current Analysis: ${JSON.stringify(insights)}
