@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, LogOut, Sparkles, FileText, Link, Brain, Lightbulb, ChevronUp, ChevronDown } from 'lucide-react';
+import { BarChart3, LogOut, Sparkles, FileText, Link, Brain, Lightbulb, ChevronUp, ChevronDown, Download } from 'lucide-react';
+import { downloadFullReportAsPDF } from '@/utils/pdfGenerator';
 import ChartControls from '@/components/dashboard/ChartControls';
 import MultiChartDisplay from '@/components/dashboard/MultiChartDisplay';
 import DiagnosticsPanel from '@/components/dashboard/DiagnosticsPanel';
@@ -47,8 +48,42 @@ const Dashboard = () => {
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
   const [configMinimized, setConfigMinimized] = useState(false);
+  const [downloadingReport, setDownloadingReport] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
+
+  const handleDownloadFullReport = async () => {
+    if (!reportRef.current || !generationResult) {
+      toast({
+        title: "Report Not Ready",
+        description: "Please generate charts first before downloading the report",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setDownloadingReport(true);
+      const reportTitle = `UAE Workforce Skills Analysis - ${new Date().toLocaleDateString()}`;
+      
+      await downloadFullReportAsPDF(reportRef.current, reportTitle);
+      
+      toast({
+        title: "Report Downloaded!",
+        description: "Full report has been downloaded successfully",
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to download the full report. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingReport(false);
+    }
+  };
 
   // Redirect if not logged in
   useEffect(() => {
@@ -474,6 +509,37 @@ const Dashboard = () => {
                 </div>
               </motion.div>
             </motion.div>
+          </div>
+        )}
+
+        {/* Results Section - Generated Charts and Analysis */}
+        {hasGenerated && generationResult && (
+          <div className="relative" ref={reportRef}>
+            {/* Floating Download Button */}
+            <div className="fixed bottom-6 right-6 z-50">
+              <Button
+                onClick={handleDownloadFullReport}
+                disabled={downloadingReport}
+                size="lg"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 gap-3"
+              >
+                {downloadingReport ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                    />
+                    Generating PDF...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-5 w-5" />
+                    Download Full Report
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         )}
 
