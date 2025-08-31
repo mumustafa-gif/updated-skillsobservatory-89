@@ -323,21 +323,21 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
             <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50 p-1 h-12">
               <TabsTrigger 
                 value="overview" 
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/10 data-[state=active]:to-secondary/10 data-[state=active]:text-primary font-medium"
+                className="flex items-center gap-2 data-[state=active]:bg-slate-400 data-[state=active]:text-blue-600 font-medium"
               >
                 <FileText className="h-4 w-4" />
                 <span className="hidden sm:inline">Overview</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="policies" 
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/10 data-[state=active]:to-accent/5 data-[state=active]:text-accent font-medium"
+                className="flex items-center gap-2 data-[state=active]:bg-slate-400 data-[state=active]:text-blue-600 font-medium"
               >
                 <Shield className="h-4 w-4" />
                 <span className="hidden sm:inline">Current Policies</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="suggestions" 
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-secondary/10 data-[state=active]:to-secondary/5 data-[state=active]:text-secondary font-medium"
+                className="flex items-center gap-2 data-[state=active]:bg-slate-400 data-[state=active]:text-blue-600 font-medium"
               >
                 <Lightbulb className="h-4 w-4" />
                 <span className="hidden sm:inline">AI Suggestions</span>
