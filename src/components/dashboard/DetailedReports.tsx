@@ -323,21 +323,21 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
             <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50 p-1 h-12">
               <TabsTrigger 
                 value="overview" 
-                className="flex items-center gap-2 data-[state=active]:bg-slate-400 data-[state=active]:text-blue-600 font-medium"
+                className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium"
               >
                 <FileText className="h-4 w-4" />
                 <span className="hidden sm:inline">Overview</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="policies" 
-                className="flex items-center gap-2 data-[state=active]:bg-slate-400 data-[state=active]:text-blue-600 font-medium"
+                className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium"
               >
                 <Shield className="h-4 w-4" />
                 <span className="hidden sm:inline">Current Policies</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="suggestions" 
-                className="flex items-center gap-2 data-[state=active]:bg-slate-400 data-[state=active]:text-blue-600 font-medium"
+                className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium"
               >
                 <Lightbulb className="h-4 w-4" />
                 <span className="hidden sm:inline">AI Suggestions</span>
