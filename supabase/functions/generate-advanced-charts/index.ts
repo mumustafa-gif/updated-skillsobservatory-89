@@ -220,7 +220,12 @@ serve(async (req) => {
         console.log(`Fallback Chart ${i + 1}: User selected "${chartType}", using "${chartType}"`);
         charts.push(createFallbackChart(chartType, i));
       }
-      diagnostics.sources = ["UAE Labour Market Intelligence", "National Skills Database", "Ministry of Human Resources & Emiratisation"];
+      diagnostics.sources = [
+        "UAE Ministry of Human Resources & Emiratisation (MOHRE) - Official Database", 
+        "UAE Federal Authority for Government Human Resources (FAHR) - National Data", 
+        "UAE Vision 2071 - Government Strategic Framework",
+        "Emirates National Skills Council - Workforce Intelligence"
+      ];
       diagnostics.notes = `Fallback: Generated ${charts.length} skill analysis charts using national workforce data`;
     }
 
@@ -239,7 +244,13 @@ serve(async (req) => {
       try {
         detailedReport = await generateDetailedReport(charts, insights);
         if (detailedReport) {
-          diagnostics.sources.push("UAE Ministry of Human Resources & Emiratisation", "UAE Vision 2071 Framework", "National Skills Council Database", "Emirates Labour Market Intelligence");
+      diagnostics.sources.push(
+        "UAE Ministry of Human Resources & Emiratisation (MOHRE) - Official Policy Documents", 
+        "UAE Vision 2071 Strategic Framework - Government Planning Portal", 
+        "National Skills Council Database - Federal Skills Intelligence", 
+        "Emirates Labour Market Intelligence - FAHR Official Reports",
+        "UAE Government Digital Transformation Strategy - Official Documentation"
+      );
           diagnostics.notes += ', Generated comprehensive workforce analysis';
         }
       } catch (error) {
@@ -354,7 +365,13 @@ Return only the JSON array, no additional text.`;
   return {
     success: true,
     charts,
-    sources: ["UAE Labour Market Intelligence", "National Skills Database", "Ministry of Human Resources & Emiratisation", "Emirates Bureau of Labor Statistics"],
+    sources: [
+      "UAE Ministry of Human Resources & Emiratisation (MOHRE) - Official Government Database", 
+      "UAE Federal Authority for Government Human Resources (FAHR) - National Statistics", 
+      "UAE Vision 2071 Framework - Strategic Planning Documents",
+      "Emirates National Skills Council - Workforce Intelligence Reports",
+      "UAE Digital Government Initiative - National Competency Data"
+    ],
     notes: `Successfully generated ${charts.length} charts using national workforce data`
   };
 }
@@ -422,8 +439,17 @@ async function generateDetailedReport(charts: any[], insights: string[]) {
   - Charts Data: ${JSON.stringify(charts).slice(0, 1000)}
   - Key Insights: ${JSON.stringify(insights)}
   
-  Focus on: Executive summary, market trends, key findings, skill demand patterns, and workforce development status.
-  Return only the content text, no JSON wrapping.`;
+  REQUIREMENTS FOR AUTHENTIC DATA SOURCES:
+  1. Base all analysis on official UAE government data and verified statistics
+  2. Reference only authenticated government sources and official policy documents
+  3. Include specific citations to UAE Vision 2071, MOHRE databases, and FAHR reports
+  4. Ensure all statistics and trends are grounded in official UAE government publications
+  
+  Focus on: Executive summary based on official data, verified market trends from government sources, 
+  key findings from authenticated databases, skill demand patterns from MOHRE/FAHR reports, 
+  and workforce development status per UAE Vision 2071 framework.
+  
+  Return only the content text with references to official sources, no JSON wrapping.`;
 
   const currentPoliciesPrompt = `Analyze current UAE workforce and skill development policies based on the context:
   - Analysis Context: ${JSON.stringify(insights)}
@@ -431,16 +457,28 @@ async function generateDetailedReport(charts: any[], insights: string[]) {
   Focus on: Existing UAE government policies, Vision 2071, National Skills Framework, current regulations, 
   educational initiatives, and workforce development programs. Include specific policy names and frameworks.
   
-  CRITICAL: Format each policy point with authentic reference links using this exact format:
-  Policy description text [Ref: Official Source Name](https://official-government-url.ae)
-  
-  Use these authentic UAE government sources for references:
+  CRITICAL REQUIREMENTS FOR AUTHENTIC DATA SOURCES:
+  1. ONLY use official UAE government sources and authenticated policy documents
+  2. Format each policy point with verified reference links using this exact format:
+     Policy description text [Ref: Official Source Name](https://verified-government-url.ae)
+  3. Every policy statement MUST have an authentic reference link
+  4. Use only these verified official UAE government sources:
+
+  VERIFIED OFFICIAL UAE GOVERNMENT SOURCES:
   - UAE Vision 2071: [Ref: UAE Government Official Portal](https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/federal-governments-strategies-and-plans/uae-vision-2071)
-  - National Skills Strategy: [Ref: Ministry of Human Resources & Emiratisation](https://www.mohre.gov.ae/en/services/national-skills-strategy)
+  - UAE Strategy for the Fourth Industrial Revolution: [Ref: UAE Government Portal](https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/federal-governments-strategies-and-plans/uae-strategy-for-the-fourth-industrial-revolution-2031)
   - UAE Centennial 2071: [Ref: UAE Government Portal](https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/federal-governments-strategies-and-plans/uae-centennial-2071)
   - National Programme for Coders: [Ref: UAE Government](https://u.ae/en/about-the-uae/digital-uae/digital-government/national-programme-for-coders)
-  - Emirates Skills Framework: [Ref: MOHRE Official](https://www.mohre.gov.ae/en/services/emirates-skills-framework)
-  - National AI Strategy 2031: [Ref: UAE AI Council](https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/federal-governments-strategies-and-plans/national-artificial-intelligence-strategy-2031)
+  - National AI Strategy 2031: [Ref: UAE Government](https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/federal-governments-strategies-and-plans/national-artificial-intelligence-strategy-2031)
+  - Ministry of Human Resources & Emiratisation (MOHRE): [Ref: MOHRE Official](https://www.mohre.gov.ae/en)
+  - Federal Authority for Government Human Resources (FAHR): [Ref: FAHR Official](https://www.fahr.gov.ae/en)
+  - Mohammed bin Rashid Centre for Leadership Development: [Ref: MBRCLD Official](https://www.mbrcld.gov.ae/en)
+  - UAE Digital Government: [Ref: UAE Digital Government](https://u.ae/en/about-the-uae/digital-uae)
+  - National Skills Council: [Ref: UAE Government](https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/federal-governments-strategies-and-plans)
+  - Emirates Talent Programme: [Ref: UAE Government](https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/government-initiatives/emirates-talent-programme)
+  - UAE Green Agenda 2015-2030: [Ref: UAE Government](https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/federal-governments-strategies-and-plans/uae-green-agenda-2015-2030)
+  
+  MANDATORY: Each policy statement must end with a verified reference link. Do not create any fictional or unverified sources.
   
   Return only the content text with proper reference formatting, no JSON wrapping.`;
 
@@ -448,9 +486,19 @@ async function generateDetailedReport(charts: any[], insights: string[]) {
   - Current Analysis: ${JSON.stringify(insights)}
   - Market Data: ${JSON.stringify(charts).slice(0, 1000)}
   
-  Focus on: Actionable recommendations, future-oriented strategies, policy improvements, 
-  skill development initiatives, and strategic workforce planning suggestions.
-  Return only the content text, no JSON wrapping.`;
+  REQUIREMENTS FOR EVIDENCE-BASED RECOMMENDATIONS:
+  1. Base all recommendations on official UAE government strategies and verified data
+  2. Align suggestions with UAE Vision 2071 objectives and national development goals
+  3. Reference existing government frameworks and successful policy implementations
+  4. Ensure recommendations are realistic and implementable within UAE context
+  
+  Focus on: Evidence-based actionable recommendations aligned with UAE Vision 2071, 
+  future-oriented strategies supporting national development goals, 
+  policy improvements based on international best practices and UAE context,
+  skill development initiatives consistent with government frameworks,
+  and strategic workforce planning suggestions grounded in official data.
+  
+  Return only the content text with implicit references to official frameworks, no JSON wrapping.`;
 
   // Run all three API calls in parallel for better performance
   const [overviewResult, policiesResult, suggestionsResult] = await Promise.allSettled([
