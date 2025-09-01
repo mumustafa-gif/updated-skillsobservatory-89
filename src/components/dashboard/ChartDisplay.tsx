@@ -1,8 +1,13 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import ReactECharts from 'echarts-for-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Download, Maximize2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { downloadChartAsPDF } from '@/utils/pdfGenerator';
+import FullScreenChartModal from './FullScreenChartModal';
 import MapChart from './MapChart';
 
 interface ChartDisplayProps {
@@ -11,6 +16,77 @@ interface ChartDisplayProps {
 }
 
 const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => {
+  const chartRef = useRef<any>(null);
+  const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
+
+  // Enhanced chart configuration with better error handling and validation
+  const enhancedConfig = useMemo(() => {
+    if (!chartOption) return {};
+    
+    // Validate and fix chart configuration
+    const config = { ...chartOption };
+    
+    // Ensure proper structure for different chart types
+    if (config.series && Array.isArray(config.series)) {
+      config.series = config.series.map((series: any) => {
+        // Fix treemap data structure if needed
+        if (series.type === 'treemap' && series.data) {
+          series.data = series.data.map((item: any) => {
+            if (item.children && !item.value && item.children.length > 0) {
+              // Calculate parent value from children if missing
+              item.value = item.children.reduce((sum: number, child: any) => sum + (child.value || 0), 0);
+            }
+            return item;
+          });
+        }
+        return series;
+      });
+    }
+
+    return {
+      ...config,
+      animation: false, // Disable animations for faster rendering
+      responsive: true,
+      maintainAspectRatio: false,
+      tooltip: {
+        trigger: config.tooltip?.trigger || 'item',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        textStyle: { color: '#fff' },
+        ...config.tooltip
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true,
+        ...config.grid
+      }
+    };
+  }, [chartOption]);
+
+  const handleDownloadPDF = async () => {
+    try {
+      const chartContainer = chartRef.current?.ele;
+      if (!chartContainer) {
+        toast.error('Chart not ready for download');
+        return;
+      }
+
+      const chartTitle = enhancedConfig.title?.text || 'Generated Chart';
+      toast.loading('Generating PDF...');
+      await downloadChartAsPDF(chartContainer, chartTitle);
+      toast.dismiss();
+      toast.success('Chart downloaded successfully!');
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Failed to download chart. Please try again.');
+      console.error('Download error:', error);
+    }
+  };
+
+  const handleFullscreen = () => {
+    setIsFullscreenOpen(true);
+  };
   if (loading) {
     return (
       <Card className="h-[500px]">
@@ -56,8 +132,8 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
   }
 
   // Handle map charts with Mapbox integration
-  if (chartOption.mapStyle || chartOption.center || chartOption.markers || 
-      (chartOption.title && chartOption.title.text && chartOption.title.text.toLowerCase().includes('map'))) {
+  if (chartOption?.mapStyle || chartOption?.center || chartOption?.markers || 
+      (chartOption?.title && chartOption.title.text && chartOption.title.text.toLowerCase().includes('map'))) {
     return (
       <MapChart 
         config={chartOption}
@@ -66,51 +142,8 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
     );
   }
 
-  // Enhanced chart configuration with better error handling and validation
-  const enhancedConfig = useMemo(() => {
-    // Validate and fix chart configuration
-    const config = { ...chartOption };
-    
-    // Ensure proper structure for different chart types
-    if (config.series && Array.isArray(config.series)) {
-      config.series = config.series.map((series: any) => {
-        // Fix treemap data structure if needed
-        if (series.type === 'treemap' && series.data) {
-          series.data = series.data.map((item: any) => {
-            if (item.children && !item.value && item.children.length > 0) {
-              // Calculate parent value from children if missing
-              item.value = item.children.reduce((sum: number, child: any) => sum + (child.value || 0), 0);
-            }
-            return item;
-          });
-        }
-        return series;
-      });
-    }
-
-    return {
-      ...config,
-      animation: false, // Disable animations for faster rendering
-      responsive: true,
-      maintainAspectRatio: false,
-      tooltip: {
-        trigger: config.tooltip?.trigger || 'item',
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        textStyle: { color: '#fff' },
-        ...config.tooltip
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        containLabel: true,
-        ...config.grid
-      }
-    };
-  }, [chartOption]);
-
   // Validate and fix treemap data structure
-  if (chartOption.series && chartOption.series.some((s: any) => s.type === 'treemap')) {
+  if (chartOption?.series && chartOption.series.some((s: any) => s.type === 'treemap')) {
     chartOption.series = chartOption.series.map((series: any) => {
       if (series.type === 'treemap' && series.data) {
         // Ensure data is properly structured for treemap
@@ -142,20 +175,54 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
     >
       <Card>
         <CardHeader>
-          <CardTitle>
-            {enhancedConfig.title?.text || 'Generated Chart'}
+          <CardTitle className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold">
+                {enhancedConfig.title?.text || 'Generated Chart'}
+              </h3>
+              {enhancedConfig.title?.subtext && (
+                <p className="text-sm text-muted-foreground mt-1">{enhancedConfig.title.subtext}</p>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleDownloadPDF}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                title="Download as PDF"
+              >
+                <Download className="h-4 w-4" />
+                <span className="hidden sm:inline">PDF</span>
+              </Button>
+              <Button
+                onClick={handleFullscreen}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                title="View Fullscreen"
+              >
+                <Maximize2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Fullscreen</span>
+              </Button>
+            </div>
           </CardTitle>
-          {enhancedConfig.title?.subtext && (
-            <p className="text-sm text-muted-foreground">{enhancedConfig.title.subtext}</p>
-          )}
         </CardHeader>
         <CardContent className="p-6">
           <ReactECharts
+            ref={chartRef}
             option={enhancedConfig}
             style={{ height: '500px', width: '100%' }}
             opts={{ renderer: 'canvas' }}
           />
         </CardContent>
+        
+        <FullScreenChartModal
+          isOpen={isFullscreenOpen}
+          onClose={() => setIsFullscreenOpen(false)}
+          chartOption={chartOption}
+          chartTitle={enhancedConfig.title?.text || 'Generated Chart'}
+        />
       </Card>
     </motion.div>
   );
