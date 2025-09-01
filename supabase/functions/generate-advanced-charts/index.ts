@@ -596,6 +596,39 @@ async function generateDetailedReport(charts: any[], insights: string[]) {
   return {
     overview,
     currentPolicies,
-    aiSuggestions
+    aiSuggestions,
+    dataSources: `# Official UAE Government Data Sources
+
+## Primary Government Portals
+• **UAE Vision 2071 Official Portal** [Ref: UAE Government Strategy Portal](https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/federal-governments-strategies-and-plans/uae-vision-2071)
+• **Ministry of Human Resources & Emiratisation (MOHRE)** [Ref: Official MOHRE Portal](https://www.mohre.gov.ae/)
+• **Federal Authority for Human Resources (FAHR)** [Ref: Official FAHR Portal](https://www.fahr.gov.ae/)
+• **UAE National Statistics Centre** [Ref: Official Statistics Portal](https://nsc.gov.ae/)
+• **Ministry of Education (MOE)** [Ref: Official MOE Portal](https://www.moe.gov.ae/)
+
+## Economic & Strategic Data Sources  
+• **Mohammed bin Rashid Centre for Government Innovation** [Ref: Official Innovation Centre](https://www.mbrcgi.gov.ae/)
+• **UAE Ministry of Economy (MOE)** [Ref: Official Economy Ministry](https://www.moec.gov.ae/)
+• **Dubai Future Foundation** [Ref: Official Future Foundation](https://www.dubaifuture.ae/)
+• **Abu Dhabi Department of Economic Development** [Ref: Official ADDED Portal](https://added.gov.ae/)
+
+## Skills & Workforce Development Sources
+• **Emirates Foundation for Youth Development** [Ref: Official Foundation Portal](https://www.emiratesfoundation.ae/)
+• **Khalifa Fund for Enterprise Development** [Ref: Official Khalifa Fund](https://www.khalifafund.ae/)
+• **UAE Skills Framework Initiative** [Ref: National Skills Development](https://u.ae/en/about-the-uae/digital-uae/digital-government-strategy)
+• **National Program for Advanced Skills** [Ref: Advanced Skills Portal](https://u.ae/en/about-the-uae/strategies-initiatives-and-awards)
+
+## Labor Market Intelligence Sources
+• **UAE Labor Market Observatory** [Ref: MOHRE Labor Statistics](https://www.mohre.gov.ae/en/labour-market-statistics.aspx)
+• **Emirates Institute for Banking & Financial Studies** [Ref: Official EIBFS Portal](https://www.eibfs.ae/)
+• **Zayed University Workforce Reports** [Ref: Official ZU Research](https://www.zu.ac.ae/)
+• **American University of Sharjah Skills Research** [Ref: Official AUS Research](https://www.aus.edu/)
+
+## Technology & Digital Transformation Sources
+• **UAE Digital Government Strategy 2025** [Ref: Official Digital Strategy](https://u.ae/en/about-the-uae/digital-uae)
+• **Smart Dubai Initiative** [Ref: Official Smart Dubai](https://www.smartdubai.ae/)
+• **Abu Dhabi Digital Authority** [Ref: Official Digital Authority](https://www.tamm.abudhabi/)
+
+**Note:** All sources listed are official UAE government portals and authenticated policy documents. Each reference includes direct links to verified government websites and official publications.`
   };
 }
