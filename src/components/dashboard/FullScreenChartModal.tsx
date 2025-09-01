@@ -51,17 +51,17 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
     ...chartOption,
     animation: true,
     title: {
-      ...chartOption.title,
+      ...(chartOption?.title || {}),
       textStyle: {
         fontSize: 24,
         fontWeight: 'bold',
         color: '#1f2937',
-        ...chartOption.title?.textStyle
+        ...(chartOption?.title?.textStyle || {})
       },
       subtextStyle: {
         fontSize: 16,
         color: '#6b7280',
-        ...chartOption.title?.subtextStyle
+        ...(chartOption?.title?.subtextStyle || {})
       },
       left: 'center',
       top: 20
@@ -72,23 +72,23 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
       top: '15%',
       bottom: '10%',
       containLabel: true,
-      ...chartOption.grid
+      ...(chartOption?.grid || {})
     },
     legend: {
-      ...chartOption.legend,
+      ...(chartOption?.legend || {}),
       textStyle: {
         fontSize: 14,
-        ...chartOption.legend?.textStyle
+        ...(chartOption?.legend?.textStyle || {})
       },
       itemWidth: 20,
       itemHeight: 14,
       itemGap: 15
     },
     tooltip: {
-      ...chartOption.tooltip,
+      ...(chartOption?.tooltip || {}),
       textStyle: {
         fontSize: 14,
-        ...chartOption.tooltip?.textStyle
+        ...(chartOption?.tooltip?.textStyle || {})
       }
     }
   };
