@@ -170,9 +170,10 @@ serve(async (req) => {
     console.log(`📊 Processing request: ${prompt.slice(0, 100)}...`);
     
     let knowledgeBaseContent = '';
+    let knowledgeBaseFiles_data = [];
     if (useKnowledgeBase && knowledgeBaseFiles.length > 0) {
       try {
-        // Get knowledge base content from database instead of storage
+        // Get knowledge base content from database
         const { data: kbFiles, error } = await supabaseClient
           .from('knowledge_base_files')
           .select('original_filename, extracted_content')
@@ -182,10 +183,10 @@ serve(async (req) => {
         if (error) {
           console.error('Error fetching knowledge base files:', error);
         } else if (kbFiles && kbFiles.length > 0) {
-          knowledgeBaseContent = kbFiles.map(file => 
-            `File: ${file.original_filename}\nContent: ${file.extracted_content}`
-          ).join('\n\n');
-          console.log(`📚 Knowledge base content loaded from ${kbFiles.length} files`);
+          knowledgeBaseFiles_data = kbFiles;
+          // Process and optimize knowledge base content
+          knowledgeBaseContent = processKnowledgeBaseContent(kbFiles, prompt);
+          console.log(`📚 Knowledge base content loaded from ${kbFiles.length} files (${knowledgeBaseContent.length} chars processed)`);
         }
       } catch (error) {
         console.error('Error loading knowledge base content:', error);
@@ -202,8 +203,8 @@ serve(async (req) => {
 
     // Run chart generation and insights in parallel for better performance
     const [chartsResult, insightsResult] = await Promise.allSettled([
-      generateCharts(prompt, numberOfCharts, chartTypes, knowledgeBaseContent),
-      generateDetailedReports ? generateInsights(prompt, numberOfCharts) : Promise.resolve([])
+      generateCharts(prompt, numberOfCharts, chartTypes, knowledgeBaseContent, useKnowledgeBase),
+      generateDetailedReports ? generateInsights(prompt, numberOfCharts, knowledgeBaseContent, useKnowledgeBase) : Promise.resolve([])
     ]);
 
     // Handle charts result
@@ -211,6 +212,14 @@ serve(async (req) => {
       charts = chartsResult.value.charts;
       diagnostics.sources = chartsResult.value.sources;
       diagnostics.notes = chartsResult.value.notes;
+      
+      // Add knowledge base files to sources if used
+      if (useKnowledgeBase && knowledgeBaseFiles_data.length > 0) {
+        const kbSources = knowledgeBaseFiles_data.map(file => 
+          `Uploaded File: ${file.original_filename} (Knowledge Base)`
+        );
+        diagnostics.sources = [...kbSources, ...diagnostics.sources];
+      }
     } else {
       console.error('Chart generation failed:', chartsResult.status === 'rejected' ? chartsResult.reason : 'Unknown error');
       // Create fallback charts
@@ -220,13 +229,27 @@ serve(async (req) => {
         console.log(`Fallback Chart ${i + 1}: User selected "${chartType}", using "${chartType}"`);
         charts.push(createFallbackChart(chartType, i));
       }
-      diagnostics.sources = [
-        "UAE Ministry of Human Resources & Emiratisation (MOHRE) - Official Database", 
-        "UAE Federal Authority for Government Human Resources (FAHR) - National Data", 
-        "UAE Vision 2071 - Government Strategic Framework",
-        "Emirates National Skills Council - Workforce Intelligence"
-      ];
-      diagnostics.notes = `Fallback: Generated ${charts.length} skill analysis charts using national workforce data`;
+      
+      // Set appropriate sources based on whether knowledge base was used
+      if (useKnowledgeBase && knowledgeBaseFiles_data.length > 0) {
+        const kbSources = knowledgeBaseFiles_data.map(file => 
+          `Uploaded File: ${file.original_filename} (Knowledge Base)`
+        );
+        diagnostics.sources = [
+          ...kbSources,
+          "UAE Ministry of Human Resources & Emiratisation (MOHRE) - Official Database", 
+          "UAE Federal Authority for Government Human Resources (FAHR) - National Data"
+        ];
+        diagnostics.notes = `Fallback: Generated ${charts.length} charts based on uploaded knowledge base files and national workforce data`;
+      } else {
+        diagnostics.sources = [
+          "UAE Ministry of Human Resources & Emiratisation (MOHRE) - Official Database", 
+          "UAE Federal Authority for Government Human Resources (FAHR) - National Data", 
+          "UAE Vision 2071 - Government Strategic Framework",
+          "Emirates National Skills Council - Workforce Intelligence"
+        ];
+        diagnostics.notes = `Fallback: Generated ${charts.length} skill analysis charts using national workforce data`;
+      }
     }
 
     // Handle insights result
@@ -242,12 +265,12 @@ serve(async (req) => {
     let detailedReport = null;
     if (generateDetailedReports) {
       try {
-        detailedReport = await generateDetailedReport(charts, insights);
+        detailedReport = await generateDetailedReport(charts, insights, knowledgeBaseContent, useKnowledgeBase, knowledgeBaseFiles_data);
         if (detailedReport) {
       diagnostics.sources.push(
         "UAE Ministry of Human Resources & Emiratisation (MOHRE) - Official Policy Documents", 
         "UAE Vision 2071 Strategic Framework - Government Planning Portal", 
-        "National Skills Council Database - Federal Skills Intelligence", 
+        "National Skills Council Database - Federal Skills Intelligence",
         "Emirates Labour Market Intelligence - FAHR Official Reports",
         "UAE Government Digital Transformation Strategy - Official Documentation"
       );
@@ -289,20 +312,83 @@ serve(async (req) => {
   }
 });
 
+// Helper function to process and optimize knowledge base content
+function processKnowledgeBaseContent(kbFiles: any[], userPrompt: string): string {
+  if (!kbFiles || kbFiles.length === 0) return '';
+  
+  // Extract keywords from the user prompt for relevance filtering
+  const keywords = extractKeywords(userPrompt.toLowerCase());
+  
+  let processedContent = '';
+  const maxContentLength = 6000; // Increased from 2000 for better context
+  
+  for (const file of kbFiles) {
+    const content = file.extracted_content || '';
+    if (!content.trim()) continue;
+    
+    // Split content into chunks and find relevant sections
+    const chunks = content.split(/\n\s*\n/); // Split by paragraphs
+    const relevantChunks = chunks.filter(chunk => 
+      keywords.some(keyword => chunk.toLowerCase().includes(keyword))
+    );
+    
+    // Use relevant chunks first, then fill with other content if needed
+    const fileContent = relevantChunks.length > 0 ? relevantChunks.join('\n\n') : content;
+    
+    const fileSection = `\n--- FILE: ${file.original_filename} ---\n${fileContent}\n`;
+    
+    if (processedContent.length + fileSection.length <= maxContentLength) {
+      processedContent += fileSection;
+    } else {
+      // Truncate to fit within limit
+      const remainingSpace = maxContentLength - processedContent.length;
+      if (remainingSpace > 100) { // Only add if there's meaningful space
+        processedContent += fileSection.substring(0, remainingSpace - 20) + '...\n';
+      }
+      break;
+    }
+  }
+  
+  return processedContent.trim();
+}
+
+// Helper function to extract keywords from user prompt
+function extractKeywords(prompt: string): string[] {
+  // Remove common words and extract meaningful terms
+  const commonWords = ['the', 'is', 'at', 'which', 'on', 'and', 'a', 'to', 'are', 'as', 'was', 'will', 'for', 'of', 'with', 'by'];
+  const words = prompt.toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .filter(word => word.length > 2 && !commonWords.includes(word));
+  
+  return [...new Set(words)]; // Remove duplicates
+}
+
 // Helper functions for better organization and parallel processing
-async function generateCharts(prompt: string, numberOfCharts: number, chartTypes: string[], knowledgeBaseContent: string) {
+async function generateCharts(prompt: string, numberOfCharts: number, chartTypes: string[], knowledgeBaseContent: string, useKnowledgeBase: boolean = false) {
   const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
   if (!openAIApiKey) {
     throw new Error('OpenAI API key not configured');
   }
 
-  const chartPrompt = `Create ${numberOfCharts} interactive chart configuration(s) for Apache ECharts based on this request: "${prompt}"
+  // Enhanced prompt generation based on knowledge base usage
+  let chartPrompt;
+  
+  if (useKnowledgeBase && knowledgeBaseContent) {
+    chartPrompt = `You are an expert data analyst. Create ${numberOfCharts} interactive chart configuration(s) for Apache ECharts based on this request: "${prompt}"
 
 Chart types requested: ${chartTypes.join(', ')}
 
-${knowledgeBaseContent ? `Context from knowledge base: ${knowledgeBaseContent.slice(0, 2000)}...` : ''}
+IMPORTANT: Use the following uploaded knowledge base content as your PRIMARY DATA SOURCE:
+${knowledgeBaseContent}
 
-Return a JSON array of chart configurations. Each chart should be a complete ECharts option object.
+Instructions:
+1. PRIORITIZE data from the uploaded files above
+2. Create charts that directly reflect the data patterns, statistics, and insights from the uploaded content
+3. If the uploaded content contains specific numbers, dates, categories, or trends, use those in your charts
+4. Extract meaningful data points from the uploaded content to populate your chart series
+5. Reference specific sections or findings from the uploaded files in chart titles and subtitles
+6. If the uploaded content is insufficient for the requested analysis, supplement with general UAE workforce knowledge
 
 For map charts, use this structure (return as regular ECharts config, the frontend will handle Mapbox):
 {
@@ -327,6 +413,37 @@ For treemap charts, use this structure:
 For other chart types, use standard ECharts configuration with proper series data structure.
 
 Return only the JSON array, no additional text.`;
+  } else {
+    chartPrompt = `Create ${numberOfCharts} interactive chart configuration(s) for Apache ECharts based on this request: "${prompt}"
+
+Chart types requested: ${chartTypes.join(', ')}
+
+Use official UAE workforce data and government statistics for accurate analysis.
+
+For map charts, use this structure (return as regular ECharts config, the frontend will handle Mapbox):
+{
+  "title": {"text": "Title", "subtext": "Subtitle"},
+  "mapStyle": "mapbox://styles/mapbox/light-v11",
+  "center": [longitude, latitude],
+  "zoom": number,
+  "markers": [{"coordinates": [lng, lat], "title": "Name", "description": "Details", "color": "#color"}]
+}
+
+For treemap charts, use this structure:
+{
+  "title": {"text": "Title", "subtext": "Subtitle"},
+  "series": [{
+    "name": "Data",
+    "type": "treemap",
+    "data": [{"name": "Category", "value": number, "children": [{"name": "Item", "value": number}]}]
+  }],
+  "tooltip": {"trigger": "item"}
+}
+
+For other chart types, use standard ECharts configuration with proper series data structure.
+
+Return only the JSON array, no additional text.`;
+  }
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -362,28 +479,55 @@ Return only the JSON array, no additional text.`;
   }
 
   const charts = JSON.parse(jsonMatch[0]);
-  return {
-    success: true,
-    charts,
-    sources: [
+  
+  // Determine sources based on knowledge base usage
+  let sources, notes;
+  if (useKnowledgeBase && knowledgeBaseContent) {
+    sources = [
+      "Uploaded Knowledge Base Files (Primary Data Source)",
+      "UAE Ministry of Human Resources & Emiratisation (MOHRE) - Official Government Database", 
+      "UAE Federal Authority for Government Human Resources (FAHR) - National Statistics", 
+      "UAE Vision 2071 Framework - Strategic Planning Documents"
+    ];
+    notes = `Successfully generated ${charts.length} charts using uploaded knowledge base content as primary data source`;
+  } else {
+    sources = [
       "UAE Ministry of Human Resources & Emiratisation (MOHRE) - Official Government Database", 
       "UAE Federal Authority for Government Human Resources (FAHR) - National Statistics", 
       "UAE Vision 2071 Framework - Strategic Planning Documents",
       "Emirates National Skills Council - Workforce Intelligence Reports",
       "UAE Digital Government Initiative - National Competency Data"
-    ],
-    notes: `Successfully generated ${charts.length} charts using national workforce data`
+    ];
+    notes = `Successfully generated ${charts.length} charts using national workforce data`;
+  }
+  
+  return {
+    success: true,
+    charts,
+    sources,
+    notes
   };
 }
 
-async function generateInsights(prompt: string, numberOfCharts: number) {
+async function generateInsights(prompt: string, numberOfCharts: number, knowledgeBaseContent: string = '', useKnowledgeBase: boolean = false) {
   const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
   if (!openAIApiKey) {
     return [`Analysis completed for ${numberOfCharts} charts based on: ${prompt.slice(0, 100)}...`];
   }
 
-  const insightsPrompt = `Generate ${numberOfCharts} key insights for UAE workforce analysis based on this request: "${prompt}".
-  Focus on actionable intelligence and key trends. Return a JSON array of strings.`;
+  let insightsPrompt;
+  
+  if (useKnowledgeBase && knowledgeBaseContent) {
+    insightsPrompt = `Generate ${numberOfCharts} key insights for UAE workforce analysis based on this request: "${prompt}".
+
+Use the following uploaded knowledge base content as your primary source:
+${knowledgeBaseContent.slice(0, 3000)}
+
+Focus on actionable intelligence and key trends extracted from the uploaded content. Reference specific data points, findings, or patterns from the uploaded files. Return a JSON array of strings.`;
+  } else {
+    insightsPrompt = `Generate ${numberOfCharts} key insights for UAE workforce analysis based on this request: "${prompt}".
+Focus on actionable intelligence and key trends. Return a JSON array of strings.`;
+  }
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -424,7 +568,7 @@ async function generateInsights(prompt: string, numberOfCharts: number) {
   return [`Analysis completed for ${numberOfCharts} charts showing UAE workforce skill trends`];
 }
 
-async function generateDetailedReport(charts: any[], insights: string[]) {
+async function generateDetailedReport(charts: any[], insights: string[], knowledgeBaseContent: string = '', useKnowledgeBase: boolean = false, knowledgeBaseFiles: any[] = []) {
   const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
   if (!openAIApiKey) {
     return { 
@@ -434,16 +578,25 @@ async function generateDetailedReport(charts: any[], insights: string[]) {
     };
   }
 
-  // Create specific prompts for each section
+  // Create specific prompts for each section with knowledge base integration
+  let contextData = '';
+  if (useKnowledgeBase && knowledgeBaseContent) {
+    contextData = `\n\nKNOWLEDGE BASE CONTEXT (Primary Source):
+${knowledgeBaseContent.slice(0, 2000)}
+
+NOTE: Prioritize insights and analysis based on the uploaded knowledge base content above.`;
+  }
+
   const overviewPrompt = `Generate a comprehensive overview and analysis of UAE workforce skills based on:
   - Charts Data: ${JSON.stringify(charts).slice(0, 1000)}
-  - Key Insights: ${JSON.stringify(insights)}
+  - Key Insights: ${JSON.stringify(insights)}${contextData}
   
   REQUIREMENTS FOR AUTHENTIC DATA SOURCES:
   1. Base all analysis on official UAE government data and verified statistics
   2. Reference only authenticated government sources and official policy documents
   3. Include specific citations to UAE Vision 2071, MOHRE databases, and FAHR reports
   4. Ensure all statistics and trends are grounded in official UAE government publications
+  ${useKnowledgeBase ? '5. PRIMARY FOCUS: Use the uploaded knowledge base content as the main data source for analysis' : ''}
   
   Focus on: Executive summary based on official data, verified market trends from government sources, 
   key findings from authenticated databases, skill demand patterns from MOHRE/FAHR reports, 
@@ -452,7 +605,7 @@ async function generateDetailedReport(charts: any[], insights: string[]) {
   Return only the content text with references to official sources, no JSON wrapping.`;
 
   const currentPoliciesPrompt = `Analyze current UAE workforce and skill development policies based on the context:
-  - Analysis Context: ${JSON.stringify(insights)}
+  - Analysis Context: ${JSON.stringify(insights)}${contextData}
   
   Focus on: Existing UAE government policies, Vision 2071, National Skills Framework, current regulations, 
   educational initiatives, and workforce development programs. Include specific policy names and frameworks.
@@ -463,6 +616,7 @@ async function generateDetailedReport(charts: any[], insights: string[]) {
      Policy description text [Ref: Official Source Name](https://verified-government-url.ae)
   3. Every policy statement MUST have an authentic reference link
   4. Use only these verified official UAE government sources:
+  ${useKnowledgeBase ? '5. PRIMARY FOCUS: Reference policies and data mentioned in the uploaded knowledge base files' : ''}
 
   VERIFIED OFFICIAL UAE GOVERNMENT SOURCES:
   - UAE Vision 2071: [Ref: UAE Government Official Portal](https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/federal-governments-strategies-and-plans/uae-vision-2071)
@@ -484,13 +638,14 @@ async function generateDetailedReport(charts: any[], insights: string[]) {
 
   const aiSuggestionsPrompt = `Generate strategic AI-powered recommendations for UAE workforce development based on:
   - Current Analysis: ${JSON.stringify(insights)}
-  - Market Data: ${JSON.stringify(charts).slice(0, 1000)}
+  - Market Data: ${JSON.stringify(charts).slice(0, 1000)}${contextData}
   
   REQUIREMENTS FOR EVIDENCE-BASED RECOMMENDATIONS:
   1. Base all recommendations on official UAE government strategies and verified data
   2. Align suggestions with UAE Vision 2071 objectives and national development goals
   3. Reference existing government frameworks and successful policy implementations
   4. Ensure recommendations are realistic and implementable within UAE context
+  ${useKnowledgeBase ? '5. PRIMARY FOCUS: Base recommendations on patterns and gaps identified in uploaded knowledge base content' : ''}
   
   Focus on: Evidence-based actionable recommendations aligned with UAE Vision 2071, 
   future-oriented strategies supporting national development goals, 
@@ -597,7 +752,11 @@ async function generateDetailedReport(charts: any[], insights: string[]) {
     overview,
     currentPolicies,
     aiSuggestions,
-    dataSources: `# Official UAE Government Data Sources
+    dataSources: `# Official UAE Government Data Sources${useKnowledgeBase && knowledgeBaseFiles.length > 0 ? `
+
+## Primary Data Sources (Knowledge Base Files)
+${knowledgeBaseFiles.map(file => `• **${file.original_filename}** - Uploaded Knowledge Base File`).join('\n')}
+` : ''}
 
 ## Primary Government Portals
 • **UAE Vision 2071 Official Portal** [Ref: UAE Government Strategy Portal](https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/federal-governments-strategies-and-plans/uae-vision-2071)
