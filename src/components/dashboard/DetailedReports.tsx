@@ -514,14 +514,14 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
             </TabsContent>
 
             <TabsContent value="suggestions" className="mt-6">
-              <Card className="bg-gradient-to-br from-secondary/5 to-secondary/10 border-secondary/20">
+              <Card className="bg-gradient-to-br from-blue-50/50 to-indigo-50/30 border-blue-200 dark:from-blue-950/20 dark:to-indigo-950/10 dark:border-blue-800">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-secondary/10">
-                      <Lightbulb className="h-5 w-5 text-secondary" />
+                    <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/50">
+                      <Lightbulb className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                      <span className="text-secondary font-bold">AI-Powered Recommendations</span>
+                      <span className="text-blue-700 dark:text-blue-300 font-bold">AI-Powered Recommendations</span>
                       <p className="text-sm text-muted-foreground font-normal mt-1">
                         Strategic suggestions for workforce development and policy improvements
                       </p>

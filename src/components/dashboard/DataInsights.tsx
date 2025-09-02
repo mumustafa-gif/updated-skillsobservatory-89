@@ -41,7 +41,7 @@ const DataInsights: React.FC<DataInsightsProps> = ({ insights, visible }) => {
                 Skills Intelligence & Analysis
               </span>
               <p className="text-sm text-muted-foreground font-normal mt-1">
-                Key insights from workforce data analysis
+                Comprehensive workforce analytics covering skill gaps, demand trends, regional distribution, and strategic workforce planning recommendations based on UAE government data and uploaded knowledge base files
               </p>
             </div>
             <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
