@@ -131,9 +131,21 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
     );
   }
 
-  // Handle map charts with Mapbox integration
-  if (chartOption?.mapStyle || chartOption?.center || chartOption?.markers || 
-      (chartOption?.title && chartOption.title.text && chartOption.title.text.toLowerCase().includes('map'))) {
+  // Enhanced detection for map charts and geographic data
+  const isMapChart = (
+    chartOption?.mapStyle || 
+    chartOption?.center || 
+    chartOption?.markers || 
+    chartOption?.type === 'map' ||
+    chartOption?.geo ||
+    chartOption?.regions ||
+    chartOption?.geoIndex !== undefined ||
+    (chartOption?.series && Array.isArray(chartOption.series) && 
+     chartOption.series.some((s: any) => s.type === 'map' || s.type === 'lines' || s.coordinateSystem === 'geo')) ||
+    (chartOption?.title && chartOption.title.text && chartOption.title.text.toLowerCase().includes('map'))
+  );
+
+  if (isMapChart) {
     return (
       <MapChart 
         config={chartOption}
