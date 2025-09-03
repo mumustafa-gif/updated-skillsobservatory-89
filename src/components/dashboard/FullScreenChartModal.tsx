@@ -42,9 +42,12 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
     }
   };
 
-  // Check if this is a map chart
-  const isMapChart = chartOption?.mapStyle || chartOption?.center || chartOption?.markers || 
-    (chartOption?.title && chartOption.title.text && chartOption.title.text.toLowerCase().includes('map'));
+  // Check if this is a map chart - only for actual "Map Visualization" charts
+  const isMapChart = (
+    chartOption?.chartType === 'Map Visualization' ||
+    (chartOption?.mapStyle && chartOption?.center && chartOption?.markers) ||
+    (chartOption?.title && chartOption.title.text && chartOption.title.text === 'Map Visualization')
+  );
 
   // Enhanced configuration for fullscreen display
   const fullscreenConfig = {

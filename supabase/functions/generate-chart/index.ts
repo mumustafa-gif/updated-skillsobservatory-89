@@ -57,9 +57,35 @@ serve(async (req) => {
       }
     }
 
+    // Check if user is requesting map visualization
+    const isMapRequest = prompt.toLowerCase().includes('map') || 
+      prompt.toLowerCase().includes('geographic') || 
+      prompt.toLowerCase().includes('location') ||
+      prompt.toLowerCase().includes('region') ||
+      prompt.toLowerCase().includes('spatial');
+
     // Create the system prompt for chart generation
     const systemPrompt = `You are a chart generation assistant. Generate valid Apache ECharts configuration JSON based on user prompts. 
 
+${isMapRequest ? `
+IMPORTANT: For geographic/map requests, return a Mapbox configuration with this exact structure:
+{
+  "option": {
+    "chartType": "Map Visualization",
+    "title": {"text": "Title", "subtext": "Subtitle"},
+    "mapStyle": "mapbox://styles/mapbox/light-v11",
+    "center": [longitude, latitude],
+    "zoom": number,
+    "markers": [{"coordinates": [lng, lat], "title": "Name", "description": "Details", "color": "#color"}]
+  },
+  "diagnostics": {
+    "chartType": "Map Visualization",
+    "dimensions": ["Geographic", "Data Points"],
+    "notes": "Generated map visualization",
+    "sources": ["Geographic data sources"]
+  }
+}
+` : `
 IMPORTANT: Return ONLY a JSON object with this exact structure:
 {
   "option": {
@@ -73,7 +99,8 @@ IMPORTANT: Return ONLY a JSON object with this exact structure:
   }
 }
 
-Supported chart types: bar, line, pie, scatter, radar
+Supported chart types: bar, line, pie, scatter, radar, heatmap, treemap
+`}
 Always include proper titles, tooltips, legends, and axis labels.
 Use appropriate colors and ensure the chart is visually appealing.
 Make realistic sample data if no specific data is provided.

@@ -18,6 +18,7 @@ function createFallbackChart(chartType: string, index: number) {
   
   if (chartType === 'map') {
     return {
+      chartType: 'Map Visualization',
       title: {
         text: 'UAE Skills Distribution Map',
         subtext: 'Regional skill demand analysis'
@@ -371,6 +372,13 @@ async function generateCharts(prompt: string, numberOfCharts: number, chartTypes
     throw new Error('OpenAI API key not configured');
   }
 
+  // Check if user is requesting map visualization
+  const isMapRequest = chartTypes.some(type => type === 'map') || 
+    prompt.toLowerCase().includes('map') || 
+    prompt.toLowerCase().includes('geographic') || 
+    prompt.toLowerCase().includes('location') ||
+    prompt.toLowerCase().includes('region');
+
   // Enhanced prompt generation based on knowledge base usage
   let chartPrompt;
   
@@ -392,6 +400,7 @@ Instructions:
 
 For map charts, use this structure (return as regular ECharts config, the frontend will handle Mapbox):
 {
+  "chartType": "Map Visualization",
   "title": {"text": "Title", "subtext": "Subtitle"},
   "mapStyle": "mapbox://styles/mapbox/light-v11",
   "center": [longitude, latitude],
@@ -422,7 +431,8 @@ Use official UAE workforce data and government statistics for accurate analysis.
 
 For map charts, use this structure (return as regular ECharts config, the frontend will handle Mapbox):
 {
-  "title": {"text": "Title", "subtext": "Subtitle"},
+  "chartType": "Map Visualization",
+  "title": {"text": "Title", "subtext": "Subtitle"},  
   "mapStyle": "mapbox://styles/mapbox/light-v11",
   "center": [longitude, latitude],
   "zoom": number,
@@ -472,13 +482,27 @@ Return only the JSON array, no additional text.`;
   const data = await response.json();
   const content = data.choices[0].message.content;
   
-  // Extract JSON from response
-  const jsonMatch = content.match(/\[[\s\S]*\]/);
+  // Extract JSON from response - improved parsing
+  let jsonMatch = content.match(/\[[\s\S]*\]/);
   if (!jsonMatch) {
-    throw new Error('No valid JSON found in response');
+    // Try to find JSON object if array is not found
+    jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      // Wrap single object in array
+      jsonMatch[0] = `[${jsonMatch[0]}]`;
+    } else {
+      throw new Error('No valid JSON found in response');
+    }
   }
 
-  const charts = JSON.parse(jsonMatch[0]);
+  // Clean up the JSON string to remove potential formatting issues
+  let cleanJson = jsonMatch[0]
+    .replace(/[\u201C\u201D]/g, '"') // Replace smart quotes
+    .replace(/[\u2018\u2019]/g, "'") // Replace smart single quotes
+    .replace(/,\s*}/g, '}')         // Remove trailing commas
+    .replace(/,\s*]/g, ']');        // Remove trailing commas in arrays
+
+  const charts = JSON.parse(cleanJson);
   
   // Determine sources based on knowledge base usage
   let sources, notes;
