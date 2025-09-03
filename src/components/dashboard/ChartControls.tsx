@@ -30,15 +30,11 @@ const chartTypeOptions = [
   { value: 'heatmap', label: 'Heatmap' },
   { value: 'treemap', label: 'Treemap' },
   { value: 'sunburst', label: 'Sunburst' },
-  { value: 'sankey', label: 'Sankey Diagram' },
-  { value: 'graph', label: 'Graph/Network' },
-  { value: 'boxplot', label: 'Box Plot' },
   { value: 'candlestick', label: 'Candlestick' },
   { value: 'parallel', label: 'Parallel Coordinates' },
   { value: 'radar', label: 'Radar Chart' },
   { value: 'gauge', label: 'Gauge Chart' },
   { value: 'funnel', label: 'Funnel Chart' },
-  { value: 'themeriver', label: 'Theme River' },
   { value: 'polar', label: 'Polar Chart' },
 ];
 

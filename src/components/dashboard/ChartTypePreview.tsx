@@ -24,15 +24,11 @@ const chartTypeInfo = {
   heatmap: { icon: Grid3X3, name: 'Heatmap', category: 'Advanced', description: 'Visualize data density with color intensity' },
   treemap: { icon: TreeDeciduous, name: 'Treemap', category: 'Advanced', description: 'Hierarchical data as nested rectangles' },
   sunburst: { icon: Sun, name: 'Sunburst', category: 'Advanced', description: 'Multi-level hierarchical data in radial layout' },
-  sankey: { icon: Share2, name: 'Sankey Diagram', category: 'Advanced', description: 'Flow and relationship visualization' },
-  graph: { icon: Share2, name: 'Network Graph', category: 'Advanced', description: 'Node and edge relationship mapping' },
-  boxplot: { icon: Target, name: 'Box Plot', category: 'Advanced', description: 'Statistical distribution analysis' },
   candlestick: { icon: BarChart3, name: 'Candlestick', category: 'Advanced', description: 'Financial data with OHLC values' },
   parallel: { icon: Activity, name: 'Parallel Coordinates', category: 'Advanced', description: 'Multi-dimensional data comparison' },
   radar: { icon: Radar, name: 'Radar Chart', category: 'Specialized', description: 'Multi-axis circular comparison' },
   gauge: { icon: Gauge, name: 'Gauge Chart', category: 'Specialized', description: 'Performance meters and KPI displays' },
   funnel: { icon: Filter, name: 'Funnel Chart', category: 'Specialized', description: 'Process flow and conversion rates' },
-  themeriver: { icon: Activity, name: 'Theme River', category: 'Advanced', description: 'Flowing time-series data visualization' },
   polar: { icon: Target, name: 'Polar Chart', category: 'Specialized', description: 'Circular coordinate system charts' },
 };
 
