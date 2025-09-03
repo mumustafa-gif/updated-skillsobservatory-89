@@ -250,6 +250,91 @@ function createFallbackChart(chartType: string, index: number) {
         }]
       };
 
+    case 'themeriver':
+    case 'theme-river':
+    case 'themeRiver':
+      return {
+        title: {
+          text: `Skills Evolution River ${chartNumber}`,
+          subtext: 'Temporal flow of skill demand'
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'line',
+            lineStyle: {
+              color: 'rgba(0,0,0,0.2)',
+              width: 1,
+              type: 'solid'
+            }
+          }
+        },
+        legend: {
+          data: ['AI/ML', 'Cloud Computing', 'Data Science', 'Cybersecurity', 'DevOps']
+        },
+        singleAxis: {
+          top: 50,
+          bottom: 50,
+          axisTick: {},
+          axisLabel: {},
+          type: 'time',
+          axisPointer: {
+            animation: true,
+            label: {
+              show: true
+            }
+          },
+          splitLine: {
+            show: true,
+            lineStyle: {
+              type: 'dashed',
+              opacity: 0.2
+            }
+          }
+        },
+        series: [{
+          type: 'themeRiver',
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 20,
+              shadowColor: 'rgba(0, 0, 0, 0.8)'
+            }
+          },
+          data: [
+            ['2023-01', 10, 'AI/ML'],
+            ['2023-02', 15, 'AI/ML'],
+            ['2023-03', 25, 'AI/ML'],
+            ['2023-04', 30, 'AI/ML'],
+            ['2023-05', 35, 'AI/ML'],
+            ['2023-06', 40, 'AI/ML'],
+            ['2023-01', 8, 'Cloud Computing'],
+            ['2023-02', 12, 'Cloud Computing'],
+            ['2023-03', 18, 'Cloud Computing'],
+            ['2023-04', 22, 'Cloud Computing'],
+            ['2023-05', 28, 'Cloud Computing'],
+            ['2023-06', 32, 'Cloud Computing'],
+            ['2023-01', 6, 'Data Science'],
+            ['2023-02', 10, 'Data Science'],
+            ['2023-03', 15, 'Data Science'],
+            ['2023-04', 18, 'Data Science'],
+            ['2023-05', 22, 'Data Science'],
+            ['2023-06', 26, 'Data Science'],
+            ['2023-01', 5, 'Cybersecurity'],
+            ['2023-02', 8, 'Cybersecurity'],
+            ['2023-03', 12, 'Cybersecurity'],
+            ['2023-04', 15, 'Cybersecurity'],
+            ['2023-05', 18, 'Cybersecurity'],
+            ['2023-06', 22, 'Cybersecurity'],
+            ['2023-01', 3, 'DevOps'],
+            ['2023-02', 5, 'DevOps'],
+            ['2023-03', 8, 'DevOps'],
+            ['2023-04', 10, 'DevOps'],
+            ['2023-05', 12, 'DevOps'],
+            ['2023-06', 15, 'DevOps']
+          ]
+        }]
+      };
+
     case 'bar':
       return {
         title: {
