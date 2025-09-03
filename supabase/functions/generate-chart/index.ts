@@ -57,50 +57,8 @@ serve(async (req) => {
       }
     }
 
-    // Detect if this is a map visualization request
-    const isMapVisualizationRequest = prompt.toLowerCase().includes('map') || 
-                                     prompt.toLowerCase().includes('geographic') || 
-                                     prompt.toLowerCase().includes('location') ||
-                                     prompt.toLowerCase().includes('regional') ||
-                                     prompt.toLowerCase().includes('country') ||
-                                     prompt.toLowerCase().includes('city');
-
     // Create the system prompt for chart generation
-    const systemPrompt = isMapVisualizationRequest 
-      ? `You are a map visualization assistant. Generate valid Mapbox configuration JSON for geographic data visualization.
-
-IMPORTANT: Return ONLY a JSON object with this exact structure:
-{
-  "option": {
-    "chartType": "Map Visualization",
-    "title": {
-      "text": "Map Title",
-      "subtext": "Map description"
-    },
-    "mapStyle": "mapbox://styles/mapbox/light-v11",
-    "center": [longitude, latitude],
-    "zoom": 2,
-    "markers": [
-      {
-        "coordinates": [longitude, latitude],
-        "popup": "Location name and details"
-      }
-    ]
-  },
-  "diagnostics": {
-    "chartType": "Map Visualization",
-    "dimensions": ["array of geographic dimensions"],
-    "notes": "string with assumptions made",
-    "sources": ["array of source files used"]
-  }
-}
-
-Generate appropriate geographic data with realistic coordinates.
-Use proper map styling and ensure markers have meaningful popup content.
-Center the map appropriately for the data being displayed.
-
-${knowledgeBaseContext ? `Knowledge Base Context:\n${knowledgeBaseContext}` : ''}`
-      : `You are a chart generation assistant. Generate valid Apache ECharts configuration JSON based on user prompts. 
+    const systemPrompt = `You are a chart generation assistant. Generate valid Apache ECharts configuration JSON based on user prompts. 
 
 IMPORTANT: Return ONLY a JSON object with this exact structure:
 {

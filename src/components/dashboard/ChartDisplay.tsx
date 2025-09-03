@@ -134,8 +134,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
   // Check if chart type is "Map Visualization" - use Mapbox only for this type
   const isMapChart = (
     chartOption?.chartType === 'Map Visualization' ||
-    (chartOption?.title && chartOption.title.text && chartOption.title.text.toLowerCase().includes('map visualization')) ||
-    (chartOption?.diagnostics && chartOption.diagnostics.chartType === 'Map Visualization')
+    (chartOption?.title && chartOption.title.text && chartOption.title.text.toLowerCase().includes('map visualization'))
   );
 
   if (isMapChart) {

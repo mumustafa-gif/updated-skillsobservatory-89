@@ -356,8 +356,7 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         // Check if chart type is "Map Visualization" - use Mapbox only for this type  
         const isMapChart = (
           chartOption?.chartType === 'Map Visualization' ||
-          (chartOption?.title && chartOption.title.text && chartOption.title.text.toLowerCase().includes('map visualization')) ||
-          (chartOption?.diagnostics && chartOption.diagnostics.chartType === 'Map Visualization')
+          (chartOption?.title && chartOption.title.text && chartOption.title.text.toLowerCase().includes('map visualization'))
         );
         
         return (
