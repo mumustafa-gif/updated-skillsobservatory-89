@@ -108,33 +108,198 @@ function createFallbackChart(chartType: string, index: number) {
     };
   }
   
-  // Default fallback for other chart types
-  return {
-    title: {
-      text: `Skills Analysis Chart ${chartNumber}`,
-      subtext: 'Market trends and demand analysis'
-    },
-    xAxis: {
-      type: 'category',
-      data: ['AI/ML', 'Cloud Computing', 'Data Science', 'Cybersecurity', 'DevOps']
-    },
-    yAxis: {
-      type: 'value',
-      name: 'Demand Score'
-    },
-    series: [{
-      name: 'Skill Demand',
-      type: chartType === 'bar' ? 'bar' : 'line',
-      data: [95, 88, 82, 78, 75],
-      smooth: chartType === 'line'
-    }],
-    tooltip: {
-      trigger: 'axis'
-    },
-    legend: {
-      data: ['Skill Demand']
-    }
-  };
+  // Enhanced fallback for all chart types
+  switch (chartType) {
+    case 'pie':
+      return {
+        title: {
+          text: `Skills Distribution Analysis ${chartNumber}`,
+          subtext: 'Market share by skill category'
+        },
+        series: [{
+          name: 'Skills',
+          type: 'pie',
+          radius: '60%',
+          data: [
+            { value: 35, name: 'AI/ML' },
+            { value: 25, name: 'Cloud Computing' },
+            { value: 20, name: 'Data Science' },
+            { value: 15, name: 'Cybersecurity' },
+            { value: 5, name: 'DevOps' }
+          ]
+        }],
+        tooltip: {
+          trigger: 'item',
+          formatter: '{a} <br/>{b}: {c} ({d}%)'
+        }
+      };
+
+    case 'scatter':
+      return {
+        title: {
+          text: `Skills Demand vs Supply Analysis ${chartNumber}`,
+          subtext: 'Market positioning by skill'
+        },
+        xAxis: {
+          type: 'value',
+          name: 'Supply Level'
+        },
+        yAxis: {
+          type: 'value',
+          name: 'Demand Level'
+        },
+        series: [{
+          name: 'Skills',
+          type: 'scatter',
+          data: [[65, 95], [70, 88], [60, 82], [55, 78], [50, 75]]
+        }],
+        tooltip: {
+          trigger: 'item'
+        }
+      };
+
+    case 'heatmap':
+      return {
+        title: {
+          text: `Skills Demand Heatmap ${chartNumber}`,
+          subtext: 'Regional and temporal analysis'
+        },
+        xAxis: {
+          type: 'category',
+          data: ['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman']
+        },
+        yAxis: {
+          type: 'category',
+          data: ['AI/ML', 'Cloud Computing', 'Data Science', 'Cybersecurity', 'DevOps']
+        },
+        visualMap: {
+          min: 0,
+          max: 100,
+          calculable: true
+        },
+        series: [{
+          name: 'Demand',
+          type: 'heatmap',
+          data: [
+            [0, 0, 95], [0, 1, 88], [0, 2, 82], [0, 3, 78], [0, 4, 75],
+            [1, 0, 85], [1, 1, 92], [1, 2, 79], [1, 3, 88], [1, 4, 72],
+            [2, 0, 75], [2, 1, 82], [2, 2, 88], [2, 3, 75], [2, 4, 68],
+            [3, 0, 65], [3, 1, 72], [3, 2, 75], [3, 3, 82], [3, 4, 78]
+          ]
+        }],
+        tooltip: {
+          position: 'top'
+        }
+      };
+
+    case 'radar':
+      return {
+        title: {
+          text: `Skills Assessment Radar ${chartNumber}`,
+          subtext: 'Multi-dimensional skill analysis'
+        },
+        radar: {
+          indicator: [
+            { name: 'AI/ML', max: 100 },
+            { name: 'Cloud Computing', max: 100 },
+            { name: 'Data Science', max: 100 },
+            { name: 'Cybersecurity', max: 100 },
+            { name: 'DevOps', max: 100 }
+          ]
+        },
+        series: [{
+          name: 'Skills Demand',
+          type: 'radar',
+          data: [{ value: [95, 88, 82, 78, 75], name: 'Current Demand' }]
+        }]
+      };
+
+    case 'gauge':
+      return {
+        title: {
+          text: `Skills Market Indicator ${chartNumber}`,
+          subtext: 'Overall market health'
+        },
+        series: [{
+          name: 'Market Health',
+          type: 'gauge',
+          min: 0,
+          max: 100,
+          detail: { formatter: '{value}%' },
+          data: [{ value: 83.6, name: 'Skills Market' }]
+        }]
+      };
+
+    case 'polar':
+      return {
+        title: {
+          text: `Skills Polar Analysis ${chartNumber}`,
+          subtext: 'Circular distribution view'
+        },
+        polar: {},
+        angleAxis: {
+          type: 'category',
+          data: ['AI/ML', 'Cloud Computing', 'Data Science', 'Cybersecurity', 'DevOps']
+        },
+        radiusAxis: {},
+        series: [{
+          name: 'Demand',
+          type: 'bar',
+          data: [95, 88, 82, 78, 75],
+          coordinateSystem: 'polar'
+        }]
+      };
+
+    case 'bar':
+      return {
+        title: {
+          text: `Skills Demand Analysis ${chartNumber}`,
+          subtext: 'Market trends and demand analysis'
+        },
+        xAxis: {
+          type: 'category',
+          data: ['AI/ML', 'Cloud Computing', 'Data Science', 'Cybersecurity', 'DevOps']
+        },
+        yAxis: {
+          type: 'value',
+          name: 'Demand Score'
+        },
+        series: [{
+          name: 'Skill Demand',
+          type: 'bar',
+          data: [95, 88, 82, 78, 75]
+        }],
+        tooltip: {
+          trigger: 'axis'
+        }
+      };
+
+    case 'line':
+    default:
+      return {
+        title: {
+          text: `Skills Trend Analysis ${chartNumber}`,
+          subtext: 'Market trends and demand analysis'
+        },
+        xAxis: {
+          type: 'category',
+          data: ['AI/ML', 'Cloud Computing', 'Data Science', 'Cybersecurity', 'DevOps']
+        },
+        yAxis: {
+          type: 'value',
+          name: 'Demand Score'
+        },
+        series: [{
+          name: 'Skill Demand',
+          type: 'line',
+          data: [95, 88, 82, 78, 75],
+          smooth: true
+        }],
+        tooltip: {
+          trigger: 'axis'
+        }
+      };
+  }
 }
 
 serve(async (req) => {
