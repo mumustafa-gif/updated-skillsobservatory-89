@@ -353,18 +353,10 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
       className={`grid ${getGridCols(chartOptions.length)} gap-3 sm:gap-4 lg:gap-6 w-full`}
     >
       {chartOptions.map((chartOption, index) => {
-        // Enhanced detection for map charts and geographic data
+        // Check if chart type is "Map Visualization" - use Mapbox only for this type  
         const isMapChart = (
-          chartOption?.mapStyle || 
-          chartOption?.center || 
-          chartOption?.markers || 
-          chartOption?.type === 'map' ||
-          chartOption?.geo ||
-          chartOption?.regions ||
-          chartOption?.geoIndex !== undefined ||
-          (chartOption?.series && Array.isArray(chartOption.series) && 
-           chartOption.series.some((s: any) => s.type === 'map' || s.type === 'lines' || s.coordinateSystem === 'geo')) ||
-          (chartOption?.title && chartOption.title.text && chartOption.title.text.toLowerCase().includes('map'))
+          chartOption?.chartType === 'Map Visualization' ||
+          (chartOption?.title && chartOption.title.text && chartOption.title.text.toLowerCase().includes('map visualization'))
         );
         
         return (
