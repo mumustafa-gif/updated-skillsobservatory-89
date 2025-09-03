@@ -60,7 +60,9 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
         bottom: '3%',
         containLabel: true,
         ...config.grid
-      }
+      },
+      // Preserve visualMap for heatmaps and other chart types that need it
+      ...(config.visualMap && { visualMap: config.visualMap })
     };
   }, [chartOption]);
 

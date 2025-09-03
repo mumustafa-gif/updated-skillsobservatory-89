@@ -341,7 +341,10 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
               color: '#374151',
               ...chartOption.series.label
             }
-          }] : []
+          }] : [],
+
+      // Preserve visualMap for heatmaps and other chart types that need it
+      ...(chartOption?.visualMap && { visualMap: chartOption.visualMap })
     };
   };
 

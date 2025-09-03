@@ -93,7 +93,9 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
         fontSize: 14,
         ...(chartOption?.tooltip?.textStyle || {})
       }
-    }
+    },
+    // Preserve visualMap for heatmaps and other chart types that need it
+    ...(chartOption?.visualMap && { visualMap: chartOption.visualMap })
   };
 
   return (
