@@ -8,7 +8,7 @@ const Index = () => {
         <img 
           src="/lovable-uploads/c4d663bc-27ef-4ba5-9a5e-f8401832952e.png" 
           alt="Logo" 
-          className="h-16 w-auto"
+          className="h-24 w-auto"
         />
       </div>
       
