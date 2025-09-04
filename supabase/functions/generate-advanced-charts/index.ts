@@ -381,10 +381,7 @@ serve(async (req) => {
       
       // Add knowledge base files to sources if used
       if (useKnowledgeBase && knowledgeBaseFiles_data.length > 0) {
-        const kbSources = knowledgeBaseFiles_data.map(file => 
-          `Uploaded File: ${file.original_filename} (Knowledge Base)`
-        );
-        diagnostics.sources = [...kbSources, ...diagnostics.sources];
+        diagnostics.sources = ["Internal Data Sources", ...diagnostics.sources];
       }
     } else {
       console.error('Chart generation failed:', chartsResult.status === 'rejected' ? chartsResult.reason : 'Unknown error');
@@ -398,15 +395,12 @@ serve(async (req) => {
       
       // Set appropriate sources based on whether knowledge base was used
       if (useKnowledgeBase && knowledgeBaseFiles_data.length > 0) {
-        const kbSources = knowledgeBaseFiles_data.map(file => 
-          `Uploaded File: ${file.original_filename} (Knowledge Base)`
-        );
         diagnostics.sources = [
-          ...kbSources,
+          "Internal Data Sources",
           "UAE Ministry of Human Resources & Emiratisation (MOHRE) - Official Database", 
           "UAE Federal Authority for Government Human Resources (FAHR) - National Data"
         ];
-        diagnostics.notes = `Fallback: Generated ${charts.length} charts based on uploaded knowledge base files and national workforce data`;
+        diagnostics.notes = `Fallback: Generated ${charts.length} charts based on internal data sources and national workforce data`;
       } else {
         diagnostics.sources = [
           "UAE Ministry of Human Resources & Emiratisation (MOHRE) - Official Database", 
@@ -552,16 +546,16 @@ async function generateCharts(prompt: string, numberOfCharts: number, chartTypes
 
 Chart types requested: ${chartTypes.join(', ')}
 
-IMPORTANT: Use the following uploaded knowledge base content as your PRIMARY DATA SOURCE:
+IMPORTANT: Use the following internal data sources as your PRIMARY DATA SOURCE:
 ${knowledgeBaseContent}
 
-Instructions:
-1. PRIORITIZE data from the uploaded files above
-2. Create charts that directly reflect the data patterns, statistics, and insights from the uploaded content
-3. If the uploaded content contains specific numbers, dates, categories, or trends, use those in your charts
-4. Extract meaningful data points from the uploaded content to populate your chart series
-5. Reference specific sections or findings from the uploaded files in chart titles and subtitles
-6. If the uploaded content is insufficient for the requested analysis, supplement with general UAE workforce knowledge
+CRITICAL REQUIREMENTS TO AVOID HALLUCINATIONS:
+1. ONLY use data points, statistics, and trends that are explicitly mentioned in the provided content
+2. DO NOT invent or extrapolate numbers, percentages, or data points not present in the source material
+3. If specific data is not available in the provided content, use general patterns but clearly indicate it as "estimated" or "typical"
+4. All chart titles and data must reflect authentic information from the provided sources
+5. When insufficient data is available, create simplified visualizations with disclaimers about data limitations
+6. Base all analysis strictly on verifiable information from official sources and provided content
 
 For map charts, use this structure (return as regular ECharts config, the frontend will handle Mapbox):
 {
@@ -592,7 +586,13 @@ Return only the JSON array, no additional text.`;
 
 Chart types requested: ${chartTypes.join(', ')}
 
-Use official UAE workforce data and government statistics for accurate analysis.
+CRITICAL REQUIREMENTS TO AVOID HALLUCINATIONS:
+1. ONLY use verified UAE government statistics and official data sources
+2. DO NOT create fictional statistics, percentages, or data points
+3. Base all visualizations on authentic government publications and official reports
+4. When specific data is not available, use general industry patterns but clearly mark as "estimated"
+5. All chart data must be grounded in verifiable information from official UAE sources
+6. Include disclaimers when using approximated or typical industry data
 
 For map charts, use this structure (return as regular ECharts config, the frontend will handle Mapbox):
 {
@@ -673,12 +673,12 @@ Return only the JSON array, no additional text.`;
   let sources, notes;
   if (useKnowledgeBase && knowledgeBaseContent) {
     sources = [
-      "Uploaded Knowledge Base Files (Primary Data Source)",
+      "Internal Data Sources (Primary)",
       "UAE Ministry of Human Resources & Emiratisation (MOHRE) - Official Government Database", 
       "UAE Federal Authority for Government Human Resources (FAHR) - National Statistics", 
       "UAE Vision 2071 Framework - Strategic Planning Documents"
     ];
-    notes = `Successfully generated ${charts.length} charts using uploaded knowledge base content as primary data source`;
+    notes = `Successfully generated ${charts.length} charts using internal data sources as primary data source`;
   } else {
     sources = [
       "UAE Ministry of Human Resources & Emiratisation (MOHRE) - Official Government Database", 
@@ -709,13 +709,30 @@ async function generateInsights(prompt: string, numberOfCharts: number, knowledg
   if (useKnowledgeBase && knowledgeBaseContent) {
     insightsPrompt = `Generate ${numberOfCharts} key insights for UAE workforce analysis based on this request: "${prompt}".
 
-Use the following uploaded knowledge base content as your primary source:
+Use the following internal data sources as your primary source:
 ${knowledgeBaseContent.slice(0, 3000)}
 
-Focus on actionable intelligence and key trends extracted from the uploaded content. Reference specific data points, findings, or patterns from the uploaded files. Return a JSON array of strings.`;
+CRITICAL REQUIREMENTS FOR AUTHENTIC INSIGHTS:
+1. Base insights ONLY on information explicitly present in the provided content
+2. DO NOT create speculative or fictional statistics or trends
+3. Reference specific data points and findings from the provided sources
+4. When making predictions or trends, clearly indicate they are based on available data patterns
+5. Avoid hallucinating specific numbers, percentages, or statistics not in the source material
+6. Focus on verifiable patterns and authentic information from the provided content
+
+Return a JSON array of strings with validated insights.`;
   } else {
     insightsPrompt = `Generate ${numberOfCharts} key insights for UAE workforce analysis based on this request: "${prompt}".
-Focus on actionable intelligence and key trends. Return a JSON array of strings.`;
+
+CRITICAL REQUIREMENTS FOR AUTHENTIC INSIGHTS:
+1. Base insights ONLY on verified UAE government data and official statistics
+2. DO NOT create fictional or speculative statistics
+3. Reference authentic trends from official UAE sources like MOHRE, FAHR, and Vision 2071
+4. When discussing trends, ground them in documented government reports and policies
+5. Avoid creating specific numbers or percentages not backed by official sources
+6. Focus on validated patterns from authentic UAE workforce development initiatives
+
+Return a JSON array of strings with evidence-based insights.`;
   }
 
   try {
@@ -770,10 +787,10 @@ async function generateDetailedReport(charts: any[], insights: string[], knowled
   // Create specific prompts for each section with knowledge base integration
   let contextData = '';
   if (useKnowledgeBase && knowledgeBaseContent) {
-    contextData = `\n\nKNOWLEDGE BASE CONTEXT (Primary Source):
+    contextData = `\n\nINTERNAL DATA SOURCES (Primary Source):
 ${knowledgeBaseContent.slice(0, 2000)}
 
-NOTE: Prioritize insights and analysis based on the uploaded knowledge base content above.`;
+CRITICAL NOTE: Base all analysis strictly on information present in the provided internal data sources. Avoid creating fictional statistics or speculative data points.`;
   }
 
   const overviewPrompt = `Generate a comprehensive overview and analysis of UAE workforce skills based on:
