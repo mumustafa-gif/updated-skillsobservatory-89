@@ -250,7 +250,7 @@ const Dashboard = () => {
             <img 
               src="/lovable-uploads/c4d663bc-27ef-4ba5-9a5e-f8401832952e.png" 
               alt="Logo" 
-              className="h-10 w-auto hover-scale transition-transform duration-200"
+              className="h-16 w-auto hover-scale transition-transform duration-200"
             />
           </motion.div>
           <motion.div 
