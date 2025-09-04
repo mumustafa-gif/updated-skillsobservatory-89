@@ -145,14 +145,14 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         textStyle: {
           fontSize: titleFontSize,
           fontWeight: 'bold',
-          color: '#1f2937',
+          color: 'hsl(var(--primary))',
           overflow: 'truncate',
           width: isMobile ? 200 : 300,
           ...chartOption.title?.textStyle
         },
         subtextStyle: {
           fontSize: baseFontSize,
-          color: '#6b7280',
+          color: 'hsl(var(--muted-foreground))',
           overflow: 'truncate',
           width: isMobile ? 180 : 280,
           ...chartOption.title?.subtextStyle
@@ -173,19 +173,19 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         itemGap: isMobile ? 6 : 8,
         textStyle: {
           fontSize: legendFontSize,
-          color: '#374151',
+          color: 'hsl(var(--muted-foreground))',
           overflow: 'truncate',
           width: isMobile ? 60 : 80,
           ...chartOption.legend?.textStyle
         },
-        pageIconColor: '#6b7280',
-        pageIconInactiveColor: '#d1d5db',
+        pageIconColor: 'hsl(var(--muted-foreground))',
+        pageIconInactiveColor: 'hsl(var(--border))',
         pageTextStyle: {
           fontSize: legendFontSize - 1,
-          color: '#6b7280'
+          color: 'hsl(var(--muted-foreground))'
         },
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        borderColor: '#e5e7eb',
+        backgroundColor: 'hsl(var(--background) / 0.9)',
+        borderColor: 'hsl(var(--border))',
         borderWidth: 1,
         borderRadius: 4,
         padding: [6, 8],
@@ -221,20 +221,20 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
               margin: 8,
               overflow: 'truncate',
               width: isMobile ? 60 : 80,
-              color: '#6b7280',
+              color: 'hsl(var(--muted-foreground))',
               ...axis.axisLabel
             },
             nameTextStyle: {
               fontSize: baseFontSize,
-              color: '#374151',
+              color: 'hsl(var(--foreground))',
               ...axis.nameTextStyle
             },
             axisLine: {
-              lineStyle: { color: '#e5e7eb' },
+              lineStyle: { color: 'hsl(var(--border))' },
               ...axis.axisLine
             },
             axisTick: {
-              lineStyle: { color: '#e5e7eb' },
+              lineStyle: { color: 'hsl(var(--border))' },
               ...axis.axisTick
             }
           }))
@@ -247,20 +247,20 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
               margin: 8,
               overflow: 'truncate',
               width: isMobile ? 60 : 80,
-              color: '#6b7280',
+              color: 'hsl(var(--muted-foreground))',
               ...chartOption.xAxis.axisLabel
             },
             nameTextStyle: {
               fontSize: baseFontSize,
-              color: '#374151',
+              color: 'hsl(var(--foreground))',
               ...chartOption.xAxis.nameTextStyle
             },
             axisLine: {
-              lineStyle: { color: '#e5e7eb' },
+              lineStyle: { color: 'hsl(var(--border))' },
               ...chartOption.xAxis.axisLine
             },
             axisTick: {
-              lineStyle: { color: '#e5e7eb' },
+              lineStyle: { color: 'hsl(var(--border))' },
               ...chartOption.xAxis.axisTick
             }
           } : undefined,
@@ -272,24 +272,24 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
             axisLabel: {
               fontSize: baseFontSize,
               margin: 8,
-              color: '#6b7280',
+              color: 'hsl(var(--muted-foreground))',
               ...axis.axisLabel
             },
             nameTextStyle: {
               fontSize: baseFontSize,
-              color: '#374151',
+              color: 'hsl(var(--foreground))',
               ...axis.nameTextStyle
             },
             axisLine: {
-              lineStyle: { color: '#e5e7eb' },
+              lineStyle: { color: 'hsl(var(--border))' },
               ...axis.axisLine
             },
             axisTick: {
-              lineStyle: { color: '#e5e7eb' },
+              lineStyle: { color: 'hsl(var(--border))' },
               ...axis.axisTick
             },
             splitLine: {
-              lineStyle: { color: '#f3f4f6' },
+              lineStyle: { color: 'hsl(var(--muted) / 0.5)' },
               ...axis.splitLine
             }
           }))
@@ -298,24 +298,24 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
             axisLabel: {
               fontSize: baseFontSize,
               margin: 8,
-              color: '#6b7280',
+              color: 'hsl(var(--muted-foreground))',
               ...chartOption.yAxis.axisLabel
             },
             nameTextStyle: {
               fontSize: baseFontSize,
-              color: '#374151',
+              color: 'hsl(var(--foreground))',
               ...chartOption.yAxis.nameTextStyle
             },
             axisLine: {
-              lineStyle: { color: '#e5e7eb' },
+              lineStyle: { color: 'hsl(var(--border))' },
               ...chartOption.yAxis.axisLine
             },
             axisTick: {
-              lineStyle: { color: '#e5e7eb' },
+              lineStyle: { color: 'hsl(var(--border))' },
               ...chartOption.yAxis.axisTick
             },
             splitLine: {
-              lineStyle: { color: '#f3f4f6' },
+              lineStyle: { color: 'hsl(var(--muted) / 0.5)' },
               ...chartOption.yAxis.splitLine
             }
           } : undefined,
@@ -326,11 +326,11 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
             ...serie,
             label: {
               fontSize: baseFontSize - 1,
-              color: '#374151',
+              color: 'hsl(var(--foreground))',
               ...serie.label
             },
             labelLine: {
-              lineStyle: { color: '#d1d5db' },
+              lineStyle: { color: 'hsl(var(--border))' },
               ...serie.labelLine
             }
           }))
@@ -338,7 +338,7 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
             ...chartOption.series,
             label: {
               fontSize: baseFontSize - 1,
-              color: '#374151',
+              color: 'hsl(var(--foreground))',
               ...chartOption.series.label
             }
           }] : [],

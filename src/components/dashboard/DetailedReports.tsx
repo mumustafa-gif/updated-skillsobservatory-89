@@ -90,26 +90,26 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
     
     // Enhanced policy report formatting with comprehensive structure
     let formattedReport = report
-      // Main headers (H1) - Large blue headers for major policy sections
-      .replace(/^# (.*$)/gim, '<div class="mb-8 mt-10 first:mt-0"><h1 class="text-2xl font-bold text-blue-600 mb-4 pb-3 border-b-2 border-blue-200 bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-t-lg">$1</h1></div>')
+      // Main headers (H1) - Large primary headers for major policy sections
+      .replace(/^# (.*$)/gim, '<div class="mb-8 mt-10 first:mt-0"><h1 class="text-2xl font-bold text-primary mb-4 pb-3 border-b-2 border-primary/20 bg-gradient-to-r from-primary/10 to-primary/5 p-4 rounded-t-lg">$1</h1></div>')
       
-      // Section headers (H2) - Medium blue headers with background
-      .replace(/^## (.*$)/gim, '<div class="mb-6 mt-8 first:mt-0"><h2 class="text-xl font-bold text-blue-600 mb-3 p-4 bg-gradient-to-r from-blue-100/80 to-blue-50/80 rounded-lg border-l-4 border-blue-500 shadow-sm">$1</h2></div>')
+      // Section headers (H2) - Medium primary headers with background
+      .replace(/^## (.*$)/gim, '<div class="mb-6 mt-8 first:mt-0"><h2 class="text-xl font-bold text-primary mb-3 p-4 bg-gradient-to-r from-primary/15 to-primary/8 rounded-lg border-l-4 border-primary shadow-sm">$1</h2></div>')
       
-      // Subsection headers (H3) - Smaller blue headers
-      .replace(/^### (.*$)/gim, '<div class="mb-5 mt-6 first:mt-0"><h3 class="text-lg font-bold text-blue-600 mb-3 pl-4 border-l-3 border-blue-400 bg-blue-50/50 py-2 rounded-r-md">$1</h3></div>')
+      // Subsection headers (H3) - Smaller primary headers
+      .replace(/^### (.*$)/gim, '<div class="mb-5 mt-6 first:mt-0"><h3 class="text-lg font-bold text-primary mb-3 pl-4 border-l-3 border-primary/60 bg-primary/10 py-2 rounded-r-md">$1</h3></div>')
       
-      // Sub-subsection headers (H4) - Minor blue headers
-      .replace(/^#### (.*$)/gim, '<h4 class="text-base font-semibold text-blue-600 mb-2 mt-4 pl-2 border-l-2 border-blue-300">$1</h4>')
+      // Sub-subsection headers (H4) - Minor primary headers
+      .replace(/^#### (.*$)/gim, '<h4 class="text-base font-semibold text-primary mb-2 mt-4 pl-2 border-l-2 border-primary/40">$1</h4>')
       
       // Policy entries with reference links - Enhanced with better styling
       .replace(/(.+?)\s*\[Ref:\s*([^\]]+)\]\s*\(([^)]+)\)/gim, 
-        '<div class="mb-5 p-4 border-l-4 border-blue-400 bg-gradient-to-r from-blue-50/80 to-white rounded-r-lg shadow-sm hover:shadow-md transition-shadow">' +
+        '<div class="mb-5 p-4 border-l-4 border-primary bg-gradient-to-r from-primary/8 to-background rounded-r-lg shadow-sm hover:shadow-md transition-shadow">' +
         '<div class="flex items-start gap-3">' +
-        '<span class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>' +
+        '<span class="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>' +
         '<div class="flex-1">' +
-        '<p class="text-sm text-gray-800 font-medium mb-3 leading-relaxed">$1</p>' +
-        '<a href="$3" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-xs text-blue-600 hover:text-blue-800 font-medium underline decoration-2 underline-offset-2 transition-colors bg-blue-100/60 hover:bg-blue-200/60 px-3 py-2 rounded-md border border-blue-200/60">' +
+        '<p class="text-sm text-foreground font-medium mb-3 leading-relaxed">$1</p>' +
+        '<a href="$3" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-xs text-primary hover:text-primary/80 font-medium underline decoration-2 underline-offset-2 transition-colors bg-primary/10 hover:bg-primary/15 px-3 py-2 rounded-md border border-primary/20">' +
         '<span class="text-sm">🔗</span>' +
         '<span>View Source</span>' +
         '<span class="text-xs opacity-75">↗</span>' +
@@ -431,28 +431,28 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
             <TabsList className="grid w-full grid-cols-4 mb-8 bg-muted/50 p-1 h-12">
               <TabsTrigger 
                 value="overview" 
-                className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium"
+                className="flex items-center gap-2 font-medium"
               >
                 <FileText className="h-4 w-4" />
                 <span className="hidden sm:inline">Overview</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="policies" 
-                className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium"
+                className="flex items-center gap-2 font-medium"
               >
                 <Shield className="h-4 w-4" />
                 <span className="hidden sm:inline">Current Policies</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="suggestions" 
-                className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium"
+                className="flex items-center gap-2 font-medium"
               >
                 <Lightbulb className="h-4 w-4" />
                 <span className="hidden sm:inline">AI Suggestions</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="sources" 
-                className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium"
+                className="flex items-center gap-2 font-medium"
               >
                 <Link className="h-4 w-4" />
                 <span className="hidden sm:inline">Data Sources</span>
@@ -514,14 +514,14 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
             </TabsContent>
 
             <TabsContent value="suggestions" className="mt-6">
-              <Card className="bg-gradient-to-br from-blue-50/50 to-indigo-50/30 border-blue-200 dark:from-blue-950/20 dark:to-indigo-950/10 dark:border-blue-800">
+              <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/50">
-                      <Lightbulb className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <Lightbulb className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <span className="text-blue-700 dark:text-blue-300 font-bold">AI-Powered Recommendations</span>
+                      <span className="text-primary font-bold">AI-Powered Recommendations</span>
                       <p className="text-sm text-muted-foreground font-normal mt-1">
                         Strategic suggestions for workforce development and policy improvements
                       </p>
@@ -534,21 +534,21 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
                     content={generationResult?.detailedReport?.aiSuggestions}
                     defaultMessage="AI-generated policy suggestions and strategic recommendations will appear here."
                     icon={Lightbulb}
-                    colorClass="text-secondary"
+                    colorClass="text-primary"
                   />
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="sources" className="mt-6">
-              <Card className="bg-gradient-to-br from-emerald-50/50 to-emerald-100/50 border-emerald-200">
+              <Card className="bg-gradient-to-br from-accent/5 to-accent/10 border-accent/20">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-xl flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-emerald-100">
-                      <Link className="h-5 w-5 text-emerald-700" />
+                    <div className="p-2 rounded-lg bg-accent/10">
+                      <Link className="h-5 w-5 text-accent" />
                     </div>
                     <div>
-                      <span className="text-emerald-700 font-bold">Official Data Sources</span>
+                      <span className="text-accent font-bold">Official Data Sources</span>
                       <p className="text-sm text-muted-foreground font-normal mt-1">
                         Verified government sources and authentic reference links used for analysis
                       </p>
@@ -561,7 +561,7 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
                     content={generationResult?.detailedReport?.dataSources}
                     defaultMessage="Official data sources and reference links will appear here after AI analysis is complete."
                     icon={Link}
-                    colorClass="text-emerald-700"
+                    colorClass="text-accent"
                   />
                 </CardContent>
               </Card>

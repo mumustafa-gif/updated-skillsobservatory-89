@@ -106,8 +106,8 @@ const ChartControls: React.FC<ChartControlsProps> = ({
       {/* Chart Type Selectors */}
       {numberOfCharts > 0 && (
         <div className="space-y-4">
-          <Label className="text-sm font-medium text-secondary flex items-center gap-2">
-            <span className="w-2 h-2 bg-secondary rounded-full"></span>
+          <Label className="text-sm font-medium text-primary flex items-center gap-2">
+            <span className="w-2 h-2 bg-primary rounded-full"></span>
             Chart Types
           </Label>
             <div className="grid gap-3">
