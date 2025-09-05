@@ -71,20 +71,17 @@ const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({ diagnostics, visibl
             </div>
             
             <div className="space-y-2 sm:col-span-2 lg:col-span-1">
-              <Label className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300">Data Sources</Label>
+              <Label className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300">Processing Methods</Label>
               <div className="flex flex-wrap gap-1">
-                {diagnostics.sources?.slice(0, 2).map((source: string, index: number) => (
-                  <Badge key={index} variant="outline" className="border-green-300 text-green-700 dark:border-green-700 dark:text-green-300 text-xs">
-                    {source}
-                  </Badge>
-                )) || (
-                  <Badge variant="outline" className="border-gray-300 text-gray-700 dark:border-gray-700 dark:text-gray-300 text-xs">
-                    Generated Data
-                  </Badge>
-                )}
-                {diagnostics.sources?.length > 2 && (
-                  <Badge variant="outline" className="border-green-300 text-green-700 dark:border-green-700 dark:text-green-300 text-xs">
-                    +{diagnostics.sources.length - 2} more
+                <Badge variant="outline" className="border-purple-300 text-purple-700 dark:border-purple-700 dark:text-purple-300 text-xs">
+                  Statistical Analysis
+                </Badge>
+                <Badge variant="outline" className="border-purple-300 text-purple-700 dark:border-purple-700 dark:text-purple-300 text-xs">
+                  Pattern Recognition
+                </Badge>
+                {diagnostics.chartTypes?.length > 1 && (
+                  <Badge variant="outline" className="border-purple-300 text-purple-700 dark:border-purple-700 dark:text-purple-300 text-xs">
+                    Multi-variate Analysis
                   </Badge>
                 )}
               </div>
