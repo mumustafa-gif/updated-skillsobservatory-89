@@ -306,7 +306,7 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult, kno
     const formatDataSources = (sources: string) => {
       if (!sources) return '';
       
-      // Remove knowledge base file references before formatting
+      // Remove knowledge base file references and specific unwanted references before formatting
       let cleanedSources = sources
         // Remove lines that contain knowledge base file references
         .replace(/\*\*[^*]+\.pdf\*\*\s*-\s*Uploaded Knowledge Base File\s*/gi, '')
@@ -314,6 +314,9 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult, kno
         .replace(/\*\*[^*]+\.txt\*\*\s*-\s*Uploaded Knowledge Base File\s*/gi, '')
         // Remove any other knowledge base file patterns
         .replace(/.*-\s*Uploaded Knowledge Base File.*\n?/gi, '')
+        // Remove specific unwanted references
+        .replace(/.*Mawaheb Blueprint Discussion Document.*\n?/gi, '')
+        .replace(/.*Workforce Planning in Al Ain Region Reports.*\n?/gi, '')
         // Clean up extra line breaks
         .replace(/\n\s*\n\s*\n/g, '\n\n')
         .trim();
