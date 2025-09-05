@@ -577,28 +577,10 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult, kno
             </TabsContent>
 
             <TabsContent value="ask-ai" className="mt-6">
-              <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-xl flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <MessageSquare className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <span className="text-primary font-bold">AI Assistant</span>
-                      <p className="text-sm text-muted-foreground font-normal mt-1">
-                        Ask questions about your analysis results and data insights
-                      </p>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <Separator className="mb-6" />
-                <CardContent className="pt-0">
-                  <AskAIChat 
-                    generationResult={generationResult}
-                    knowledgeFileIds={knowledgeFileIds}
-                  />
-                </CardContent>
-              </Card>
+              <AskAIChat 
+                generationResult={generationResult}
+                knowledgeFileIds={knowledgeFileIds}
+              />
             </TabsContent>
           </Tabs>
         </CardContent>
