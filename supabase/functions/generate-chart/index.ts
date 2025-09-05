@@ -73,7 +73,7 @@ IMPORTANT: For geographic/map requests, return a Mapbox configuration with this 
   "option": {
     "chartType": "Map Visualization",
     "title": {"text": "Title", "subtext": "Subtitle"},
-    "mapStyle": "mapbox://styles/mapbox/light-v11",
+    "mapStyle": "mapbox://styles/mapbox/outdoors-v12",
     "center": [longitude, latitude],
     "zoom": number,
     "markers": [{"coordinates": [lng, lat], "title": "Name", "description": "Details", "color": "#color"}]
@@ -81,7 +81,7 @@ IMPORTANT: For geographic/map requests, return a Mapbox configuration with this 
   "diagnostics": {
     "chartType": "Map Visualization",
     "dimensions": ["Geographic", "Data Points"],
-    "notes": "Generated map visualization",
+    "notes": "Generated map visualization with colorful terrain style",
     "sources": ["Geographic data sources"]
   }
 }
