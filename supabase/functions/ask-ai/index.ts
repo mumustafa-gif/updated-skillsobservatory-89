@@ -95,35 +95,44 @@ serve(async (req) => {
     console.log('Analysis context length:', analysisContext.length);
 
     // Build the professional ministerial system prompt
-    const systemPrompt = `You are a senior policy advisor and data analyst for the UAE Ministry, providing executive briefings to Ministers and senior government officials. Your responses must be authoritative, data-driven, and actionable.
+    const systemPrompt = `You are a senior policy advisor and data analyst for the UAE Ministry, providing comprehensive executive briefings to Ministers and senior government officials. Your responses must be authoritative, data-driven, statistically rich, and immediately actionable.
 
 **MANDATORY RESPONSE STRUCTURE:**
 Always structure your response with exactly these 5 sections:
 
 ## Executive Summary
-• One key finding or insight (maximum 2 lines)
+• Primary finding with statistical backing (2-3 lines)
+• Overall trend direction and significance level
 
-## Key Metrics  
-• 2-3 most important statistics or data points with specific numbers
-• Include percentages, trends, or comparisons when available
+## Key Metrics & Statistics
+• 4-5 critical data points with specific numbers, percentages, and growth rates
+• Include year-over-year comparisons, regional benchmarks, and performance indicators
+• Highlight statistical significance and confidence intervals where applicable
+• Present data in context (e.g., "15% above national average", "2.3x industry standard")
 
-## Strategic Insights
-• 2-3 critical insights that inform policy decisions
-• Focus on implications for UAE's strategic objectives
+## Strategic Insights & Analysis
+• 3-4 detailed insights that inform policy decisions with statistical evidence
+• Include correlation analysis, trend projections, and risk assessments
+• Focus on implications for UAE's Vision 2071 and strategic objectives
+• Quantify potential impacts and opportunities
 
-## Recommendations
-• 2-3 specific, actionable recommendations for ministerial consideration
-• Prioritize high-impact, implementable solutions
+## Actionable Recommendations
+• 3-4 specific, implementable recommendations with projected outcomes
+• Include resource requirements, timelines, and success metrics
+• Prioritize by impact potential and implementation feasibility
+• Provide cost-benefit analysis where relevant
 
-## Next Steps
-• 1-2 immediate actions the Ministry should take
+## Immediate Next Steps
+• 2-3 urgent actions with specific timelines and responsible entities
+• Include measurable milestones and performance indicators
 
 **Professional Standards:**
-- Maximum 120 words total
-- Use precise, ministerial-level language
-- Include specific data points and percentages
-- Focus on strategic implications and actionable outcomes
-- Every bullet point maximum 1-2 lines
+- Maximum 400 words total for comprehensive analysis
+- Use precise, ministerial-level language with statistical rigor
+- Include specific data points, percentages, growth rates, and benchmarks
+- Emphasize actionable outcomes with quantified benefits
+- Provide statistical context and comparative analysis
+- Focus on measurable policy impacts and ROI
 
 Available Context:
 ${analysisContext}
@@ -144,7 +153,7 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
         { role: 'system', content: systemPrompt },
         { role: 'user', content: question }
       ],
-      max_tokens: 800,
+      max_tokens: 1200,
       temperature: 0.3,
       stream: true,
     };
@@ -176,7 +185,7 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
         // Try fallback to GPT-5-mini if primary model fails
         if (response.status === 400 && requestBody.model === 'gpt-4o-mini') {
           console.log('Retrying with GPT-5-mini fallback...');
-          const fallbackBody = { ...requestBody, model: 'gpt-5-mini-2025-08-07', max_completion_tokens: 800 };
+          const fallbackBody = { ...requestBody, model: 'gpt-5-mini-2025-08-07', max_completion_tokens: 1200 };
           delete fallbackBody.max_tokens;
           delete fallbackBody.temperature;
           
