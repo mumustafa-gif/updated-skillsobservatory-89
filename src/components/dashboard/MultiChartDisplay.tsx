@@ -173,18 +173,13 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         'hsl(200, 80%, 40%)', // Dark blue
       ],
 
-      // Enhanced legend configuration
+      // Enhanced legend configuration - bottom right positioning
       legend: {
         ...chartOption.legend,
         type: 'scroll',
-        orient: isMobile ? 'horizontal' : 'vertical',
-        ...(isMobile ? {
-          bottom: 8,
-          left: 'center',
-        } : {
-          right: 12,
-          top: 'center',
-        }),
+        orient: 'vertical',
+        right: '2%',
+        bottom: '5%',
         itemWidth: isMobile ? 14 : 16,
         itemHeight: isMobile ? 10 : 12,
         itemGap: isMobile ? 8 : 10,

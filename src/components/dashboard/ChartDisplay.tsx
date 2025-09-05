@@ -91,15 +91,15 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
         ...config.grid
       },
       
-      // Enhanced legend styling
+      // Enhanced legend styling - bottom right positioning
       legend: {
         type: 'scroll',
-        orient: 'horizontal',
-        bottom: '2%',
-        left: 'center',
+        orient: 'vertical',
+        right: '3%',
+        bottom: '8%',
         itemWidth: 18,
         itemHeight: 12,
-        itemGap: 20,
+        itemGap: 12,
         textStyle: {
           color: 'hsl(220, 20%, 50%)',
           fontSize: 11,
@@ -111,6 +111,14 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
           color: 'hsl(220, 20%, 50%)',
           fontSize: 10
         },
+        backgroundColor: 'hsl(0, 0%, 100%, 0.95)',
+        borderColor: 'hsl(220, 15%, 90%)',
+        borderWidth: 1,
+        borderRadius: 6,
+        padding: [8, 10],
+        shadowColor: 'hsla(220, 85%, 25%, 0.15)',
+        shadowBlur: 8,
+        shadowOffsetY: 2,
         ...config.legend
       },
       

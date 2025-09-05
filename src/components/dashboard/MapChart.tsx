@@ -68,19 +68,56 @@ const MapChart: React.FC<MapChartProps> = ({ config, loading = false }) => {
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: config.mapStyle || 'mapbox://styles/mapbox/satellite-streets-v12',
-      center: config.center || [0, 0],
-      zoom: config.zoom || 2,
+      style: config.mapStyle || 'mapbox://styles/mapbox/outdoors-v12', // Colorful terrain style
+      center: config.center || [54.3773, 24.4539], // UAE center
+      zoom: config.zoom || 6,
       projection: 'mercator',
     });
 
-    // Add navigation controls
+    // Add map style controls for user interaction
     map.current.addControl(
       new mapboxgl.NavigationControl({
         visualizePitch: true,
       }),
       'top-right'
     );
+
+    // Add style switcher for different visual modes
+    const styleOptions = [
+      { name: 'Terrain', style: 'mapbox://styles/mapbox/outdoors-v12' },
+      { name: 'Satellite', style: 'mapbox://styles/mapbox/satellite-streets-v12' },
+      { name: 'Streets', style: 'mapbox://styles/mapbox/streets-v12' },
+    ];
+
+    // Create style switcher if not already added
+    if (map.current && !document.querySelector('.mapboxgl-ctrl-group .style-switcher')) {
+      const styleControl = document.createElement('div');
+      styleControl.className = 'mapboxgl-ctrl mapboxgl-ctrl-group style-switcher';
+      styleControl.innerHTML = `
+        <select style="
+          background: white; 
+          border: none; 
+          padding: 6px; 
+          font-size: 12px;
+          border-radius: 4px;
+          cursor: pointer;
+        ">
+          ${styleOptions.map(option => 
+            `<option value="${option.style}">${option.name}</option>`
+          ).join('')}
+        </select>
+      `;
+      
+      const select = styleControl.querySelector('select');
+      if (select) {
+        select.addEventListener('change', (e) => {
+          const target = e.target as HTMLSelectElement;
+          map.current?.setStyle(target.value);
+        });
+      }
+      
+      document.querySelector('.mapboxgl-ctrl-top-right')?.appendChild(styleControl);
+    }
 
     // Add markers if provided
     if (config.markers && config.markers.length > 0) {
