@@ -140,13 +140,12 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-5-2025-08-07',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: question }
         ],
         max_completion_tokens: 1500,
-        temperature: 0.3,
       }),
     });
 
