@@ -132,7 +132,7 @@ ${analysisContext}
 
 ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''}`;
 
-    // Make the OpenAI API call
+    // Make the OpenAI API call with streaming
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -146,6 +146,7 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
           { role: 'user', content: question }
         ],
         max_completion_tokens: 1500,
+        stream: true,
       }),
     });
 
@@ -155,13 +156,61 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
-    const data = await response.json();
-    console.log('OpenAI response received');
-    
-    const answer = data.choices[0]?.message?.content || 'I apologize, but I could not generate a response to your question.';
+    // Create a ReadableStream for streaming response
+    const stream = new ReadableStream({
+      async start(controller) {
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
 
-    return new Response(JSON.stringify({ answer }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        if (!reader) {
+          controller.close();
+          return;
+        }
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
+                if (data === '[DONE]') {
+                  controller.close();
+                  return;
+                }
+
+                try {
+                  const parsed = JSON.parse(data);
+                  const content = parsed.choices?.[0]?.delta?.content;
+                  if (content) {
+                    controller.enqueue(`data: ${JSON.stringify({ content })}\n\n`);
+                  }
+                } catch (e) {
+                  // Skip invalid JSON
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Streaming error:', error);
+          controller.error(error);
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
     });
 
   } catch (error) {

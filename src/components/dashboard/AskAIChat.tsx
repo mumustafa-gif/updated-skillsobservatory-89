@@ -25,6 +25,8 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState<string>('');
+  const [isStreaming, setIsStreaming] = useState(false);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -32,44 +34,56 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
   const formatAIResponse = (content: string) => {
     if (!content) return '';
     
-    let formatted = content
-      // Format main headings (##)
-      .replace(/^## (.+)$/gm, '<h3 class="text-base font-bold text-primary mb-3 mt-4 first:mt-0 pb-1 border-b border-primary/20">$1</h3>')
+    // Split content into lines for processing
+    const lines = content.split('\n');
+    const formattedLines: string[] = [];
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim();
       
-      // Format subheadings (###)
-      .replace(/^### (.+)$/gm, '<h4 class="text-sm font-semibold text-primary/80 mb-2 mt-3">$1</h4>')
-      
-      // Format bullet points (•)
-      .replace(/^• (.+)$/gm, '<div class="flex items-start gap-2 mb-2"><span class="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></span><span class="text-sm text-foreground leading-relaxed">$1</span></div>')
-      
-      // Format regular bullet points (-)
-      .replace(/^- (.+)$/gm, '<div class="flex items-start gap-2 mb-2"><span class="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></span><span class="text-sm text-foreground leading-relaxed">$1</span></div>')
-      
-      // Format bold text
-      .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-primary">$1</strong>')
-      
-      // Format italic text
-      .replace(/\*(.+?)\*/g, '<em class="italic text-foreground/80">$1</em>')
-      
-      // Format numbers and percentages
-      .replace(/(\d+%)/g, '<span class="font-semibold text-primary">$1</span>')
-      .replace(/(\d+\.?\d*)/g, '<span class="font-medium text-primary">$1</span>');
-
-    // Process paragraphs
-    const paragraphs = formatted.split('\n\n').map(paragraph => {
-      paragraph = paragraph.trim();
-      if (!paragraph) return '';
-      
-      // Skip already formatted elements
-      if (paragraph.startsWith('<h') || paragraph.startsWith('<div')) {
-        return paragraph;
+      if (!trimmedLine) {
+        formattedLines.push('<br />');
+        continue;
       }
       
-      // Regular paragraphs
-      return `<p class="text-sm text-foreground leading-relaxed mb-3">${paragraph}</p>`;
-    }).filter(p => p.trim()).join('\n');
-
-    return paragraphs.replace(/\n/g, '');
+      // Format main headings (##)
+      if (trimmedLine.startsWith('## ')) {
+        const heading = trimmedLine.replace(/^## /, '');
+        formattedLines.push(`<h3 class="text-base font-bold text-primary mb-3 mt-4 first:mt-0 pb-1 border-b border-primary/20">${heading}</h3>`);
+        continue;
+      }
+      
+      // Format subheadings (###)
+      if (trimmedLine.startsWith('### ')) {
+        const subheading = trimmedLine.replace(/^### /, '');
+        formattedLines.push(`<h4 class="text-sm font-semibold text-primary/80 mb-2 mt-3">${subheading}</h4>`);
+        continue;
+      }
+      
+      // Format bullet points (• or -)
+      if (trimmedLine.startsWith('• ') || trimmedLine.startsWith('- ')) {
+        const bulletText = trimmedLine.replace(/^[•-] /, '');
+        const processedBullet = bulletText
+          .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-primary">$1</strong>')
+          .replace(/\*([^*]+?)\*/g, '<em class="italic text-foreground/80">$1</em>')
+          .replace(/(\d+%)/g, '<span class="font-semibold text-primary">$1</span>')
+          .replace(/(\b\d+(?:\.\d+)?(?:k|K|m|M|b|B)?\b)/g, '<span class="font-medium text-primary">$1</span>');
+        
+        formattedLines.push(`<div class="flex items-start gap-2 mb-2"><span class="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></span><span class="text-sm text-foreground leading-relaxed">${processedBullet}</span></div>`);
+        continue;
+      }
+      
+      // Format regular paragraphs
+      const processedLine = trimmedLine
+        .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-primary">$1</strong>')
+        .replace(/\*([^*]+?)\*/g, '<em class="italic text-foreground/80">$1</em>')
+        .replace(/(\d+%)/g, '<span class="font-semibold text-primary">$1</span>')
+        .replace(/(\b\d+(?:\.\d+)?(?:k|K|m|M|b|B)?\b)/g, '<span class="font-medium text-primary">$1</span>');
+      
+      formattedLines.push(`<p class="text-sm text-foreground leading-relaxed mb-3">${processedLine}</p>`);
+    }
+    
+    return formattedLines.join('');
   };
 
   const scrollToBottom = () => {
@@ -78,10 +92,10 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, streamingMessage]);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    if (!inputValue.trim() || isLoading || isStreaming) return;
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,
@@ -93,26 +107,79 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
+    setIsStreaming(true);
+    setStreamingMessage('');
 
     try {
-      const { data, error } = await supabase.functions.invoke('ask-ai', {
-        body: {
+      const { data: authData } = await supabase.auth.getSession();
+      const token = authData.session?.access_token;
+
+      if (!token) {
+        throw new Error('No authentication token');
+      }
+
+      const response = await fetch(`https://yduosziameskzofrcodg.supabase.co/functions/v1/ask-ai`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           question: userMessage.content,
           generationResult,
           knowledgeFileIds,
-        },
+        }),
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedContent = '';
+
+      if (!reader) {
+        throw new Error('No response body reader');
+      }
+
+      setIsLoading(false);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.content) {
+                accumulatedContent += parsed.content;
+                setStreamingMessage(accumulatedContent);
+              }
+            } catch (e) {
+              // Skip invalid JSON
+            }
+          }
+        }
+      }
+
+      // Create final message
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: data.answer || 'I apologize, but I could not generate a response. Please try again.',
+        content: accumulatedContent || 'I apologize, but I could not generate a response. Please try again.',
         timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+      setStreamingMessage('');
+      setIsStreaming(false);
+
     } catch (error) {
       console.error('Error asking AI:', error);
       toast({
@@ -129,6 +196,8 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
       };
 
       setMessages(prev => [...prev, errorMessage]);
+      setStreamingMessage('');
+      setIsStreaming(false);
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
@@ -259,6 +328,32 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
           </motion.div>
         )}
 
+        {isStreaming && streamingMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex gap-3 justify-start"
+          >
+            <div className="w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center flex-shrink-0">
+              <Bot className="h-4 w-4" />
+            </div>
+            <Card className="bg-card border-border">
+              <CardContent className="p-3">
+                <div 
+                  className="formatted-response" 
+                  dangerouslySetInnerHTML={{ 
+                    __html: formatAIResponse(streamingMessage) 
+                  }}
+                />
+                <p className="text-xs mt-2 opacity-70 text-muted-foreground flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Generating response...
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -273,16 +368,16 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Ask me anything about your analysis..."
-            disabled={isLoading}
+            disabled={isLoading || isStreaming}
             className="flex-1 bg-background border-primary/20 focus:border-primary"
           />
           <Button
             onClick={handleSendMessage}
-            disabled={!inputValue.trim() || isLoading}
+            disabled={!inputValue.trim() || isLoading || isStreaming}
             size="icon"
             className="bg-primary hover:bg-primary/90"
           >
-            {isLoading ? (
+            {(isLoading || isStreaming) ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Send className="h-4 w-4" />
