@@ -156,34 +156,54 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
-    // Return streaming response directly
+    // Return streaming response with proper headers to prevent buffering
     const readable = new ReadableStream({
       async start(controller) {
+        let isClosed = false;
+        const encoder = new TextEncoder();
+        
+        // Send heartbeat to prevent proxy buffering
+        const heartbeat = () => {
+          if (!isClosed) {
+            controller.enqueue(encoder.encode(`: heartbeat\n\n`));
+          }
+        };
+        
+        const heartbeatInterval = setInterval(heartbeat, 30000); // Every 30 seconds
+        
         try {
           const reader = response.body?.getReader();
           if (!reader) {
-            controller.error(new Error('No response reader'));
+            clearInterval(heartbeatInterval);
+            if (!isClosed) {
+              controller.error(new Error('No response reader'));
+            }
             return;
           }
 
           const decoder = new TextDecoder();
+          let buffer = '';
 
           while (true) {
             const { done, value } = await reader.read();
-            if (done) {
-              controller.close();
-              break;
-            }
+            if (done) break;
 
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            
+            // Keep the last incomplete line in buffer
+            buffer = lines.pop() || '';
 
             for (const line of lines) {
               if (line.startsWith('data: ')) {
                 const data = line.slice(6).trim();
                 
                 if (data === '[DONE]') {
-                  controller.close();
+                  clearInterval(heartbeatInterval);
+                  if (!isClosed) {
+                    isClosed = true;
+                    controller.close();
+                  }
                   return;
                 }
 
@@ -191,22 +211,30 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
                   try {
                     const parsed = JSON.parse(data);
                     const content = parsed.choices?.[0]?.delta?.content;
-                    if (content) {
-                      // Send the content directly
+                    if (content && !isClosed) {
                       const responseData = `data: ${JSON.stringify({ content })}\n\n`;
-                      controller.enqueue(new TextEncoder().encode(responseData));
+                      controller.enqueue(encoder.encode(responseData));
                     }
                   } catch (parseError) {
-                    // Skip invalid JSON
-                    console.warn('JSON parse error:', parseError);
+                    // Skip invalid JSON - this is normal for SSE streams
                   }
                 }
               }
             }
           }
+          
+          clearInterval(heartbeatInterval);
+          if (!isClosed) {
+            isClosed = true;
+            controller.close();
+          }
         } catch (streamError) {
+          clearInterval(heartbeatInterval);
           console.error('Stream error:', streamError);
-          controller.error(streamError);
+          if (!isClosed) {
+            isClosed = true;
+            controller.error(streamError);
+          }
         }
       },
     });
@@ -215,8 +243,9 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no', // Disable nginx buffering
       },
     });
 

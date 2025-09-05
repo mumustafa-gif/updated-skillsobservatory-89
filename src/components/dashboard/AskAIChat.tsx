@@ -31,59 +31,33 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const formatAIResponse = (content: string) => {
+  const formatAIResponse = (content: string, isStreaming: boolean = false): string => {
     if (!content) return '';
     
-    // Split content into lines for processing
-    const lines = content.split('\n');
-    const formattedLines: string[] = [];
-    
-    for (const line of lines) {
-      const trimmedLine = line.trim();
+    // For streaming, only format complete lines to avoid breaking mid-sentence
+    if (isStreaming) {
+      const lines = content.split('\n');
+      const completedLines = lines.slice(0, -1); // All but the last line
+      const lastLine = lines[lines.length - 1];
       
-      if (!trimmedLine) {
-        formattedLines.push('<br />');
-        continue;
-      }
+      const formattedCompleted = completedLines.join('\n')
+        .replace(/## (.*)/g, '<div class="text-lg font-semibold mt-4 mb-2 text-primary">$1</div>')
+        .replace(/### (.*)/g, '<div class="text-base font-medium mt-3 mb-2 text-muted-foreground">$1</div>')
+        .replace(/• (.*)/g, '<div class="ml-4 mb-1">• $1</div>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+        .replace(/\n/g, '<br />');
       
-      // Format main headings (##)
-      if (trimmedLine.startsWith('## ')) {
-        const heading = trimmedLine.replace(/^## /, '');
-        formattedLines.push(`<h3 class="text-base font-bold text-primary mb-3 mt-4 first:mt-0 pb-1 border-b border-primary/20">${heading}</h3>`);
-        continue;
-      }
-      
-      // Format subheadings (###)
-      if (trimmedLine.startsWith('### ')) {
-        const subheading = trimmedLine.replace(/^### /, '');
-        formattedLines.push(`<h4 class="text-sm font-semibold text-primary/80 mb-2 mt-3">${subheading}</h4>`);
-        continue;
-      }
-      
-      // Format bullet points (• or -)
-      if (trimmedLine.startsWith('• ') || trimmedLine.startsWith('- ')) {
-        const bulletText = trimmedLine.replace(/^[•-] /, '');
-        const processedBullet = bulletText
-          .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-primary">$1</strong>')
-          .replace(/\*([^*]+?)\*/g, '<em class="italic text-foreground/80">$1</em>')
-          .replace(/(\d+%)/g, '<span class="font-semibold text-primary">$1</span>')
-          .replace(/(\b\d+(?:\.\d+)?(?:k|K|m|M|b|B)?\b)/g, '<span class="font-medium text-primary">$1</span>');
-        
-        formattedLines.push(`<div class="flex items-start gap-2 mb-2"><span class="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></span><span class="text-sm text-foreground leading-relaxed">${processedBullet}</span></div>`);
-        continue;
-      }
-      
-      // Format regular paragraphs
-      const processedLine = trimmedLine
-        .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-primary">$1</strong>')
-        .replace(/\*([^*]+?)\*/g, '<em class="italic text-foreground/80">$1</em>')
-        .replace(/(\d+%)/g, '<span class="font-semibold text-primary">$1</span>')
-        .replace(/(\b\d+(?:\.\d+)?(?:k|K|m|M|b|B)?\b)/g, '<span class="font-medium text-primary">$1</span>');
-      
-      formattedLines.push(`<p class="text-sm text-foreground leading-relaxed mb-3">${processedLine}</p>`);
+      // Add the last line without formatting (might be incomplete)
+      return formattedCompleted + (completedLines.length > 0 ? '<br />' : '') + lastLine;
     }
     
-    return formattedLines.join('');
+    // For completed responses, format everything
+    return content
+      .replace(/## (.*)/g, '<div class="text-lg font-semibold mt-4 mb-2 text-primary">$1</div>')
+      .replace(/### (.*)/g, '<div class="text-base font-medium mt-3 mb-2 text-muted-foreground">$1</div>')
+      .replace(/• (.*)/g, '<div class="ml-4 mb-1">• $1</div>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+      .replace(/\n/g, '<br />');
   };
 
   const scrollToBottom = () => {
@@ -145,18 +119,23 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
 
       setIsLoading(false);
 
+      let buffer = '';
+      
       try {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          
+          // Keep the last incomplete line in buffer
+          buffer = lines.pop() || '';
 
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               const data = line.slice(6).trim();
-              if (data) {
+              if (data && data !== '[DONE]') {
                 try {
                   const parsed = JSON.parse(data);
                   if (parsed.content) {
@@ -164,16 +143,21 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
                     setStreamingMessage(accumulatedContent);
                   }
                 } catch (e) {
-                  // Skip invalid JSON
-                  console.warn('JSON parse error:', e);
+                  // Skip invalid JSON or heartbeats
                 }
               }
+            } else if (line.startsWith(': heartbeat')) {
+              // Skip heartbeat messages
+              continue;
             }
           }
         }
       } catch (streamError) {
         console.error('Stream processing error:', streamError);
-        throw streamError;
+        // Don't throw - preserve partial content
+        if (accumulatedContent) {
+          setStreamingMessage(accumulatedContent);
+        }
       }
 
       // Create final message
@@ -212,7 +196,7 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -295,21 +279,19 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
                     ? 'bg-primary text-primary-foreground border-primary' 
                     : 'bg-card border-border'
                 }`}>
-                  <CardContent className="p-3">
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                   <CardContent className="p-3">
                       <div 
-                        className="formatted-response" 
+                        className="formatted-response text-sm leading-relaxed whitespace-pre-wrap" 
                         dangerouslySetInnerHTML={{ 
-                          __html: message.role === 'assistant' ? formatAIResponse(message.content) : message.content 
+                          __html: message.role === 'assistant' ? formatAIResponse(message.content, false) : message.content 
                         }}
                       />
-                    </p>
-                    <p className={`text-xs mt-2 opacity-70 ${
-                      message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                    }`}>
-                      {message.timestamp.toLocaleTimeString()}
-                    </p>
-                  </CardContent>
+                     <p className={`text-xs mt-2 opacity-70 ${
+                       message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                     }`}>
+                       {message.timestamp.toLocaleTimeString()}
+                     </p>
+                   </CardContent>
                 </Card>
               </div>
             </motion.div>
@@ -346,18 +328,19 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
               <Bot className="h-4 w-4" />
             </div>
             <Card className="bg-card border-border">
-              <CardContent className="p-3">
-                <div 
-                  className="formatted-response" 
-                  dangerouslySetInnerHTML={{ 
-                    __html: formatAIResponse(streamingMessage) 
-                  }}
-                />
-                <p className="text-xs mt-2 opacity-70 text-muted-foreground flex items-center gap-1">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Generating response...
-                </p>
-              </CardContent>
+               <CardContent className="p-3">
+                 <div 
+                   className="formatted-response text-sm leading-relaxed whitespace-pre-wrap" 
+                   dangerouslySetInnerHTML={{ 
+                     __html: formatAIResponse(streamingMessage, true) 
+                   }}
+                 />
+                 <div className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
+                 <p className="text-xs mt-2 opacity-70 text-muted-foreground flex items-center gap-1">
+                   <Loader2 className="h-3 w-3 animate-spin" />
+                   Generating response...
+                 </p>
+               </CardContent>
             </Card>
           </motion.div>
         )}
@@ -374,7 +357,7 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
             ref={inputRef}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             placeholder="Ask me anything about your analysis..."
             disabled={isLoading || isStreaming}
             className="flex-1 bg-background border-primary/20 focus:border-primary"
