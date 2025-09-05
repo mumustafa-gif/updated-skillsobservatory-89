@@ -270,23 +270,23 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
         ...config.tooltip
       },
       
-      // Enhanced legend styling with better positioning
+      // Enhanced legend styling positioned at bottom right
       legend: config.legend !== false ? {
         show: true,
         type: 'scroll',
-        orient: 'horizontal',
-        top: config.title ? '12%' : '5%',
-        left: 'center',
+        orient: 'vertical',
+        right: '2%',
+        bottom: '5%',
         itemWidth: 18,
         itemHeight: 12,
-        itemGap: 20,
+        itemGap: 15,
         textStyle: {
           color: '#333',
           fontSize: 12,
           fontWeight: 500
         },
         pageButtonItemGap: 10,
-        pageButtonGap: 20,
+        pageButtonGap: 15,
         pageTextStyle: {
           color: '#666',
           fontSize: 11
@@ -302,12 +302,12 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
         ...config.legend
       } : false,
       
-      // Professional grid styling
+      // Responsive grid styling
       grid: {
         left: '10%',
-        right: '8%',
+        right: config.legend !== false && config.legend?.show !== false ? '22%' : '8%',
         bottom: '15%',
-        top: config.legend !== false && config.legend?.show !== false ? '25%' : '15%',
+        top: config.title ? '18%' : '10%',
         containLabel: true,
         ...config.grid
       },

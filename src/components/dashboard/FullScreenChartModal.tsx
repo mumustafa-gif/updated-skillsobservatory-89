@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -49,54 +49,476 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
     (chartOption?.title && chartOption.title.text && chartOption.title.text === 'Map Visualization')
   );
 
-  // Enhanced configuration for fullscreen display
-  const fullscreenConfig = {
-    ...chartOption,
-    animation: true,
-    title: {
-      ...(chartOption?.title || {}),
-      textStyle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#1f2937',
-        ...(chartOption?.title?.textStyle || {})
+  // Enhanced configuration for fullscreen display with professional styling
+  const fullscreenConfig = useMemo(() => {
+    if (!chartOption) return {};
+    
+    // Professional color palette for UAE Ministry
+    const professionalColors = [
+      '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', 
+      '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+      '#2E8B57', '#FF6347', '#4682B4', '#DAA520', '#9932CC'
+    ];
+
+    // Heatmap color gradients
+    const heatmapColors = ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026'];
+    const treemapColors = ['#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896'];
+
+    const config = { ...chartOption };
+
+    // Enhanced series styling
+    if (config.series && Array.isArray(config.series)) {
+      config.series = config.series.map((series: any, index: number) => {
+        const baseColor = professionalColors[index % professionalColors.length];
+        
+        // Chart type specific enhancements
+        switch (series.type) {
+          case 'bar':
+            return {
+              ...series,
+              itemStyle: {
+                color: baseColor,
+                borderRadius: [6, 6, 0, 0],
+                ...series.itemStyle
+              },
+              label: {
+                show: true,
+                position: 'top',
+                fontSize: 13,
+                color: '#333',
+                fontWeight: 'bold',
+                formatter: function(params: any) {
+                  const value = typeof params.value === 'number' ? params.value.toLocaleString() : params.value;
+                  return value;
+                },
+                ...series.label
+              }
+            };
+            
+          case 'line':
+            return {
+              ...series,
+              lineStyle: {
+                color: baseColor,
+                width: 4,
+                ...series.lineStyle
+              },
+              itemStyle: {
+                color: baseColor,
+                borderColor: '#fff',
+                borderWidth: 3,
+                ...series.itemStyle
+              },
+              symbol: 'circle',
+              symbolSize: 8,
+              label: {
+                show: false,
+                fontSize: 13,
+                color: '#333',
+                ...series.label
+              }
+            };
+            
+          case 'pie':
+            return {
+              ...series,
+              radius: ['45%', '75%'],
+              center: ['50%', '55%'],
+              itemStyle: {
+                borderRadius: 10,
+                borderColor: '#fff',
+                borderWidth: 3
+              },
+              label: {
+                show: true,
+                formatter: '{b}: {c} ({d}%)',
+                fontSize: 14,
+                color: '#333',
+                fontWeight: 'bold'
+              },
+              labelLine: {
+                show: true,
+                length: 20,
+                length2: 10
+              },
+              data: series.data?.map((item: any, idx: number) => ({
+                ...item,
+                itemStyle: {
+                  color: professionalColors[idx % professionalColors.length]
+                }
+              }))
+            };
+            
+          case 'heatmap':
+            return {
+              ...series,
+              itemStyle: {
+                borderColor: '#fff',
+                borderWidth: 2
+              },
+              label: {
+                show: true,
+                fontSize: 13,
+                color: '#000',
+                fontWeight: 'bold',
+                formatter: function(params: any) {
+                  return params.value[2] || params.value;
+                }
+              }
+            };
+            
+          case 'treemap':
+            return {
+              ...series,
+              levels: [
+                {
+                  itemStyle: {
+                    borderColor: '#fff',
+                    borderWidth: 3,
+                    gapWidth: 3
+                  }
+                },
+                {
+                  colorSaturation: [0.3, 0.6],
+                  itemStyle: {
+                    borderColorSaturation: 0.7,
+                    gapWidth: 2,
+                    borderWidth: 3
+                  }
+                }
+              ],
+              label: {
+                show: true,
+                fontSize: 13,
+                fontWeight: 'bold',
+                color: '#000',
+                formatter: function(params: any) {
+                  return `${params.name}\n${params.value}`;
+                }
+              },
+              data: series.data?.map((item: any, idx: number) => ({
+                ...item,
+                itemStyle: {
+                  color: treemapColors[idx % treemapColors.length]
+                }
+              }))
+            };
+            
+          case 'scatter':
+            return {
+              ...series,
+              symbolSize: function(data: any) {
+                return Math.max(10, Math.min(30, Math.sqrt((data[2] || 10) * 2)));
+              },
+              itemStyle: {
+                color: baseColor,
+                opacity: 0.8,
+                ...series.itemStyle
+              }
+            };
+            
+          default:
+            return {
+              ...series,
+              itemStyle: {
+                color: baseColor,
+                ...series.itemStyle
+              }
+            };
+        }
+      });
+    }
+
+    return {
+      ...config,
+      animation: true,
+      animationDuration: 1000,
+      animationEasing: 'cubicOut',
+      responsive: true,
+      
+      // Enhanced color configuration
+      color: professionalColors,
+      
+      // Enhanced title styling for fullscreen
+      title: config.title ? {
+        ...config.title,
+        textStyle: {
+          fontSize: 28,
+          fontWeight: 'bold',
+          color: '#1a1a1a',
+          ...config.title.textStyle
+        },
+        subtextStyle: {
+          fontSize: 18,
+          color: '#666',
+          ...config.title.subtextStyle
+        },
+        left: 'center',
+        top: 20
+      } : undefined,
+      
+      // Professional tooltip styling
+      tooltip: {
+        trigger: config.tooltip?.trigger || (config.series?.[0]?.type === 'pie' ? 'item' : 'axis'),
+        backgroundColor: '#fff',
+        borderColor: '#ddd',
+        borderWidth: 1,
+        textStyle: { 
+          color: '#333',
+          fontSize: 14,
+          fontWeight: 400
+        },
+        formatter: function(params: any) {
+          if (Array.isArray(params)) {
+            let result = `<strong>${params[0].axisValue}</strong><br/>`;
+            params.forEach((param: any) => {
+              const value = typeof param.value === 'number' ? param.value.toLocaleString() : param.value;
+              result += `<span style="color:${param.color}">●</span> ${param.seriesName}: <strong>${value}</strong><br/>`;
+            });
+            return result;
+          } else {
+            const value = typeof params.value === 'number' ? params.value.toLocaleString() : params.value;
+            if (params.percent !== undefined) {
+              return `<strong>${params.name}</strong><br/><span style="color:${params.color}">●</span> ${params.seriesName}: <strong>${value} (${params.percent}%)</strong>`;
+            }
+            return `<strong>${params.name}</strong><br/><span style="color:${params.color}">●</span> ${params.seriesName}: <strong>${value}</strong>`;
+          }
+        },
+        extraCssText: 'box-shadow: 0 6px 16px rgba(0,0,0,0.15); border-radius: 10px;',
+        ...config.tooltip
       },
-      subtextStyle: {
-        fontSize: 16,
-        color: '#6b7280',
-        ...(chartOption?.title?.subtextStyle || {})
+      
+      // Enhanced legend styling positioned at bottom right
+      legend: config.legend !== false ? {
+        show: true,
+        type: 'scroll',
+        orient: 'vertical',
+        right: '2%',
+        bottom: '10%',
+        itemWidth: 20,
+        itemHeight: 16,
+        itemGap: 15,
+        textStyle: {
+          color: '#333',
+          fontSize: 14,
+          fontWeight: 500
+        },
+        pageButtonItemGap: 12,
+        pageButtonGap: 15,
+        pageTextStyle: {
+          color: '#666',
+          fontSize: 12
+        },
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        borderColor: '#e0e0e0',
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: [12, 16],
+        shadowColor: 'rgba(0,0,0,0.1)',
+        shadowBlur: 10,
+        shadowOffsetY: 3,
+        ...config.legend
+      } : false,
+      
+      // Responsive grid styling
+      grid: {
+        left: '8%',
+        right: config.legend !== false && config.legend?.show !== false ? '25%' : '8%',
+        bottom: '15%',
+        top: config.title ? '20%' : '10%',
+        containLabel: true,
+        ...config.grid
       },
-      left: 'center',
-      top: 20
-    },
-    grid: {
-      left: '8%',
-      right: '8%',
-      top: '15%',
-      bottom: '10%',
-      containLabel: true,
-      ...(chartOption?.grid || {})
-    },
-    legend: {
-      ...(chartOption?.legend || {}),
-      textStyle: {
-        fontSize: 14,
-        ...(chartOption?.legend?.textStyle || {})
-      },
-      itemWidth: 20,
-      itemHeight: 14,
-      itemGap: 15
-    },
-    tooltip: {
-      ...(chartOption?.tooltip || {}),
-      textStyle: {
-        fontSize: 14,
-        ...(chartOption?.tooltip?.textStyle || {})
-      }
-    },
-    // Preserve visualMap for heatmaps and other chart types that need it
-    ...(chartOption?.visualMap && { visualMap: chartOption.visualMap })
-  };
+      
+      // Enhanced X-axis styling
+      xAxis: Array.isArray(config.xAxis) ? config.xAxis.map((axis: any) => ({
+        ...axis,
+        name: axis.name || (axis.type === 'category' ? 'Categories' : 'X Values'),
+        nameLocation: 'middle',
+        nameGap: 35,
+        nameTextStyle: {
+          fontSize: 16,
+          fontWeight: 'bold',
+          color: '#333',
+          ...axis.nameTextStyle
+        },
+        axisLine: { 
+          lineStyle: { color: '#ddd', width: 2 },
+          ...axis.axisLine
+        },
+        axisTick: { 
+          lineStyle: { color: '#ddd', width: 2 },
+          ...axis.axisTick
+        },
+        axisLabel: { 
+          color: '#666',
+          fontSize: 13,
+          fontWeight: 500,
+          rotate: axis.axisLabel?.rotate || 0,
+          formatter: axis.axisLabel?.formatter || function(value: any) {
+            if (typeof value === 'string' && value.length > 15) {
+              return value.substring(0, 15) + '...';
+            }
+            return value;
+          },
+          ...axis.axisLabel
+        },
+        splitLine: {
+          lineStyle: { color: '#f5f5f5', type: 'dashed', width: 1 },
+          ...axis.splitLine
+        }
+      })) : config.xAxis ? {
+        ...config.xAxis,
+        name: config.xAxis.name || (config.xAxis.type === 'category' ? 'Categories' : 'X Values'),
+        nameLocation: 'middle',
+        nameGap: 35,
+        nameTextStyle: {
+          fontSize: 16,
+          fontWeight: 'bold',
+          color: '#333',
+          ...config.xAxis.nameTextStyle
+        },
+        axisLine: { 
+          lineStyle: { color: '#ddd', width: 2 },
+          ...config.xAxis.axisLine
+        },
+        axisTick: { 
+          lineStyle: { color: '#ddd', width: 2 },
+          ...config.xAxis.axisTick
+        },
+        axisLabel: { 
+          color: '#666',
+          fontSize: 13,
+          fontWeight: 500,
+          rotate: config.xAxis.axisLabel?.rotate || 0,
+          formatter: config.xAxis.axisLabel?.formatter || function(value: any) {
+            if (typeof value === 'string' && value.length > 15) {
+              return value.substring(0, 15) + '...';
+            }
+            return value;
+          },
+          ...config.xAxis.axisLabel
+        },
+        splitLine: {
+          lineStyle: { color: '#f5f5f5', type: 'dashed', width: 1 },
+          ...config.xAxis.splitLine
+        }
+      } : undefined,
+      
+      // Enhanced Y-axis styling
+      yAxis: Array.isArray(config.yAxis) ? config.yAxis.map((axis: any) => ({
+        ...axis,
+        name: axis.name || (axis.type === 'value' ? 'Values' : 'Categories'),
+        nameLocation: 'middle',
+        nameGap: 60,
+        nameTextStyle: {
+          fontSize: 16,
+          fontWeight: 'bold',
+          color: '#333',
+          ...axis.nameTextStyle
+        },
+        axisLine: { 
+          lineStyle: { color: '#ddd', width: 2 },
+          ...axis.axisLine
+        },
+        axisTick: { 
+          lineStyle: { color: '#ddd', width: 2 },
+          ...axis.axisTick
+        },
+        axisLabel: { 
+          color: '#666',
+          fontSize: 13,
+          fontWeight: 500,
+          formatter: axis.axisLabel?.formatter || function(value: any) {
+            if (typeof value === 'number') {
+              if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+              if (value >= 1000) return (value / 1000).toFixed(1) + 'K';
+              return value.toLocaleString();
+            }
+            return value;
+          },
+          ...axis.axisLabel
+        },
+        splitLine: {
+          lineStyle: { color: '#f5f5f5', type: 'dashed', width: 1 },
+          ...axis.splitLine
+        }
+      })) : config.yAxis ? {
+        ...config.yAxis,
+        name: config.yAxis.name || (config.yAxis.type === 'value' ? 'Values' : 'Categories'),
+        nameLocation: 'middle',
+        nameGap: 60,
+        nameTextStyle: {
+          fontSize: 16,
+          fontWeight: 'bold',
+          color: '#333',
+          ...config.yAxis.nameTextStyle
+        },
+        axisLine: { 
+          lineStyle: { color: '#ddd', width: 2 },
+          ...config.yAxis.axisLine
+        },
+        axisTick: { 
+          lineStyle: { color: '#ddd', width: 2 },
+          ...config.yAxis.axisTick
+        },
+        axisLabel: { 
+          color: '#666',
+          fontSize: 13,
+          fontWeight: 500,
+          formatter: config.yAxis.axisLabel?.formatter || function(value: any) {
+            if (typeof value === 'number') {
+              if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+              if (value >= 1000) return (value / 1000).toFixed(1) + 'K';
+              return value.toLocaleString();
+            }
+            return value;
+          },
+          ...config.yAxis.axisLabel
+        },
+        splitLine: {
+          lineStyle: { color: '#f5f5f5', type: 'dashed', width: 1 },
+          ...config.yAxis.splitLine
+        }
+      } : undefined,
+      
+      // Enhanced visualMap for heatmaps
+      visualMap: config.visualMap ? {
+        type: 'continuous',
+        min: 0,
+        max: 100,
+        calculable: true,
+        orient: 'horizontal',
+        left: 'center',
+        bottom: '5%',
+        inRange: {
+          color: heatmapColors
+        },
+        textStyle: {
+          color: '#333',
+          fontSize: 13,
+          fontWeight: 500
+        },
+        ...config.visualMap
+      } : config.series?.[0]?.type === 'heatmap' ? {
+        type: 'continuous',
+        min: 0,
+        max: 100,
+        calculable: true,
+        orient: 'horizontal',
+        left: 'center',
+        bottom: '5%',
+        inRange: {
+          color: heatmapColors
+        },
+        textStyle: {
+          color: '#333',
+          fontSize: 13,
+          fontWeight: 500
+        }
+      } : undefined
+    };
+  }, [chartOption]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -144,9 +566,9 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
             <ReactECharts
               option={fullscreenConfig}
               style={{ 
-                height: '70vh', 
+                height: '75vh', 
                 width: '100%',
-                minHeight: '500px'
+                minHeight: '600px'
               }}
               opts={{ 
                 renderer: 'canvas',
