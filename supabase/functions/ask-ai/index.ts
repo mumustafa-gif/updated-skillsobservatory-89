@@ -56,7 +56,7 @@ serve(async (req) => {
 
       if (files && files.length > 0) {
         knowledgeBaseContext = files.map(file => 
-          `**${file.original_filename}:**\n${file.extracted_content}`
+          file.extracted_content
         ).join('\n\n');
         console.log('Knowledge base context length:', knowledgeBaseContext.length);
       }
