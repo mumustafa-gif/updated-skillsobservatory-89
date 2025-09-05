@@ -197,17 +197,17 @@ const AIAgentLoader: React.FC<AIAgentLoaderProps> = ({ visible }) => {
             transition={{ delay: 0.3 }}
             className="grid grid-cols-1 md:grid-cols-3 gap-4"
           >
-            <div className="text-center p-4 rounded-lg bg-primary/10">
+            <div className="text-center p-4 rounded-lg bg-primary/20 border border-primary/30">
               <Target className="h-6 w-6 text-primary mx-auto mb-2" />
-              <p className="text-sm font-medium">Smart Analytics</p>
+              <p className="text-sm font-medium text-primary">Smart Analytics</p>
             </div>
-            <div className="text-center p-4 rounded-lg bg-secondary/10">
-              <Lightbulb className="h-6 w-6 text-secondary mx-auto mb-2" />
-              <p className="text-sm font-medium">AI Insights</p>
+            <div className="text-center p-4 rounded-lg bg-accent/20 border border-accent/30">
+              <Lightbulb className="h-6 w-6 text-accent mx-auto mb-2" />
+              <p className="text-sm font-medium text-accent">AI Insights</p>
             </div>
-            <div className="text-center p-4 rounded-lg bg-accent/10">
-              <Zap className="h-6 w-6 text-accent mx-auto mb-2" />
-              <p className="text-sm font-medium">Real-time Processing</p>
+            <div className="text-center p-4 rounded-lg bg-primary/15 border border-primary/25">
+              <Zap className="h-6 w-6 text-primary mx-auto mb-2" />
+              <p className="text-sm font-medium text-primary">Real-time Processing</p>
             </div>
           </motion.div>
 
