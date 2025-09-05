@@ -44,19 +44,19 @@ serve(async (req) => {
       });
     }
 
-    // Get knowledge base content if files are specified
+    // Get knowledge base content if files are specified (limited for speed)
     let knowledgeBaseContext = '';
     if (knowledgeFileIds.length > 0) {
       console.log('Fetching knowledge base files:', knowledgeFileIds);
       const { data: files } = await supabase
         .from('knowledge_base_files')
         .select('original_filename, extracted_content')
-        .in('id', knowledgeFileIds)
+        .in('id', knowledgeFileIds.slice(0, 3)) // Limit to 3 files for speed
         .eq('user_id', user.id);
 
       if (files && files.length > 0) {
         knowledgeBaseContext = files.map(file => 
-          file.extracted_content
+          file.extracted_content?.slice(0, 2000) || '' // Limit content length
         ).join('\n\n');
         console.log('Knowledge base context length:', knowledgeBaseContext.length);
       }
@@ -94,38 +94,36 @@ serve(async (req) => {
 
     console.log('Analysis context length:', analysisContext.length);
 
-    // Build the system prompt
-    const systemPrompt = `You are an AI assistant specializing in UAE workforce development, labor market analysis, and policy research. You have access to current analysis results and official UAE government documents.
+    // Build the professional ministerial system prompt
+    const systemPrompt = `You are a senior policy advisor and data analyst for the UAE Ministry, providing executive briefings to Ministers and senior government officials. Your responses must be authoritative, data-driven, and actionable.
 
-**CRITICAL FORMATTING REQUIREMENTS:**
-- Always use clear headings (## Main Heading) and subheadings (### Sub Heading)
-- Keep responses SHORT and CONCISE (3-5 bullet points maximum per section)
-- Use bullet points (•) for all key information
-- Structure every response with these sections when relevant:
-  ## Key Insights
-  ## Recommendations  
-  ## Current Status
-  ## Next Steps
+**MANDATORY RESPONSE STRUCTURE:**
+Always structure your response with exactly these 5 sections:
 
-**Response Style Guidelines:**
-- Maximum 150 words total
-- Use bullet points for ALL content
-- Each bullet point should be 1-2 lines maximum
-- Include specific numbers/percentages when available
-- End with 1-2 actionable next steps
+## Executive Summary
+• One key finding or insight (maximum 2 lines)
 
-**Example Format:**
-## Key Insights
-• UAE workforce shows 65% skill gap in technology sectors
-• Current policies focus on Emiratization targets of 10% by 2026
+## Key Metrics  
+• 2-3 most important statistics or data points with specific numbers
+• Include percentages, trends, or comparisons when available
+
+## Strategic Insights
+• 2-3 critical insights that inform policy decisions
+• Focus on implications for UAE's strategic objectives
 
 ## Recommendations
-• Implement targeted reskilling programs for emerging technologies
-• Strengthen partnerships between education and industry
+• 2-3 specific, actionable recommendations for ministerial consideration
+• Prioritize high-impact, implementable solutions
 
 ## Next Steps
-• Review existing training curricula
-• Establish industry-specific skill assessments
+• 1-2 immediate actions the Ministry should take
+
+**Professional Standards:**
+- Maximum 120 words total
+- Use precise, ministerial-level language
+- Include specific data points and percentages
+- Focus on strategic implications and actionable outcomes
+- Every bullet point maximum 1-2 lines
 
 Available Context:
 ${analysisContext}
@@ -141,12 +139,13 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
     }
 
     const requestBody = {
-      model: 'gpt-5-2025-08-07',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: question }
       ],
-      max_completion_tokens: 1500,
+      max_tokens: 800,
+      temperature: 0.3,
       stream: true,
     };
 
@@ -173,11 +172,35 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
       try {
         errorText = await response.text();
         console.error('OpenAI API error response:', errorText);
+        
+        // Try fallback to GPT-5-mini if primary model fails
+        if (response.status === 400 && requestBody.model === 'gpt-4o-mini') {
+          console.log('Retrying with GPT-5-mini fallback...');
+          const fallbackBody = { ...requestBody, model: 'gpt-5-mini-2025-08-07', max_completion_tokens: 800 };
+          delete fallbackBody.max_tokens;
+          delete fallbackBody.temperature;
+          
+          const fallbackResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openAIApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(fallbackBody),
+          });
+          
+          if (fallbackResponse.ok) {
+            response = fallbackResponse;
+          }
+        }
       } catch (e) {
         console.error('Failed to read error response:', e);
         errorText = `HTTP ${response.status} ${response.statusText}`;
       }
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      }
     }
 
     // Return streaming response with proper headers to prevent buffering
