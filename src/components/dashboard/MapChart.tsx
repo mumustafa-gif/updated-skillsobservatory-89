@@ -68,11 +68,13 @@ const MapChart: React.FC<MapChartProps> = ({ config, loading = false }) => {
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: config.mapStyle || 'mapbox://styles/mapbox/outdoors-v12', // Colorful terrain style
+      style: config.mapStyle || 'mapbox://styles/mapbox/outdoors-v12', // Force colorful outdoor terrain style
       center: config.center || [54.3773, 24.4539], // UAE center
       zoom: config.zoom || 6,
       projection: 'mercator',
     });
+
+    console.log('MapChart initialized with style:', config.mapStyle || 'mapbox://styles/mapbox/outdoors-v12');
 
     // Add map style controls for user interaction
     map.current.addControl(

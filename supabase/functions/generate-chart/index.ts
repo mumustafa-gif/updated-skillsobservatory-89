@@ -68,7 +68,7 @@ serve(async (req) => {
     const systemPrompt = `You are a chart generation assistant. Generate valid Apache ECharts configuration JSON based on user prompts. 
 
 ${isMapRequest ? `
-IMPORTANT: For geographic/map requests, return a Mapbox configuration with this exact structure:
+IMPORTANT: For geographic/map requests, return a Mapbox configuration with this exact structure and ALWAYS use the colorful outdoor terrain style:
 {
   "option": {
     "chartType": "Map Visualization",
@@ -81,10 +81,12 @@ IMPORTANT: For geographic/map requests, return a Mapbox configuration with this 
   "diagnostics": {
     "chartType": "Map Visualization",
     "dimensions": ["Geographic", "Data Points"],
-    "notes": "Generated map visualization with colorful terrain style",
+    "notes": "Generated colorful outdoor terrain map visualization",
     "sources": ["Geographic data sources"]
   }
 }
+
+CRITICAL: Always use "mapbox://styles/mapbox/outdoors-v12" for the mapStyle property to show colorful terrain.
 ` : `
 IMPORTANT: Return ONLY a JSON object with this exact structure:
 {
