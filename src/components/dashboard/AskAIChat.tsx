@@ -29,6 +29,49 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const formatAIResponse = (content: string) => {
+    if (!content) return '';
+    
+    let formatted = content
+      // Format main headings (##)
+      .replace(/^## (.+)$/gm, '<h3 class="text-base font-bold text-primary mb-3 mt-4 first:mt-0 pb-1 border-b border-primary/20">$1</h3>')
+      
+      // Format subheadings (###)
+      .replace(/^### (.+)$/gm, '<h4 class="text-sm font-semibold text-primary/80 mb-2 mt-3">$1</h4>')
+      
+      // Format bullet points (•)
+      .replace(/^• (.+)$/gm, '<div class="flex items-start gap-2 mb-2"><span class="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></span><span class="text-sm text-foreground leading-relaxed">$1</span></div>')
+      
+      // Format regular bullet points (-)
+      .replace(/^- (.+)$/gm, '<div class="flex items-start gap-2 mb-2"><span class="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0"></span><span class="text-sm text-foreground leading-relaxed">$1</span></div>')
+      
+      // Format bold text
+      .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-primary">$1</strong>')
+      
+      // Format italic text
+      .replace(/\*(.+?)\*/g, '<em class="italic text-foreground/80">$1</em>')
+      
+      // Format numbers and percentages
+      .replace(/(\d+%)/g, '<span class="font-semibold text-primary">$1</span>')
+      .replace(/(\d+\.?\d*)/g, '<span class="font-medium text-primary">$1</span>');
+
+    // Process paragraphs
+    const paragraphs = formatted.split('\n\n').map(paragraph => {
+      paragraph = paragraph.trim();
+      if (!paragraph) return '';
+      
+      // Skip already formatted elements
+      if (paragraph.startsWith('<h') || paragraph.startsWith('<div')) {
+        return paragraph;
+      }
+      
+      // Regular paragraphs
+      return `<p class="text-sm text-foreground leading-relaxed mb-3">${paragraph}</p>`;
+    }).filter(p => p.trim()).join('\n');
+
+    return paragraphs.replace(/\n/g, '');
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -177,7 +220,12 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
                 }`}>
                   <CardContent className="p-3">
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {message.content}
+                      <div 
+                        className="formatted-response" 
+                        dangerouslySetInnerHTML={{ 
+                          __html: message.role === 'assistant' ? formatAIResponse(message.content) : message.content 
+                        }}
+                      />
                     </p>
                     <p className={`text-xs mt-2 opacity-70 ${
                       message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'
