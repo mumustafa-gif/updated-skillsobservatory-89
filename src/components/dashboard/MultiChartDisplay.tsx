@@ -161,36 +161,55 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         top: 8
       },
 
-      // Legend configuration - positioned at bottom right
+      // Professional theme color palette
+      color: [
+        'hsl(220, 85%, 25%)', // Navy blue (primary)
+        'hsl(15, 85%, 60%)',  // Orange (accent)
+        'hsl(200, 70%, 45%)', // Blue
+        'hsl(35, 80%, 55%)',  // Golden
+        'hsl(240, 60%, 50%)', // Purple
+        'hsl(220, 70%, 35%)', // Dark navy
+        'hsl(15, 75%, 50%)',  // Dark orange
+        'hsl(200, 80%, 40%)', // Dark blue
+      ],
+
+      // Enhanced legend configuration
       legend: {
         ...chartOption.legend,
         type: 'scroll',
-        orient: 'vertical',
-        right: isMobile ? 8 : 12,
-        bottom: isMobile ? 8 : 12,
-        itemWidth: isMobile ? 12 : 14,
-        itemHeight: isMobile ? 8 : 10,
-        itemGap: isMobile ? 6 : 8,
+        orient: isMobile ? 'horizontal' : 'vertical',
+        ...(isMobile ? {
+          bottom: 8,
+          left: 'center',
+        } : {
+          right: 12,
+          top: 'center',
+        }),
+        itemWidth: isMobile ? 14 : 16,
+        itemHeight: isMobile ? 10 : 12,
+        itemGap: isMobile ? 8 : 10,
         textStyle: {
           fontSize: legendFontSize,
-          color: 'hsl(var(--muted-foreground))',
+          color: 'hsl(220, 20%, 50%)',
+          fontWeight: 500,
           overflow: 'truncate',
-          width: isMobile ? 60 : 80,
+          width: isMobile ? 70 : 90,
           ...chartOption.legend?.textStyle
         },
-        pageIconColor: 'hsl(var(--muted-foreground))',
-        pageIconInactiveColor: 'hsl(var(--border))',
+        pageIconColor: 'hsl(220, 85%, 25%)',
+        pageIconInactiveColor: 'hsl(220, 20%, 70%)',
         pageTextStyle: {
           fontSize: legendFontSize - 1,
-          color: 'hsl(var(--muted-foreground))'
+          color: 'hsl(220, 20%, 50%)',
+          fontWeight: 500
         },
-        backgroundColor: 'hsl(var(--background) / 0.9)',
-        borderColor: 'hsl(var(--border))',
+        backgroundColor: 'hsl(0, 0%, 100%, 0.95)',
+        borderColor: 'hsl(220, 15%, 90%)',
         borderWidth: 1,
-        borderRadius: 4,
-        padding: [6, 8],
-        shadowColor: 'rgba(0, 0, 0, 0.1)',
-        shadowBlur: 4,
+        borderRadius: 6,
+        padding: [8, 10],
+        shadowColor: 'hsla(220, 85%, 25%, 0.15)',
+        shadowBlur: 8,
         shadowOffsetY: 2
       },
 

@@ -43,24 +43,158 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
       });
     }
 
+    // Professional color palette from theme
+    const themeColors = [
+      'hsl(220, 85%, 25%)', // Navy blue (primary)
+      'hsl(15, 85%, 60%)',  // Orange (accent)
+      'hsl(200, 70%, 45%)', // Blue
+      'hsl(35, 80%, 55%)',  // Golden
+      'hsl(240, 60%, 50%)', // Purple
+      'hsl(220, 70%, 35%)', // Dark navy
+      'hsl(15, 75%, 50%)',  // Dark orange
+      'hsl(200, 80%, 40%)', // Dark blue
+    ];
+
     return {
       ...config,
-      animation: false, // Disable animations for faster rendering
+      animation: true,
+      animationDuration: 800,
+      animationEasing: 'cubicOut',
       responsive: true,
       maintainAspectRatio: false,
+      
+      // Enhanced color configuration
+      color: themeColors,
+      
+      // Professional tooltip styling
       tooltip: {
         trigger: config.tooltip?.trigger || 'item',
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        textStyle: { color: '#fff' },
+        backgroundColor: 'hsl(220, 50%, 8%)',
+        borderColor: 'hsl(220, 85%, 25%)',
+        borderWidth: 1,
+        textStyle: { 
+          color: 'hsl(220, 15%, 95%)',
+          fontSize: 12,
+          fontWeight: 400
+        },
+        extraCssText: 'box-shadow: 0 8px 32px hsla(220, 85%, 25%, 0.3); border-radius: 8px;',
         ...config.tooltip
       },
+      
+      // Professional grid styling
       grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
+        left: '5%',
+        right: '5%',
+        bottom: '8%',
+        top: '12%',
         containLabel: true,
         ...config.grid
       },
+      
+      // Enhanced legend styling
+      legend: {
+        type: 'scroll',
+        orient: 'horizontal',
+        bottom: '2%',
+        left: 'center',
+        itemWidth: 18,
+        itemHeight: 12,
+        itemGap: 20,
+        textStyle: {
+          color: 'hsl(220, 20%, 50%)',
+          fontSize: 11,
+          fontWeight: 500
+        },
+        pageIconColor: 'hsl(220, 85%, 25%)',
+        pageIconInactiveColor: 'hsl(220, 20%, 70%)',
+        pageTextStyle: {
+          color: 'hsl(220, 20%, 50%)',
+          fontSize: 10
+        },
+        ...config.legend
+      },
+      
+      // Enhanced axis styling
+      xAxis: Array.isArray(config.xAxis) ? config.xAxis.map((axis: any) => ({
+        ...axis,
+        axisLine: { 
+          lineStyle: { color: 'hsl(220, 15%, 90%)' },
+          ...axis.axisLine
+        },
+        axisTick: { 
+          lineStyle: { color: 'hsl(220, 15%, 85%)' },
+          ...axis.axisTick
+        },
+        axisLabel: { 
+          color: 'hsl(220, 20%, 50%)',
+          fontSize: 11,
+          ...axis.axisLabel
+        },
+        splitLine: {
+          lineStyle: { color: 'hsl(220, 15%, 95%)', type: 'dashed' },
+          ...axis.splitLine
+        }
+      })) : config.xAxis ? {
+        ...config.xAxis,
+        axisLine: { 
+          lineStyle: { color: 'hsl(220, 15%, 90%)' },
+          ...config.xAxis.axisLine
+        },
+        axisTick: { 
+          lineStyle: { color: 'hsl(220, 15%, 85%)' },
+          ...config.xAxis.axisTick
+        },
+        axisLabel: { 
+          color: 'hsl(220, 20%, 50%)',
+          fontSize: 11,
+          ...config.xAxis.axisLabel
+        },
+        splitLine: {
+          lineStyle: { color: 'hsl(220, 15%, 95%)', type: 'dashed' },
+          ...config.xAxis.splitLine
+        }
+      } : undefined,
+      
+      yAxis: Array.isArray(config.yAxis) ? config.yAxis.map((axis: any) => ({
+        ...axis,
+        axisLine: { 
+          lineStyle: { color: 'hsl(220, 15%, 90%)' },
+          ...axis.axisLine
+        },
+        axisTick: { 
+          lineStyle: { color: 'hsl(220, 15%, 85%)' },
+          ...axis.axisTick
+        },
+        axisLabel: { 
+          color: 'hsl(220, 20%, 50%)',
+          fontSize: 11,
+          ...axis.axisLabel
+        },
+        splitLine: {
+          lineStyle: { color: 'hsl(220, 15%, 95%)', type: 'dashed' },
+          ...axis.splitLine
+        }
+      })) : config.yAxis ? {
+        ...config.yAxis,
+        axisLine: { 
+          lineStyle: { color: 'hsl(220, 15%, 90%)' },
+          ...config.yAxis.axisLine
+        },
+        axisTick: { 
+          lineStyle: { color: 'hsl(220, 15%, 85%)' },
+          ...config.yAxis.axisTick
+        },
+        axisLabel: { 
+          color: 'hsl(220, 20%, 50%)',
+          fontSize: 11,
+          ...config.yAxis.axisLabel
+        },
+        splitLine: {
+          lineStyle: { color: 'hsl(220, 15%, 95%)', type: 'dashed' },
+          ...config.yAxis.splitLine
+        }
+      } : undefined,
+      
       // Preserve visualMap for heatmaps and other chart types that need it
       ...(config.visualMap && { visualMap: config.visualMap })
     };
