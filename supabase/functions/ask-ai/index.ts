@@ -167,39 +167,53 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
           return;
         }
 
+        let isClosed = false;
+
+        const closeController = () => {
+          if (!isClosed) {
+            isClosed = true;
+            controller.close();
+          }
+        };
+
         try {
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
 
-            const chunk = decoder.decode(value);
+            const chunk = decoder.decode(value, { stream: true });
             const lines = chunk.split('\n');
 
             for (const line of lines) {
               if (line.startsWith('data: ')) {
-                const data = line.slice(6);
+                const data = line.slice(6).trim();
                 if (data === '[DONE]') {
-                  controller.close();
+                  closeController();
                   return;
                 }
 
-                try {
-                  const parsed = JSON.parse(data);
-                  const content = parsed.choices?.[0]?.delta?.content;
-                  if (content) {
-                    controller.enqueue(`data: ${JSON.stringify({ content })}\n\n`);
+                if (data) {
+                  try {
+                    const parsed = JSON.parse(data);
+                    const content = parsed.choices?.[0]?.delta?.content;
+                    if (content && !isClosed) {
+                      const encoder = new TextEncoder();
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
+                    }
+                  } catch (e) {
+                    // Skip invalid JSON
                   }
-                } catch (e) {
-                  // Skip invalid JSON
                 }
               }
             }
           }
         } catch (error) {
           console.error('Streaming error:', error);
-          controller.error(error);
+          if (!isClosed) {
+            controller.error(error);
+          }
         } finally {
-          controller.close();
+          closeController();
         }
       },
     });
