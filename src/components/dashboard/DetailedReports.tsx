@@ -348,36 +348,43 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult, kno
           '</span>' +
           '</div></div></div>')
         
-        // Headers for organization
-        .replace(/^# (.*$)/gim, '<h2 class="text-xl font-bold text-emerald-800 mb-4 mt-6 first:mt-0 pb-2 border-b-2 border-emerald-200">$1</h2>')
-        .replace(/^## (.*$)/gim, '<h3 class="text-lg font-semibold text-emerald-700 mb-3 mt-5 pl-3 border-l-4 border-emerald-400">$1</h3>')
+        // Headers for organization - convert ## to styled h3
+        .replace(/^##\s+(.*$)/gim, '<h3 class="text-lg font-semibold text-emerald-700 mb-3 mt-5 pl-3 border-l-4 border-emerald-400">$1</h3>')
+        // Convert # to styled h2
+        .replace(/^#\s+(.*$)/gim, '<h2 class="text-xl font-bold text-emerald-800 mb-4 mt-6 first:mt-0 pb-2 border-b-2 border-emerald-200">$1</h2>')
+        
+        // Convert bold text (**text**) to HTML
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-emerald-800">$1</strong>')
         
         // Bullet points for source categories
         .replace(/^[•\-\*]\s+(.+)$/gim, 
           '<div class="mb-3 flex items-start gap-3">' +
           '<span class="w-2 h-2 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></span>' +
           '<p class="text-sm text-emerald-800 leading-relaxed font-medium">$1</p>' +
-          '</div>');
+          '</div>')
+        
+        // Convert line breaks to HTML
+        .replace(/\n/g, '<br />');
 
-      // Process paragraphs
-      const paragraphs = formattedSources.split('\n\n').map(paragraph => {
+      // Process paragraphs for content that wasn't already formatted
+      const paragraphs = formattedSources.split('<br /><br />').map(paragraph => {
         paragraph = paragraph.trim();
         if (!paragraph) return '';
         
         // Skip already formatted elements
-        if (paragraph.startsWith('<div') || paragraph.startsWith('<h') || paragraph.startsWith('<span')) {
+        if (paragraph.startsWith('<div') || paragraph.startsWith('<h') || paragraph.startsWith('<span') || paragraph.startsWith('<strong')) {
           return paragraph;
         }
         
-        // Regular paragraphs
+        // Regular paragraphs that don't have HTML formatting yet
         if (paragraph && !paragraph.match(/^<[^>]+>/)) {
           return `<div class="mb-4 p-3 bg-emerald-50/30 rounded-lg border-l-2 border-emerald-300"><p class="text-sm text-emerald-800 leading-relaxed">${paragraph}</p></div>`;
         }
         
         return paragraph;
-      }).filter(p => p.trim()).join('\n');
+      }).filter(p => p.trim()).join('<br />');
 
-      return paragraphs.replace(/\n/g, '');
+      return paragraphs;
     };
 
     return (
