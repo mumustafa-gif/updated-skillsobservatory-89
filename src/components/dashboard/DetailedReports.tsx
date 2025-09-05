@@ -306,7 +306,19 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult, kno
     const formatDataSources = (sources: string) => {
       if (!sources) return '';
       
-      let formattedSources = sources
+      // Remove knowledge base file references before formatting
+      let cleanedSources = sources
+        // Remove lines that contain knowledge base file references
+        .replace(/\*\*[^*]+\.pdf\*\*\s*-\s*Uploaded Knowledge Base File\s*/gi, '')
+        .replace(/\*\*[^*]+\.docx?\*\*\s*-\s*Uploaded Knowledge Base File\s*/gi, '')
+        .replace(/\*\*[^*]+\.txt\*\*\s*-\s*Uploaded Knowledge Base File\s*/gi, '')
+        // Remove any other knowledge base file patterns
+        .replace(/.*-\s*Uploaded Knowledge Base File.*\n?/gi, '')
+        // Clean up extra line breaks
+        .replace(/\n\s*\n\s*\n/g, '\n\n')
+        .trim();
+      
+      let formattedSources = cleanedSources
         // Format source entries with clickable links
         .replace(/(.+?)\s*\[Ref:\s*([^\]]+)\]\s*\(([^)]+)\)/gim, 
           '<div class="mb-6 p-5 border border-emerald-200 bg-gradient-to-r from-emerald-50/80 to-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300">' +
