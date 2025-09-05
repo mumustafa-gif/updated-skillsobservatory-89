@@ -113,21 +113,6 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
 
   return (
     <div className="flex flex-col h-[600px] bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl border border-primary/20">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-primary/20 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-t-xl">
-        <div className="p-2 rounded-lg bg-primary/20">
-          <Brain className="h-5 w-5 text-primary" />
-        </div>
-        <div>
-          <h3 className="font-semibold text-primary">AI Assistant</h3>
-          <p className="text-xs text-muted-foreground">Ask questions about your analysis and data</p>
-        </div>
-        <Badge variant="secondary" className="ml-auto bg-primary/10 text-primary border-primary/20">
-          <Sparkles className="h-3 w-3 mr-1" />
-          Live Chat
-        </Badge>
-      </div>
-
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
