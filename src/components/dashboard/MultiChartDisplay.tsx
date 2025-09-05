@@ -100,8 +100,19 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
     const isLarge = typeof window !== 'undefined' && window.innerWidth > 1440;
 
     const baseFontSize = isMobile ? 10 : isTablet ? 11 : 12;
-    const titleFontSize = isMobile ? 12 : isTablet ? 14 : 16;
-    const legendFontSize = isMobile ? 9 : isTablet ? 10 : 11;
+    const titleFontSize = isMobile ? 14 : isTablet ? 16 : 18;
+    const legendFontSize = isMobile ? 10 : isTablet ? 11 : 12;
+
+    // Professional color palette
+    const professionalColors = [
+      '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', 
+      '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+      '#2E8B57', '#FF6347', '#4682B4', '#DAA520', '#9932CC'
+    ];
+
+    // Heatmap and treemap color palettes
+    const heatmapColors = ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026'];
+    const treemapColors = ['#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896'];
 
     // Validate and fix treemap data structure before applying responsive config
     if (chartOption.series && chartOption.series.some((s: any) => s.type === 'treemap')) {
@@ -125,240 +136,472 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
       });
     }
 
+    // Enhanced series with professional styling
+    const enhancedSeries = Array.isArray(chartOption.series) 
+      ? chartOption.series.map((series: any, seriesIndex: number) => {
+          const baseColor = professionalColors[seriesIndex % professionalColors.length];
+          
+          // Chart type specific enhancements
+          switch (series.type) {
+            case 'bar':
+              return {
+                ...series,
+                itemStyle: {
+                  color: baseColor,
+                  borderRadius: [4, 4, 0, 0],
+                  ...series.itemStyle
+                },
+                label: {
+                  show: true,
+                  position: 'top',
+                  fontSize: baseFontSize - 1,
+                  color: '#333',
+                  formatter: function(params: any) {
+                    const value = typeof params.value === 'number' ? params.value.toLocaleString() : params.value;
+                    return value;
+                  },
+                  ...series.label
+                }
+              };
+              
+            case 'line':
+              return {
+                ...series,
+                lineStyle: {
+                  color: baseColor,
+                  width: 3,
+                  ...series.lineStyle
+                },
+                itemStyle: {
+                  color: baseColor,
+                  borderColor: '#fff',
+                  borderWidth: 2,
+                  ...series.itemStyle
+                },
+                symbol: 'circle',
+                symbolSize: isMobile ? 4 : 6,
+                label: {
+                  show: false,
+                  fontSize: baseFontSize - 1,
+                  color: '#333',
+                  ...series.label
+                }
+              };
+              
+            case 'pie':
+              return {
+                ...series,
+                radius: isMobile ? ['30%', '60%'] : ['40%', '70%'],
+                center: ['50%', '60%'],
+                itemStyle: {
+                  borderRadius: isMobile ? 4 : 6,
+                  borderColor: '#fff',
+                  borderWidth: 2
+                },
+                label: {
+                  show: true,
+                  formatter: '{b}: {c} ({d}%)',
+                  fontSize: baseFontSize,
+                  color: '#333',
+                  fontWeight: 'bold'
+                },
+                labelLine: {
+                  show: true,
+                  length: isMobile ? 10 : 15,
+                  length2: isMobile ? 5 : 8
+                },
+                data: series.data?.map((item: any, idx: number) => ({
+                  ...item,
+                  itemStyle: {
+                    color: professionalColors[idx % professionalColors.length]
+                  }
+                }))
+              };
+              
+            case 'heatmap':
+              return {
+                ...series,
+                itemStyle: {
+                  borderColor: '#fff',
+                  borderWidth: 1
+                },
+                label: {
+                  show: !isMobile,
+                  fontSize: baseFontSize - 1,
+                  color: '#000',
+                  fontWeight: 'bold',
+                  formatter: function(params: any) {
+                    return params.value[2] || params.value;
+                  }
+                }
+              };
+              
+            case 'treemap':
+              return {
+                ...series,
+                levels: [
+                  {
+                    itemStyle: {
+                      borderColor: '#fff',
+                      borderWidth: 2,
+                      gapWidth: 2
+                    }
+                  },
+                  {
+                    colorSaturation: [0.3, 0.6],
+                    itemStyle: {
+                      borderColorSaturation: 0.7,
+                      gapWidth: 1,
+                      borderWidth: 2
+                    }
+                  }
+                ],
+                label: {
+                  show: true,
+                  fontSize: isMobile ? 9 : baseFontSize - 1,
+                  fontWeight: 'bold',
+                  color: '#000',
+                  formatter: function(params: any) {
+                    return isMobile ? params.name : `${params.name}\n${params.value}`;
+                  }
+                },
+                data: series.data?.map((item: any, idx: number) => ({
+                  ...item,
+                  itemStyle: {
+                    color: treemapColors[idx % treemapColors.length]
+                  }
+                }))
+              };
+              
+            case 'scatter':
+              return {
+                ...series,
+                symbolSize: function(data: any) {
+                  const baseSize = isMobile ? 6 : 8;
+                  return Math.max(baseSize, Math.min(isMobile ? 15 : 20, Math.sqrt((data[2] || 10) * 2)));
+                },
+                itemStyle: {
+                  color: baseColor,
+                  opacity: 0.8,
+                  ...series.itemStyle
+                }
+              };
+              
+            default:
+              return {
+                ...series,
+                itemStyle: {
+                  color: baseColor,
+                  ...series.itemStyle
+                },
+                label: {
+                  fontSize: baseFontSize - 1,
+                  color: '#333',
+                  ...series.label
+                }
+              };
+          }
+        })
+      : chartOption.series ? [chartOption.series] : [];
+
     return {
       ...chartOption,
       animation: false, // Disable animation for better performance
       
+      // Enhanced color configuration
+      color: professionalColors,
+      
       // Grid configuration for proper spacing
       grid: {
         left: isMobile ? '12%' : '10%',
-        right: isMobile ? '25%' : '22%',
-        top: chartOption.title ? (isMobile ? '15%' : '12%') : (isMobile ? '8%' : '6%'),
-        bottom: isMobile ? '25%' : '22%',
+        right: isMobile ? '8%' : '8%',
+        top: chartOption.title ? (isMobile ? '20%' : '18%') : (isMobile ? '12%' : '10%'),
+        bottom: isMobile ? '20%' : '18%',
         containLabel: true,
         ...chartOption.grid
       },
 
-      // Title configuration
-      title: {
+      // Enhanced title configuration
+      title: chartOption.title ? {
         ...chartOption.title,
         textStyle: {
           fontSize: titleFontSize,
           fontWeight: 'bold',
-          color: 'hsl(var(--primary))',
-          overflow: 'truncate',
-          width: isMobile ? 200 : 300,
+          color: '#1a1a1a',
           ...chartOption.title?.textStyle
         },
         subtextStyle: {
-          fontSize: baseFontSize,
-          color: 'hsl(var(--muted-foreground))',
-          overflow: 'truncate',
-          width: isMobile ? 180 : 280,
+          fontSize: baseFontSize + 1,
+          color: '#666',
           ...chartOption.title?.subtextStyle
         },
         left: 'center',
-        top: 8
-      },
+        top: 10
+      } : undefined,
 
-      // Professional theme color palette
-      color: [
-        'hsl(220, 85%, 25%)', // Navy blue (primary)
-        'hsl(15, 85%, 60%)',  // Orange (accent)
-        'hsl(200, 70%, 45%)', // Blue
-        'hsl(35, 80%, 55%)',  // Golden
-        'hsl(240, 60%, 50%)', // Purple
-        'hsl(220, 70%, 35%)', // Dark navy
-        'hsl(15, 75%, 50%)',  // Dark orange
-        'hsl(200, 80%, 40%)', // Dark blue
-      ],
-
-      // Enhanced legend configuration - bottom right positioning
-      legend: {
-        ...chartOption.legend,
+      // Enhanced legend configuration - horizontal at top
+      legend: chartOption.legend !== false ? {
+        show: true,
         type: 'scroll',
-        orient: 'vertical',
-        right: '2%',
-        bottom: '5%',
-        itemWidth: isMobile ? 14 : 16,
+        orient: 'horizontal',
+        top: chartOption.title ? '12%' : '5%',
+        left: 'center',
+        itemWidth: isMobile ? 14 : 18,
         itemHeight: isMobile ? 10 : 12,
-        itemGap: isMobile ? 8 : 10,
+        itemGap: isMobile ? 12 : 20,
         textStyle: {
           fontSize: legendFontSize,
-          color: 'hsl(220, 20%, 50%)',
-          fontWeight: 500,
-          overflow: 'truncate',
-          width: isMobile ? 70 : 90,
-          ...chartOption.legend?.textStyle
-        },
-        pageIconColor: 'hsl(220, 85%, 25%)',
-        pageIconInactiveColor: 'hsl(220, 20%, 70%)',
-        pageTextStyle: {
-          fontSize: legendFontSize - 1,
-          color: 'hsl(220, 20%, 50%)',
+          color: '#333',
           fontWeight: 500
         },
-        backgroundColor: 'hsl(0, 0%, 100%, 0.95)',
-        borderColor: 'hsl(220, 15%, 90%)',
+        pageButtonItemGap: isMobile ? 5 : 10,
+        pageButtonGap: isMobile ? 10 : 20,
+        pageTextStyle: {
+          fontSize: legendFontSize - 1,
+          color: '#666'
+        },
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        borderColor: '#e0e0e0',
         borderWidth: 1,
         borderRadius: 6,
-        padding: [8, 10],
-        shadowColor: 'hsla(220, 85%, 25%, 0.15)',
-        shadowBlur: 8,
-        shadowOffsetY: 2
-      },
+        padding: [6, 10],
+        shadowColor: 'rgba(0,0,0,0.1)',
+        shadowBlur: 6,
+        shadowOffsetY: 2,
+        ...chartOption.legend
+      } : false,
 
-      // Tooltip configuration
+      // Enhanced tooltip configuration
       tooltip: {
-        ...chartOption.tooltip,
+        trigger: chartOption.tooltip?.trigger || (chartOption.series?.[0]?.type === 'pie' ? 'item' : 'axis'),
+        backgroundColor: '#fff',
+        borderColor: '#ddd',
+        borderWidth: 1,
         textStyle: {
           fontSize: baseFontSize,
-          ...chartOption.tooltip?.textStyle
+          color: '#333'
+        },
+        formatter: function(params: any) {
+          if (Array.isArray(params)) {
+            let result = `<strong>${params[0].axisValue}</strong><br/>`;
+            params.forEach((param: any) => {
+              const value = typeof param.value === 'number' ? param.value.toLocaleString() : param.value;
+              result += `<span style="color:${param.color}">●</span> ${param.seriesName}: <strong>${value}</strong><br/>`;
+            });
+            return result;
+          } else {
+            const value = typeof params.value === 'number' ? params.value.toLocaleString() : params.value;
+            if (params.percent !== undefined) {
+              return `<strong>${params.name}</strong><br/><span style="color:${params.color}">●</span> ${params.seriesName}: <strong>${value} (${params.percent}%)</strong>`;
+            }
+            return `<strong>${params.name}</strong><br/><span style="color:${params.color}">●</span> ${params.seriesName}: <strong>${value}</strong>`;
+          }
         },
         confine: true,
+        extraCssText: 'box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 6px;',
         position: function (point: number[], params: any, dom: any, rect: any, size: any) {
           const x = point[0] < size.viewSize[0] / 2 ? point[0] + 20 : point[0] - dom.offsetWidth - 20;
           const y = point[1] < size.viewSize[1] / 2 ? point[1] + 20 : point[1] - dom.offsetHeight - 20;
           return [Math.max(10, Math.min(x, size.viewSize[0] - dom.offsetWidth - 10)), 
                   Math.max(10, Math.min(y, size.viewSize[1] - dom.offsetHeight - 10))];
-        }
+        },
+        ...chartOption.tooltip
       },
 
-      // X-axis configuration
+      // Enhanced X-axis configuration with dynamic labels
       xAxis: Array.isArray(chartOption.xAxis) 
         ? chartOption.xAxis.map(axis => ({
             ...axis,
+            name: axis.name || (axis.type === 'category' ? 'Categories' : 'X Values'),
+            nameLocation: 'middle',
+            nameGap: isMobile ? 25 : 30,
+            nameTextStyle: {
+              fontSize: baseFontSize + 1,
+              fontWeight: 'bold',
+              color: '#333',
+              ...axis.nameTextStyle
+            },
             axisLabel: {
               fontSize: baseFontSize,
               rotate: isMobile && axis.data?.length > 4 ? 30 : 0,
               interval: isMobile ? 'auto' : 0,
               margin: 8,
-              overflow: 'truncate',
-              width: isMobile ? 60 : 80,
-              color: 'hsl(var(--muted-foreground))',
+              color: '#666',
+              formatter: axis.axisLabel?.formatter || function(value: any) {
+                if (typeof value === 'string' && value.length > (isMobile ? 8 : 12)) {
+                  return value.substring(0, isMobile ? 8 : 12) + '...';
+                }
+                return value;
+              },
               ...axis.axisLabel
             },
-            nameTextStyle: {
-              fontSize: baseFontSize,
-              color: 'hsl(var(--foreground))',
-              ...axis.nameTextStyle
-            },
             axisLine: {
-              lineStyle: { color: 'hsl(var(--border))' },
+              lineStyle: { color: '#ddd' },
               ...axis.axisLine
             },
             axisTick: {
-              lineStyle: { color: 'hsl(var(--border))' },
+              lineStyle: { color: '#ddd' },
               ...axis.axisTick
+            },
+            splitLine: {
+              lineStyle: { color: '#f5f5f5', type: 'dashed' },
+              ...axis.splitLine
             }
           }))
         : chartOption.xAxis ? {
             ...chartOption.xAxis,
+            name: chartOption.xAxis.name || (chartOption.xAxis.type === 'category' ? 'Categories' : 'X Values'),
+            nameLocation: 'middle',
+            nameGap: isMobile ? 25 : 30,
+            nameTextStyle: {
+              fontSize: baseFontSize + 1,
+              fontWeight: 'bold',
+              color: '#333',
+              ...chartOption.xAxis.nameTextStyle
+            },
             axisLabel: {
               fontSize: baseFontSize,
               rotate: isMobile && chartOption.xAxis.data?.length > 4 ? 30 : 0,
               interval: isMobile ? 'auto' : 0,
               margin: 8,
-              overflow: 'truncate',
-              width: isMobile ? 60 : 80,
-              color: 'hsl(var(--muted-foreground))',
+              color: '#666',
+              formatter: chartOption.xAxis.axisLabel?.formatter || function(value: any) {
+                if (typeof value === 'string' && value.length > (isMobile ? 8 : 12)) {
+                  return value.substring(0, isMobile ? 8 : 12) + '...';
+                }
+                return value;
+              },
               ...chartOption.xAxis.axisLabel
             },
-            nameTextStyle: {
-              fontSize: baseFontSize,
-              color: 'hsl(var(--foreground))',
-              ...chartOption.xAxis.nameTextStyle
-            },
             axisLine: {
-              lineStyle: { color: 'hsl(var(--border))' },
+              lineStyle: { color: '#ddd' },
               ...chartOption.xAxis.axisLine
             },
             axisTick: {
-              lineStyle: { color: 'hsl(var(--border))' },
+              lineStyle: { color: '#ddd' },
               ...chartOption.xAxis.axisTick
+            },
+            splitLine: {
+              lineStyle: { color: '#f5f5f5', type: 'dashed' },
+              ...chartOption.xAxis.splitLine
             }
           } : undefined,
 
-      // Y-axis configuration
+      // Enhanced Y-axis configuration with dynamic labels
       yAxis: Array.isArray(chartOption.yAxis)
         ? chartOption.yAxis.map(axis => ({
             ...axis,
+            name: axis.name || (axis.type === 'value' ? 'Values' : 'Categories'),
+            nameLocation: 'middle',
+            nameGap: isMobile ? 40 : 50,
+            nameTextStyle: {
+              fontSize: baseFontSize + 1,
+              fontWeight: 'bold',
+              color: '#333',
+              ...axis.nameTextStyle
+            },
             axisLabel: {
               fontSize: baseFontSize,
               margin: 8,
-              color: 'hsl(var(--muted-foreground))',
+              color: '#666',
+              formatter: axis.axisLabel?.formatter || function(value: any) {
+                if (typeof value === 'number') {
+                  if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                  if (value >= 1000) return (value / 1000).toFixed(1) + 'K';
+                  return value.toLocaleString();
+                }
+                return value;
+              },
               ...axis.axisLabel
             },
-            nameTextStyle: {
-              fontSize: baseFontSize,
-              color: 'hsl(var(--foreground))',
-              ...axis.nameTextStyle
-            },
             axisLine: {
-              lineStyle: { color: 'hsl(var(--border))' },
+              lineStyle: { color: '#ddd' },
               ...axis.axisLine
             },
             axisTick: {
-              lineStyle: { color: 'hsl(var(--border))' },
+              lineStyle: { color: '#ddd' },
               ...axis.axisTick
             },
             splitLine: {
-              lineStyle: { color: 'hsl(var(--muted) / 0.5)' },
+              lineStyle: { color: '#f5f5f5', type: 'dashed' },
               ...axis.splitLine
             }
           }))
         : chartOption.yAxis ? {
             ...chartOption.yAxis,
+            name: chartOption.yAxis.name || (chartOption.yAxis.type === 'value' ? 'Values' : 'Categories'),
+            nameLocation: 'middle',
+            nameGap: isMobile ? 40 : 50,
+            nameTextStyle: {
+              fontSize: baseFontSize + 1,
+              fontWeight: 'bold',
+              color: '#333',
+              ...chartOption.yAxis.nameTextStyle
+            },
             axisLabel: {
               fontSize: baseFontSize,
               margin: 8,
-              color: 'hsl(var(--muted-foreground))',
+              color: '#666',
+              formatter: chartOption.yAxis.axisLabel?.formatter || function(value: any) {
+                if (typeof value === 'number') {
+                  if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                  if (value >= 1000) return (value / 1000).toFixed(1) + 'K';
+                  return value.toLocaleString();
+                }
+                return value;
+              },
               ...chartOption.yAxis.axisLabel
             },
-            nameTextStyle: {
-              fontSize: baseFontSize,
-              color: 'hsl(var(--foreground))',
-              ...chartOption.yAxis.nameTextStyle
-            },
             axisLine: {
-              lineStyle: { color: 'hsl(var(--border))' },
+              lineStyle: { color: '#ddd' },
               ...chartOption.yAxis.axisLine
             },
             axisTick: {
-              lineStyle: { color: 'hsl(var(--border))' },
+              lineStyle: { color: '#ddd' },
               ...chartOption.yAxis.axisTick
             },
             splitLine: {
-              lineStyle: { color: 'hsl(var(--muted) / 0.5)' },
+              lineStyle: { color: '#f5f5f5', type: 'dashed' },
               ...chartOption.yAxis.splitLine
             }
           } : undefined,
 
-      // Series label configuration
-      series: Array.isArray(chartOption.series) 
-        ? chartOption.series.map((serie: any) => ({
-            ...serie,
-            label: {
-              fontSize: baseFontSize - 1,
-              color: 'hsl(var(--foreground))',
-              ...serie.label
-            },
-            labelLine: {
-              lineStyle: { color: 'hsl(var(--border))' },
-              ...serie.labelLine
-            }
-          }))
-        : chartOption.series ? [{
-            ...chartOption.series,
-            label: {
-              fontSize: baseFontSize - 1,
-              color: 'hsl(var(--foreground))',
-              ...chartOption.series.label
-            }
-          }] : [],
+      // Enhanced series configuration
+      series: enhancedSeries,
 
-      // Preserve visualMap for heatmaps and other chart types that need it
-      ...(chartOption?.visualMap && { visualMap: chartOption.visualMap })
+      // Enhanced visualMap for heatmaps
+      visualMap: chartOption.visualMap ? {
+        type: 'continuous',
+        min: 0,
+        max: 100,
+        calculable: true,
+        orient: 'horizontal',
+        left: 'center',
+        bottom: '5%',
+        inRange: {
+          color: heatmapColors
+        },
+        textStyle: {
+          color: '#333',
+          fontSize: baseFontSize
+        },
+        ...chartOption.visualMap
+      } : chartOption.series?.[0]?.type === 'heatmap' ? {
+        type: 'continuous',
+        min: 0,
+        max: 100,
+        calculable: true,
+        orient: 'horizontal',
+        left: 'center',
+        bottom: '5%',
+        inRange: {
+          color: heatmapColors
+        },
+        textStyle: {
+          color: '#333',
+          fontSize: baseFontSize
+        }
+      } : undefined
     };
   };
 
