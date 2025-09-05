@@ -464,7 +464,7 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult, kno
                 className="flex items-center gap-2 font-medium"
               >
                 <MessageSquare className="h-4 w-4" />
-                <span className="hidden sm:inline">Ask from AI</span>
+                <span className="hidden sm:inline">Ask AI Agent</span>
               </TabsTrigger>
             </TabsList>
 
