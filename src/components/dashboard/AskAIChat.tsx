@@ -145,27 +145,35 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
 
       setIsLoading(false);
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.content) {
-                accumulatedContent += parsed.content;
-                setStreamingMessage(accumulatedContent);
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6).trim();
+              if (data) {
+                try {
+                  const parsed = JSON.parse(data);
+                  if (parsed.content) {
+                    accumulatedContent += parsed.content;
+                    setStreamingMessage(accumulatedContent);
+                  }
+                } catch (e) {
+                  // Skip invalid JSON
+                  console.warn('JSON parse error:', e);
+                }
               }
-            } catch (e) {
-              // Skip invalid JSON
             }
           }
         }
+      } catch (streamError) {
+        console.error('Stream processing error:', streamError);
+        throw streamError;
       }
 
       // Create final message

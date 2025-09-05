@@ -156,30 +156,24 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
-    // Create a ReadableStream for streaming response
-    const stream = new ReadableStream({
+    // Return streaming response directly
+    const readable = new ReadableStream({
       async start(controller) {
-        const reader = response.body?.getReader();
-        const decoder = new TextDecoder();
-
-        if (!reader) {
-          controller.close();
-          return;
-        }
-
-        let isClosed = false;
-
-        const closeController = () => {
-          if (!isClosed) {
-            isClosed = true;
-            controller.close();
-          }
-        };
-
         try {
+          const reader = response.body?.getReader();
+          if (!reader) {
+            controller.error(new Error('No response reader'));
+            return;
+          }
+
+          const decoder = new TextDecoder();
+
           while (true) {
             const { done, value } = await reader.read();
-            if (done) break;
+            if (done) {
+              controller.close();
+              break;
+            }
 
             const chunk = decoder.decode(value, { stream: true });
             const lines = chunk.split('\n');
@@ -187,8 +181,9 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
             for (const line of lines) {
               if (line.startsWith('data: ')) {
                 const data = line.slice(6).trim();
+                
                 if (data === '[DONE]') {
-                  closeController();
+                  controller.close();
                   return;
                 }
 
@@ -196,29 +191,27 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
                   try {
                     const parsed = JSON.parse(data);
                     const content = parsed.choices?.[0]?.delta?.content;
-                    if (content && !isClosed) {
-                      const encoder = new TextEncoder();
-                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
+                    if (content) {
+                      // Send the content directly
+                      const responseData = `data: ${JSON.stringify({ content })}\n\n`;
+                      controller.enqueue(new TextEncoder().encode(responseData));
                     }
-                  } catch (e) {
+                  } catch (parseError) {
                     // Skip invalid JSON
+                    console.warn('JSON parse error:', parseError);
                   }
                 }
               }
             }
           }
-        } catch (error) {
-          console.error('Streaming error:', error);
-          if (!isClosed) {
-            controller.error(error);
-          }
-        } finally {
-          closeController();
+        } catch (streamError) {
+          console.error('Stream error:', streamError);
+          controller.error(streamError);
         }
       },
     });
 
-    return new Response(stream, {
+    return new Response(readable, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/event-stream',
