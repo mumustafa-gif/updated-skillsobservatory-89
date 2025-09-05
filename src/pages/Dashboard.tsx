@@ -475,11 +475,11 @@ const Dashboard = () => {
                     </div>
 
                     {/* Regenerate Section */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Sparkles className="h-4 w-4 text-secondary" />
-                        <span className="text-sm font-medium text-secondary">Regenerate</span>
-                      </div>
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Sparkles className="h-4 w-4 text-accent" />
+                          <span className="text-sm font-medium text-accent">Regenerate</span>
+                        </div>
                       <div className="space-y-3">
                         <Textarea placeholder="Modify your workforce analysis requirements..." value={prompt} onChange={e => setPrompt(e.target.value)} rows={3} className="resize-none text-sm" />
                         <Button onClick={handleGenerate} disabled={generating} size="sm" className="w-full text-white bg-slate-800 hover:bg-slate-700">
