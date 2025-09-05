@@ -477,12 +477,12 @@ const Dashboard = () => {
                     {/* Regenerate Section */}
                     <div className="space-y-4">
                       <div className="flex items-center gap-2 mb-3">
-                        <Sparkles className="h-4 w-4 text-secondary bg-gray-600" />
-                        <span className="text-sm font-medium text-gray-800">Regenerate</span>
+                        <Sparkles className="h-4 w-4 text-secondary" />
+                        <span className="text-sm font-medium text-secondary">Regenerate</span>
                       </div>
                       <div className="space-y-3">
                         <Textarea placeholder="Modify your workforce analysis requirements..." value={prompt} onChange={e => setPrompt(e.target.value)} rows={3} className="resize-none text-sm" />
-                        <Button onClick={handleGenerate} disabled={generating} size="sm" className="w-full text-white bg-slate-900 hover:bg-slate-800">
+                        <Button onClick={handleGenerate} disabled={generating} size="sm" className="w-full text-white bg-slate-800 hover:bg-slate-700">
                           {generating ? <>
                               <motion.div animate={{
                         rotate: 360
