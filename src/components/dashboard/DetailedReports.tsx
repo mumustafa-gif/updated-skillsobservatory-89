@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { FileText, Brain, Shield, Lightbulb, TrendingUp, BarChart3, Users, Target, AlertCircle, CheckCircle2, Link } from 'lucide-react';
+import { FileText, Brain, Shield, Lightbulb, TrendingUp, BarChart3, Users, Target, AlertCircle, CheckCircle2, Link, MessageSquare } from 'lucide-react';
+import AskAIChat from './AskAIChat';
 
 interface DetailedReportsProps {
   generationResult: {
@@ -16,9 +17,10 @@ interface DetailedReportsProps {
       dataSources?: string;
     };
   } | null;
+  knowledgeFileIds?: string[];
 }
 
-const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) => {
+const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult, knowledgeFileIds = [] }) => {
   const formatReport = (report: string | any) => {
     if (!report) return '';
     
@@ -428,7 +430,7 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
         </CardHeader>
         <CardContent className="p-6">
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-8 bg-muted/50 p-1 h-12">
+            <TabsList className="grid w-full grid-cols-5 mb-8 bg-muted/50 p-1 h-12">
               <TabsTrigger 
                 value="overview" 
                 className="flex items-center gap-2 font-medium"
@@ -456,6 +458,13 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
               >
                 <Link className="h-4 w-4" />
                 <span className="hidden sm:inline">Data Sources</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="ask-ai" 
+                className="flex items-center gap-2 font-medium"
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span className="hidden sm:inline">Ask from AI</span>
               </TabsTrigger>
             </TabsList>
 
@@ -562,6 +571,31 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult }) =
                     defaultMessage="Official data sources and reference links will appear here after AI analysis is complete."
                     icon={Link}
                     colorClass="text-accent"
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="ask-ai" className="mt-6">
+              <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-xl flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <MessageSquare className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <span className="text-primary font-bold">AI Assistant</span>
+                      <p className="text-sm text-muted-foreground font-normal mt-1">
+                        Ask questions about your analysis results and data insights
+                      </p>
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <Separator className="mb-6" />
+                <CardContent className="pt-0">
+                  <AskAIChat 
+                    generationResult={generationResult}
+                    knowledgeFileIds={knowledgeFileIds}
                   />
                 </CardContent>
               </Card>

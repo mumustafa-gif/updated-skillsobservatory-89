@@ -1,1 +1,4 @@
 project_id = "yduosziameskzofrcodg"
+
+[functions.ask-ai]
+verify_jwt = true
