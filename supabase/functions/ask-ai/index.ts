@@ -133,27 +133,51 @@ ${analysisContext}
 ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''}`;
 
     // Make the OpenAI API call with streaming
+    console.log('Making OpenAI API request...');
+    
+    if (!openAIApiKey) {
+      console.error('OpenAI API key is not configured');
+      throw new Error('OpenAI API key is not configured');
+    }
+
+    const requestBody = {
+      model: 'gpt-5-2025-08-07',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: question }
+      ],
+      max_completion_tokens: 1500,
+      stream: true,
+    };
+
+    console.log('Request payload:', { 
+      model: requestBody.model, 
+      messageCount: requestBody.messages.length,
+      systemPromptLength: systemPrompt.length,
+      questionLength: question.length 
+    });
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'gpt-5-2025-08-07',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: question }
-        ],
-        max_completion_tokens: 1500,
-        stream: true,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
+    console.log('OpenAI API response status:', response.status, response.statusText);
+
     if (!response.ok) {
-      const error = await response.text();
-      console.error('OpenAI API error:', error);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      let errorText;
+      try {
+        errorText = await response.text();
+        console.error('OpenAI API error response:', errorText);
+      } catch (e) {
+        console.error('Failed to read error response:', e);
+        errorText = `HTTP ${response.status} ${response.statusText}`;
+      }
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     // Return streaming response with proper headers to prevent buffering
@@ -161,6 +185,7 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
       async start(controller) {
         let isClosed = false;
         const encoder = new TextEncoder();
+        let contentReceived = false;
         
         // Send heartbeat to prevent proxy buffering
         const heartbeat = () => {
@@ -174,6 +199,7 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
         try {
           const reader = response.body?.getReader();
           if (!reader) {
+            console.error('No response reader available');
             clearInterval(heartbeatInterval);
             if (!isClosed) {
               controller.error(new Error('No response reader'));
@@ -183,10 +209,14 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
 
           const decoder = new TextDecoder();
           let buffer = '';
+          console.log('Starting to read streaming response...');
 
           while (true) {
             const { done, value } = await reader.read();
-            if (done) break;
+            if (done) {
+              console.log('Stream completed. Content received:', contentReceived);
+              break;
+            }
 
             buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split('\n');
@@ -199,6 +229,7 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
                 const data = line.slice(6).trim();
                 
                 if (data === '[DONE]') {
+                  console.log('Received [DONE] signal');
                   clearInterval(heartbeatInterval);
                   if (!isClosed) {
                     isClosed = true;
@@ -212,10 +243,12 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
                     const parsed = JSON.parse(data);
                     const content = parsed.choices?.[0]?.delta?.content;
                     if (content && !isClosed) {
+                      contentReceived = true;
                       const responseData = `data: ${JSON.stringify({ content })}\n\n`;
                       controller.enqueue(encoder.encode(responseData));
                     }
                   } catch (parseError) {
+                    console.log('Parse error for line:', line, 'Error:', parseError);
                     // Skip invalid JSON - this is normal for SSE streams
                   }
                 }
@@ -223,6 +256,7 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
             }
           }
           
+          console.log('Stream processing completed normally');
           clearInterval(heartbeatInterval);
           if (!isClosed) {
             isClosed = true;
@@ -230,7 +264,7 @@ ${knowledgeBaseContext ? `Knowledge Base Content:\n${knowledgeBaseContext}` : ''
           }
         } catch (streamError) {
           clearInterval(heartbeatInterval);
-          console.error('Stream error:', streamError);
+          console.error('Stream processing error:', streamError);
           if (!isClosed) {
             isClosed = true;
             controller.error(streamError);
