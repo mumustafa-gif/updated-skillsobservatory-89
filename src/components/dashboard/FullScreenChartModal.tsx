@@ -88,7 +88,9 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
                 color: '#333',
                 fontWeight: 'bold',
                 formatter: function(params: any) {
-                  const value = typeof params.value === 'number' ? params.value.toLocaleString() : params.value;
+                  const value = typeof params.value === 'number' 
+                    ? params.value.toFixed(1) + '%' 
+                    : params.value;
                   return value;
                 },
                 ...series.label
@@ -131,7 +133,7 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
               },
               label: {
                 show: true,
-                formatter: '{b}: {c} ({d}%)',
+                formatter: '{b}: {d}%',
                 fontSize: 14,
                 color: '#333',
                 fontWeight: 'bold'
@@ -162,7 +164,8 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
                 color: '#000',
                 fontWeight: 'bold',
                 formatter: function(params: any) {
-                  return params.value[2] || params.value;
+                  const value = params.value[2] || params.value;
+                  return typeof value === 'number' ? value.toFixed(1) + '%' : value;
                 }
               }
             };
@@ -193,7 +196,8 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
                 fontWeight: 'bold',
                 color: '#000',
                 formatter: function(params: any) {
-                  return `${params.name}\n${params.value}`;
+                  const percentage = ((params.value / params.treeAncestors?.[0]?.value || 1) * 100).toFixed(1);
+                  return `${params.name}\n${percentage}%\n(${params.value})`;
                 }
               },
               data: series.data?.map((item: any, idx: number) => ({
@@ -288,43 +292,47 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
         ...config.tooltip
       },
       
-      // Enhanced legend styling positioned at bottom right
+      // Enhanced legend styling positioned at bottom right with percentage info
       legend: config.legend !== false ? {
         show: true,
         type: 'scroll',
-        orient: 'vertical',
+        orient: 'horizontal',
         right: '2%',
-        bottom: '10%',
+        bottom: '2%',
         itemWidth: 20,
         itemHeight: 16,
-        itemGap: 15,
+        itemGap: 20,
         textStyle: {
           color: '#333',
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: 500
         },
+        formatter: function(name: string) {
+          // Enhanced legend with percentage information where available
+          return name.includes('(') ? name : `${name}`;
+        },
         pageButtonItemGap: 12,
-        pageButtonGap: 15,
+        pageButtonGap: 20,
         pageTextStyle: {
           color: '#666',
-          fontSize: 12
+          fontSize: 11
         },
         backgroundColor: 'rgba(255,255,255,0.95)',
         borderColor: '#e0e0e0',
         borderWidth: 1,
         borderRadius: 8,
-        padding: [12, 16],
-        shadowColor: 'rgba(0,0,0,0.1)',
-        shadowBlur: 10,
-        shadowOffsetY: 3,
+        padding: [10, 14],
+        shadowColor: 'rgba(0,0,0,0.08)',
+        shadowBlur: 8,
+        shadowOffsetY: 2,
         ...config.legend
       } : false,
       
-      // Responsive grid styling
+      // Responsive grid styling with space for bottom-right legend
       grid: {
         left: '8%',
-        right: config.legend !== false && config.legend?.show !== false ? '25%' : '8%',
-        bottom: '15%',
+        right: config.legend !== false && config.legend?.show !== false ? '8%' : '8%',
+        bottom: config.legend !== false && config.legend?.show !== false ? '20%' : '15%',
         top: config.title ? '20%' : '10%',
         containLabel: true,
         ...config.grid
@@ -431,9 +439,7 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
           fontWeight: 500,
           formatter: axis.axisLabel?.formatter || function(value: any) {
             if (typeof value === 'number') {
-              if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
-              if (value >= 1000) return (value / 1000).toFixed(1) + 'K';
-              return value.toLocaleString();
+              return value.toFixed(1) + '%';
             }
             return value;
           },
@@ -468,9 +474,7 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
           fontWeight: 500,
           formatter: config.yAxis.axisLabel?.formatter || function(value: any) {
             if (typeof value === 'number') {
-              if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
-              if (value >= 1000) return (value / 1000).toFixed(1) + 'K';
-              return value.toLocaleString();
+              return value.toFixed(1) + '%';
             }
             return value;
           },

@@ -89,16 +89,25 @@ IMPORTANT: For geographic/map requests, return a Mapbox configuration with this 
 CRITICAL: Always use "mapbox://styles/mapbox/outdoors-v12" for the mapStyle property to show colorful terrain.
 ` : `
 CRITICAL CHART REQUIREMENTS:
-1. PROFESSIONAL LEGENDS: Always include detailed legends with:
-   - Clear, descriptive labels for each data series
-   - Professional color palette (#1f77b4, #ff7f0e, #2ca02c, #d62728, #9467bd, #8c564b, #e377c2, #7f7f7f, #bcbd22, #17becf)
-   - Proper positioning (top, right, or bottom based on chart type)
-   - Rich text formatting with data values where applicable
+1. PERCENTAGE DATA CONVERSION: ALWAYS convert and display data as percentages:
+   - If data is not in percentage format, convert it: (value/total)*100
+   - Format all values with "%" symbol: "25.5%", "12.0%", etc.
+   - For pie charts: Show both absolute values and percentages
+   - For bar/line charts: Convert series data to percentage of total or relative percentage
+   - Use proper percentage formatting in tooltips and labels
 
-2. DYNAMIC AXIS INFORMATION: Include comprehensive axis configuration:
+2. ENHANCED PROFESSIONAL LEGENDS: Include self-explanatory legends with:
+   - Descriptive labels that explain what each data series represents
+   - Include percentage values in legend labels where applicable: "Category A (35.2%)"
+   - Professional color palette (#1f77b4, #ff7f0e, #2ca02c, #d62728, #9467bd, #8c564b, #e377c2, #7f7f7f, #bcbd22, #17becf)
+   - Position at bottom-right of charts for optimal visibility
+   - Rich text formatting with both absolute and percentage values
+   - Include total count/sum in legend when relevant: "Total: 1,250 items (100%)"
+
+3. DYNAMIC AXIS INFORMATION: Include comprehensive axis configuration:
    - Descriptive axis labels that explain what the data represents
-   - Proper units and formatting (%, millions, thousands, etc.)
-   - Clear tick marks and grid lines
+   - ALWAYS show percentage units (%) in Y-axis for percentage data
+   - Clear tick marks and grid lines with percentage formatting
    - Rotated labels if needed to prevent overlap
 
 3. MULTI-COLOR SCHEMES: Use distinct color palettes:
@@ -127,11 +136,17 @@ MANDATORY JSON STRUCTURE:
       "show": true,
       "type": "scroll",
       "orient": "horizontal",
-      "top": "8%",
-      "data": ["Series 1", "Series 2", "Series 3"],
-      "textStyle": {"fontSize": 12},
+      "right": "2%",
+      "bottom": "2%",
+      "data": ["Series 1 (25.5%)", "Series 2 (35.2%)", "Series 3 (39.3%)"],
+      "textStyle": {"fontSize": 12, "color": "#333"},
       "itemWidth": 18,
-      "itemHeight": 12
+      "itemHeight": 12,
+      "backgroundColor": "rgba(255,255,255,0.9)",
+      "borderColor": "#ddd",
+      "borderWidth": 1,
+      "padding": [8, 12],
+      "borderRadius": 4
     },
     "tooltip": {
       "trigger": "axis|item",
@@ -164,7 +179,12 @@ MANDATORY JSON STRUCTURE:
       "nameGap": 50,
       "axisLabel": {
         "fontSize": 11,
-        "formatter": "{value}"
+        "formatter": function(value) {
+          if (typeof value === 'number') {
+            return value + '%';
+          }
+          return value;
+        }
       }
     },
     "series": [
@@ -179,7 +199,12 @@ MANDATORY JSON STRUCTURE:
           "show": true,
           "position": "top|inside",
           "fontSize": 10,
-          "formatter": "{c}"
+          "formatter": function(params) {
+            if (typeof params.value === 'number') {
+              return params.value.toFixed(1) + '%';
+            }
+            return params.value;
+          }
         }
       }
     ]
@@ -195,15 +220,22 @@ MANDATORY JSON STRUCTURE:
 Supported chart types: bar, line, pie, scatter, radar, heatmap, treemap
 `}
 
-CHART-SPECIFIC ENHANCEMENTS:
-- Bar/Line: Use gradient fills, proper spacing, data labels on hover
-- Pie: Show percentages, use distinct colors, proper legend positioning
-- Heatmap: Use continuous color scale with 5+ stops, show value labels
-- Treemap: Use hierarchical colors, show both percentage and absolute values
-- Scatter: Color-code by categories, use different shapes/sizes if applicable
+CHART-SPECIFIC PERCENTAGE ENHANCEMENTS:
+- Bar/Line: Convert all values to percentages of total, show percentage labels on bars/points
+- Pie: ALWAYS show percentages (calculate if not provided), format as "Label: 25.5%"
+- Heatmap: Use percentage scale (0-100%), show percentage values in cells
+- Treemap: Show both percentage of total and absolute values: "Category A\n25.5% (1,250)"
+- Scatter: Use percentage scales for both axes when applicable
+
+MANDATORY PERCENTAGE CONVERSION LOGIC:
+1. Calculate total sum of all values in dataset
+2. Convert each value to percentage: (value/total) * 100
+3. Format with 1 decimal place: "25.5%"
+4. Include in tooltips: "Series A: 1,250 (25.5%)"
+5. Update legend labels: "Category A (25.5%)"
 
 Always generate realistic, meaningful sample data if no specific data is provided.
-Include proper number formatting, units, and contextual information.
+Include proper percentage formatting, units, and contextual information.
 
 ${knowledgeBaseContext ? `Knowledge Base Context:\n${knowledgeBaseContext}` : ''}`;
 

@@ -69,7 +69,9 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
                 fontSize: 11,
                 color: '#333',
                 formatter: function(params: any) {
-                  const value = typeof params.value === 'number' ? params.value.toLocaleString() : params.value;
+                  const value = typeof params.value === 'number' 
+                    ? params.value.toFixed(1) + '%' 
+                    : params.value;
                   return value;
                 },
                 ...series.label
@@ -112,7 +114,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
               },
               label: {
                 show: true,
-                formatter: '{b}: {c} ({d}%)',
+                formatter: '{b}: {d}%',
                 fontSize: 12,
                 color: '#333',
                 fontWeight: 'bold'
@@ -137,15 +139,16 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
                 borderColor: '#fff',
                 borderWidth: 1
               },
-              label: {
-                show: true,
-                fontSize: 11,
-                color: '#000',
-                fontWeight: 'bold',
-                formatter: function(params: any) {
-                  return params.value[2] || params.value;
+                label: {
+                  show: true,
+                  fontSize: 11,
+                  color: '#000',
+                  fontWeight: 'bold',
+                  formatter: function(params: any) {
+                    const value = params.value[2] || params.value;
+                    return typeof value === 'number' ? value.toFixed(1) + '%' : value;
+                  }
                 }
-              }
             };
             
           case 'treemap':
@@ -168,15 +171,16 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
                   }
                 }
               ],
-              label: {
-                show: true,
-                fontSize: 11,
-                fontWeight: 'bold',
-                color: '#000',
-                formatter: function(params: any) {
-                  return `${params.name}\n${params.value}`;
-                }
-              },
+                label: {
+                  show: true,
+                  fontSize: 11,
+                  fontWeight: 'bold',
+                  color: '#000',
+                  formatter: function(params: any) {
+                    const percentage = ((params.value / params.treeAncestors?.[0]?.value || 1) * 100).toFixed(1);
+                    return `${params.name}\n${percentage}%\n(${params.value})`;
+                  }
+                },
               data: series.data?.map((item: any, idx: number) => ({
                 ...item,
                 itemStyle: {
@@ -250,63 +254,71 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
           fontSize: 12,
           fontWeight: 400
         },
-        formatter: function(params: any) {
-          if (Array.isArray(params)) {
-            let result = `<strong>${params[0].axisValue}</strong><br/>`;
-            params.forEach((param: any) => {
-              const value = typeof param.value === 'number' ? param.value.toLocaleString() : param.value;
-              result += `<span style="color:${param.color}">●</span> ${param.seriesName}: <strong>${value}</strong><br/>`;
-            });
-            return result;
-          } else {
-            const value = typeof params.value === 'number' ? params.value.toLocaleString() : params.value;
-            if (params.percent !== undefined) {
-              return `<strong>${params.name}</strong><br/><span style="color:${params.color}">●</span> ${params.seriesName}: <strong>${value} (${params.percent}%)</strong>`;
+          formatter: function(params: any) {
+            if (Array.isArray(params)) {
+              let result = `<strong>${params[0].axisValue}</strong><br/>`;
+              params.forEach((param: any) => {
+                const value = typeof param.value === 'number' 
+                  ? param.value.toFixed(1) + '%' 
+                  : param.value;
+                result += `<span style="color:${param.color}">●</span> ${param.seriesName}: <strong>${value}</strong><br/>`;
+              });
+              return result;
+            } else {
+              const value = typeof params.value === 'number' 
+                ? params.value.toFixed(1) + '%' 
+                : params.value;
+              if (params.percent !== undefined) {
+                return `<strong>${params.name}</strong><br/><span style="color:${params.color}">●</span> ${params.seriesName}: <strong>${params.percent.toFixed(1)}%</strong>`;
+              }
+              return `<strong>${params.name}</strong><br/><span style="color:${params.color}">●</span> ${params.seriesName}: <strong>${value}</strong>`;
             }
-            return `<strong>${params.name}</strong><br/><span style="color:${params.color}">●</span> ${params.seriesName}: <strong>${value}</strong>`;
-          }
-        },
+          },
         extraCssText: 'box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px;',
         ...config.tooltip
       },
       
-      // Enhanced legend styling positioned at bottom right
+      // Enhanced legend styling positioned at bottom right with percentage info
       legend: config.legend !== false ? {
         show: true,
         type: 'scroll',
-        orient: 'vertical',
+        orient: 'horizontal',
         right: '2%',
-        bottom: '5%',
+        bottom: '2%',
         itemWidth: 18,
         itemHeight: 12,
         itemGap: 15,
         textStyle: {
           color: '#333',
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: 500
+        },
+        formatter: function(name: string) {
+          // Enhanced legend with percentage information where available
+          return name.includes('(') ? name : `${name}`;
         },
         pageButtonItemGap: 10,
         pageButtonGap: 15,
         pageTextStyle: {
           color: '#666',
-          fontSize: 11
+          fontSize: 10
         },
         backgroundColor: 'rgba(255,255,255,0.95)',
         borderColor: '#e0e0e0',
         borderWidth: 1,
         borderRadius: 6,
-        padding: [8, 12],
-        shadowColor: 'rgba(0,0,0,0.1)',
-        shadowBlur: 8,
+        padding: [6, 10],
+        shadowColor: 'rgba(0,0,0,0.08)',
+        shadowBlur: 6,
         shadowOffsetY: 2,
         ...config.legend
       } : false,
       
-      // Responsive grid styling
+      // Responsive grid styling with space for bottom-right legend
       grid: {
         left: '10%',
-        right: config.legend !== false && config.legend?.show !== false ? '22%' : '8%',
-        bottom: '15%',
+        right: config.legend !== false && config.legend?.show !== false ? '8%' : '8%',
+        bottom: config.legend !== false && config.legend?.show !== false ? '18%' : '15%',
         top: config.title ? '18%' : '10%',
         containLabel: true,
         ...config.grid
@@ -408,14 +420,12 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
         axisLabel: { 
           color: '#666',
           fontSize: 11,
-          formatter: axis.axisLabel?.formatter || function(value: any) {
-            if (typeof value === 'number') {
-              if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
-              if (value >= 1000) return (value / 1000).toFixed(1) + 'K';
-              return value.toLocaleString();
-            }
-            return value;
-          },
+            formatter: axis.axisLabel?.formatter || function(value: any) {
+              if (typeof value === 'number') {
+                return value.toFixed(1) + '%';
+              }
+              return value;
+            },
           ...axis.axisLabel
         },
         splitLine: {
@@ -446,9 +456,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
           fontSize: 11,
           formatter: config.yAxis.axisLabel?.formatter || function(value: any) {
             if (typeof value === 'number') {
-              if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
-              if (value >= 1000) return (value / 1000).toFixed(1) + 'K';
-              return value.toLocaleString();
+              return value.toFixed(1) + '%';
             }
             return value;
           },

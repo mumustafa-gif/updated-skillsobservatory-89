@@ -157,7 +157,9 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
                   fontSize: baseFontSize - 1,
                   color: '#333',
                   formatter: function(params: any) {
-                    const value = typeof params.value === 'number' ? params.value.toLocaleString() : params.value;
+                    const value = typeof params.value === 'number' 
+                      ? params.value.toFixed(1) + '%' 
+                      : params.value;
                     return value;
                   },
                   ...series.label
@@ -200,7 +202,7 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
                 },
                 label: {
                   show: true,
-                  formatter: '{b}: {c} ({d}%)',
+                  formatter: '{b}: {d}%',
                   fontSize: baseFontSize,
                   color: '#333',
                   fontWeight: 'bold'
@@ -231,7 +233,8 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
                   color: '#000',
                   fontWeight: 'bold',
                   formatter: function(params: any) {
-                    return params.value[2] || params.value;
+                    const value = params.value[2] || params.value;
+                    return typeof value === 'number' ? value.toFixed(1) + '%' : value;
                   }
                 }
               };
@@ -262,7 +265,8 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
                   fontWeight: 'bold',
                   color: '#000',
                   formatter: function(params: any) {
-                    return isMobile ? params.name : `${params.name}\n${params.value}`;
+                    const percentage = ((params.value / params.treeAncestors?.[0]?.value || 1) * 100).toFixed(1);
+                    return isMobile ? `${percentage}%` : `${params.name}\n${percentage}%\n(${params.value})`;
                   }
                 },
                 data: series.data?.map((item: any, idx: number) => ({
@@ -311,12 +315,12 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
       // Enhanced color configuration
       color: professionalColors,
       
-      // Grid configuration for proper spacing
+      // Grid configuration for proper spacing with bottom legend
       grid: {
         left: isMobile ? '12%' : '10%',
         right: isMobile ? '8%' : '8%',
-        top: chartOption.title ? (isMobile ? '20%' : '18%') : (isMobile ? '12%' : '10%'),
-        bottom: isMobile ? '20%' : '18%',
+        top: chartOption.title ? (isMobile ? '18%' : '15%') : (isMobile ? '10%' : '8%'),
+        bottom: isMobile ? '25%' : '20%',
         containLabel: true,
         ...chartOption.grid
       },
@@ -339,23 +343,27 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         top: 10
       } : undefined,
 
-      // Enhanced legend configuration - horizontal at top
+      // Enhanced legend configuration - horizontal at bottom right
       legend: chartOption.legend !== false ? {
         show: true,
         type: 'scroll',
         orient: 'horizontal',
-        top: chartOption.title ? '12%' : '5%',
-        left: 'center',
-        itemWidth: isMobile ? 14 : 18,
+        right: '2%',
+        bottom: '2%',
+        itemWidth: isMobile ? 14 : 16,
         itemHeight: isMobile ? 10 : 12,
-        itemGap: isMobile ? 12 : 20,
+        itemGap: isMobile ? 10 : 15,
         textStyle: {
           fontSize: legendFontSize,
           color: '#333',
           fontWeight: 500
         },
-        pageButtonItemGap: isMobile ? 5 : 10,
-        pageButtonGap: isMobile ? 10 : 20,
+        formatter: function(name: string) {
+          // Enhanced legend with percentage information where available
+          return name.includes('(') ? name : `${name}`;
+        },
+        pageButtonItemGap: isMobile ? 5 : 8,
+        pageButtonGap: isMobile ? 8 : 12,
         pageTextStyle: {
           fontSize: legendFontSize - 1,
           color: '#666'
@@ -363,11 +371,11 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         backgroundColor: 'rgba(255,255,255,0.95)',
         borderColor: '#e0e0e0',
         borderWidth: 1,
-        borderRadius: 6,
-        padding: [6, 10],
-        shadowColor: 'rgba(0,0,0,0.1)',
-        shadowBlur: 6,
-        shadowOffsetY: 2,
+        borderRadius: 4,
+        padding: [4, 8],
+        shadowColor: 'rgba(0,0,0,0.08)',
+        shadowBlur: 4,
+        shadowOffsetY: 1,
         ...chartOption.legend
       } : false,
 
@@ -385,14 +393,18 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
           if (Array.isArray(params)) {
             let result = `<strong>${params[0].axisValue}</strong><br/>`;
             params.forEach((param: any) => {
-              const value = typeof param.value === 'number' ? param.value.toLocaleString() : param.value;
+              const value = typeof param.value === 'number' 
+                ? param.value.toFixed(1) + '%' 
+                : param.value;
               result += `<span style="color:${param.color}">●</span> ${param.seriesName}: <strong>${value}</strong><br/>`;
             });
             return result;
           } else {
-            const value = typeof params.value === 'number' ? params.value.toLocaleString() : params.value;
+            const value = typeof params.value === 'number' 
+              ? params.value.toFixed(1) + '%' 
+              : params.value;
             if (params.percent !== undefined) {
-              return `<strong>${params.name}</strong><br/><span style="color:${params.color}">●</span> ${params.seriesName}: <strong>${value} (${params.percent}%)</strong>`;
+              return `<strong>${params.name}</strong><br/><span style="color:${params.color}">●</span> ${params.seriesName}: <strong>${params.percent.toFixed(1)}%</strong>`;
             }
             return `<strong>${params.name}</strong><br/><span style="color:${params.color}">●</span> ${params.seriesName}: <strong>${value}</strong>`;
           }
