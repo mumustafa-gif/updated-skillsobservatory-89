@@ -231,8 +231,12 @@ MANDATORY PERCENTAGE CONVERSION LOGIC:
 1. Calculate total sum of all values in dataset
 2. Convert each value to percentage: (value/total) * 100
 3. Format with 1 decimal place: "25.5%"
-4. Include in tooltips: "Series A: 1,250 (25.5%)"
-5. Update legend labels: "Category A (25.5%)"
+4. Ensure percentages never exceed 100% - if data is already in percentage format, use as-is
+5. For pie charts: values should sum to exactly 100%
+6. Include in tooltips: "Series A: 1,250 (25.5%)"
+7. Update legend labels: "Category A (25.5%)"
+
+CRITICAL: If input data appears to already be in percentage format (values between 0-100), do NOT multiply by 100 again. Only convert to percentage if values are raw counts or decimals between 0-1.
 
 Always generate realistic, meaningful sample data if no specific data is provided.
 Include proper percentage formatting, units, and contextual information.
