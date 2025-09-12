@@ -222,7 +222,7 @@ Always structure your response with exactly these 5 sections:
       }
     };
 
-    const systemPrompt = getSystemPrompt(persona);
+    const systemPrompt = getSystemPrompt(persona) + `
 
 Available Context:
 ${analysisContext}
