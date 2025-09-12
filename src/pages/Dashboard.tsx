@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, LogOut, Sparkles, FileText, Link, Brain, Lightbulb, ChevronUp, ChevronDown, Crown, Users, GraduationCap, Loader2, RefreshCw } from 'lucide-react';
+import { BarChart3, LogOut, Sparkles, FileText, Link, Brain, Lightbulb, ChevronUp, ChevronDown, Crown, Users, GraduationCap, Loader2, RefreshCw, Shield, Target, TrendingUp, BookOpen } from 'lucide-react';
 import ChartControls from '@/components/dashboard/ChartControls';
 import MultiChartDisplay from '@/components/dashboard/MultiChartDisplay';
 import DiagnosticsPanel from '@/components/dashboard/DiagnosticsPanel';
@@ -46,6 +46,80 @@ const Dashboard = () => {
   const [hasGenerated, setHasGenerated] = useState(false);
   const [configMinimized, setConfigMinimized] = useState(false);
   const [selectedPersona, setSelectedPersona] = useState('minister');
+
+  // Persona-specific styling functions
+  const getPersonaStyles = (persona: string) => {
+    switch (persona) {
+      case 'minister':
+        return {
+          primaryColor: 'from-purple-600 to-indigo-600',
+          accentColor: 'from-purple-500/20 to-indigo-500/20',
+          borderColor: 'border-purple-200',
+          hoverBorderColor: 'hover:border-purple-300',
+          iconBg: 'bg-purple-100',
+          iconColor: 'text-purple-600',
+          title: 'Strategic Policy Analysis',
+          subtitle: 'Executive-level workforce insights for national planning',
+          description: 'Comprehensive policy analysis with strategic recommendations for UAE workforce development',
+          features: [
+            { icon: Crown, title: 'Policy Intelligence', desc: 'Strategic policy analysis and recommendations' },
+            { icon: Shield, title: 'Executive Briefings', desc: 'High-level workforce insights for decision makers' },
+            { icon: Target, title: 'Strategic Planning', desc: 'Long-term workforce development strategies' }
+          ]
+        };
+      case 'chro':
+        return {
+          primaryColor: 'from-blue-600 to-cyan-600',
+          accentColor: 'from-blue-500/20 to-cyan-500/20',
+          borderColor: 'border-blue-200',
+          hoverBorderColor: 'hover:border-blue-300',
+          iconBg: 'bg-blue-100',
+          iconColor: 'text-blue-600',
+          title: 'Human Resources Analytics',
+          subtitle: 'Data-driven insights for workforce management and talent acquisition',
+          description: 'Advanced HR analytics focusing on talent acquisition, retention, and workforce optimization',
+          features: [
+            { icon: Users, title: 'Talent Analytics', desc: 'Comprehensive talent acquisition and retention insights' },
+            { icon: BarChart3, title: 'Workforce Metrics', desc: 'Key performance indicators and workforce trends' },
+            { icon: TrendingUp, title: 'HR Optimization', desc: 'Strategic HR planning and optimization' }
+          ]
+        };
+      case 'educationist':
+        return {
+          primaryColor: 'from-emerald-600 to-teal-600',
+          accentColor: 'from-emerald-500/20 to-teal-500/20',
+          borderColor: 'border-emerald-200',
+          hoverBorderColor: 'hover:border-emerald-300',
+          iconBg: 'bg-emerald-100',
+          iconColor: 'text-emerald-600',
+          title: 'Educational Planning',
+          subtitle: 'Skills development insights for curriculum design and educational outcomes',
+          description: 'Educational planning focused on skills development, curriculum design, and learning outcomes',
+          features: [
+            { icon: GraduationCap, title: 'Skills Development', desc: 'Curriculum design and skills gap analysis' },
+            { icon: BookOpen, title: 'Learning Outcomes', desc: 'Educational effectiveness and learning metrics' },
+            { icon: Lightbulb, title: 'Innovation in Education', desc: 'Future-ready educational strategies' }
+          ]
+        };
+      default:
+        return {
+          primaryColor: 'from-primary to-secondary',
+          accentColor: 'from-primary/20 to-secondary/20',
+          borderColor: 'border-primary/20',
+          hoverBorderColor: 'hover:border-primary/40',
+          iconBg: 'bg-primary/10',
+          iconColor: 'text-primary',
+          title: 'Skills Observatory',
+          subtitle: 'AI-powered workforce analytics platform',
+          description: 'Comprehensive workforce skills analysis and strategic planning platform',
+          features: [
+            { icon: BarChart3, title: 'Skills Mapping', desc: 'AI-powered analysis of workforce skills supply and demand patterns' },
+            { icon: Brain, title: 'Workforce Analytics', desc: 'Strategic insights for education and employment planning in the UAE' },
+            { icon: Lightbulb, title: 'Policy Intelligence', desc: 'Data-driven recommendations for strategic workforce development' }
+          ]
+        };
+    }
+  };
   const {
     user,
     signOut,
@@ -284,15 +358,17 @@ const Dashboard = () => {
               duration: 4,
               repeat: Infinity,
               ease: "easeInOut"
-            }} className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-r from-primary via-secondary to-accent p-5 shadow-lg">
-                  <Sparkles className="h-10 w-10 text-primary-foreground" />
+            }} className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${getPersonaStyles(selectedPersona).primaryColor} p-5 shadow-lg`}>
+                  <Sparkles className="h-10 w-10 text-white" />
                 </motion.div>
-                <h1 className="text-4xl font-bold mb-4 text-primary">
-                  Skills Observatory
+                <h1 className={`text-4xl font-bold mb-2 ${getPersonaStyles(selectedPersona).iconColor}`}>
+                  {getPersonaStyles(selectedPersona).title}
                 </h1>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                  AI-powered platform mapping workforce skills supply and demand across the UAE. 
-                  Supporting strategic planning in education, employment, and policy development.
+                <p className="text-lg font-medium text-muted-foreground mb-3">
+                  {getPersonaStyles(selectedPersona).subtitle}
+                </p>
+                <p className="text-base text-muted-foreground max-w-2xl mx-auto">
+                  {getPersonaStyles(selectedPersona).description}
                 </p>
               </div>
 
@@ -322,11 +398,11 @@ const Dashboard = () => {
               duration: 0.6,
               delay: 0.2
             }}>
-                  <Card className="h-full bg-gradient-to-br from-card to-card/50 border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <Card className={`h-full bg-gradient-to-br from-card to-card/50 ${getPersonaStyles(selectedPersona).borderColor} shadow-lg hover:shadow-xl transition-all duration-300`}>
                     <CardHeader className="pb-4">
                       <CardTitle className="flex items-center gap-3 text-xl">
-                        <div className="p-2 rounded-lg bg-primary/10">
-                          <BarChart3 className="h-5 w-5 text-primary" />
+                        <div className={`p-2 rounded-lg ${getPersonaStyles(selectedPersona).iconBg}`}>
+                          <BarChart3 className={`h-5 w-5 ${getPersonaStyles(selectedPersona).iconColor}`} />
                         </div>
                         Chart Configuration
                       </CardTitle>
@@ -348,21 +424,36 @@ const Dashboard = () => {
               duration: 0.6,
               delay: 0.3
             }}>
-                  <Card className="h-full bg-gradient-to-br from-card to-card/50 border-secondary/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <Card className={`h-full bg-gradient-to-br from-card to-card/50 ${getPersonaStyles(selectedPersona).borderColor} shadow-lg hover:shadow-xl transition-all duration-300`}>
                     <CardHeader className="pb-4">
                       <CardTitle className="flex items-center gap-3 text-xl">
-                        <div className="p-2 rounded-lg bg-secondary/10">
-                          <Sparkles className="h-5 w-5 text-secondary" />
+                        <div className={`p-2 rounded-lg ${getPersonaStyles(selectedPersona).iconBg}`}>
+                          <Sparkles className={`h-5 w-5 ${getPersonaStyles(selectedPersona).iconColor}`} />
                         </div>
-                        Generate Charts
+                        Generate Analysis
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
                       <div className="space-y-4">
                         <Label htmlFor="prompt" className="text-base font-medium">
-                          Describe your workforce analysis needs
+                          {selectedPersona === 'minister' ? 'Describe your policy analysis requirements' :
+                           selectedPersona === 'chro' ? 'Describe your HR analytics needs' :
+                           selectedPersona === 'educationist' ? 'Describe your educational planning requirements' :
+                           'Describe your workforce analysis needs'}
                         </Label>
-                        <Textarea id="prompt" placeholder="Example: Analyze demand for AI and data science skills in Dubai's financial sector for 2025 workforce planning..." value={prompt} onChange={e => setPrompt(e.target.value)} rows={6} className="resize-none text-base leading-relaxed" />
+                        <Textarea 
+                          id="prompt" 
+                          placeholder={
+                            selectedPersona === 'minister' ? 'Example: Analyze current workforce policies and recommend strategic initiatives for UAE Vision 2071 alignment...' :
+                            selectedPersona === 'chro' ? 'Example: Analyze talent acquisition trends and retention strategies for tech companies in Dubai...' :
+                            selectedPersona === 'educationist' ? 'Example: Evaluate skills gap in STEM education and recommend curriculum improvements for 2025...' :
+                            'Example: Analyze demand for AI and data science skills in Dubai\'s financial sector for 2025 workforce planning...'
+                          }
+                          value={prompt} 
+                          onChange={e => setPrompt(e.target.value)} 
+                          rows={6} 
+                          className="resize-none text-base leading-relaxed" 
+                        />
                       </div>
 
                       {/* Knowledge Base Toggle */}
@@ -379,7 +470,7 @@ const Dashboard = () => {
                           <Switch checked={useKnowledgeBase} onCheckedChange={setUseKnowledgeBase} className="data-[state=checked]:bg-primary" />
                         </div>}
 
-                      <Button onClick={handleGenerate} disabled={generating} size="lg" className={`w-full h-12 text-base font-medium transition-all duration-300 ${useKnowledgeBase && uploadedFiles.length > 0 ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700' : 'bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90'}`}>
+                      <Button onClick={handleGenerate} disabled={generating} size="lg" className={`w-full h-12 text-base font-medium transition-all duration-300 ${useKnowledgeBase && uploadedFiles.length > 0 ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700' : `bg-gradient-to-r ${getPersonaStyles(selectedPersona).primaryColor} hover:opacity-90`}`}>
                         {generating ? <>
                             <motion.div animate={{
                         rotate: 360
@@ -388,14 +479,28 @@ const Dashboard = () => {
                         repeat: Infinity,
                         ease: "linear"
                       }} className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-3" />
-                            {useKnowledgeBase && uploadedFiles.length > 0 ? 'Generating Skill Analysis with Knowledge Base...' : 'Generating Skills Analysis...'}
+                            {useKnowledgeBase && uploadedFiles.length > 0 ? 
+                              (selectedPersona === 'minister' ? 'Generating Policy Analysis with Knowledge Base...' :
+                               selectedPersona === 'chro' ? 'Generating HR Analytics with Knowledge Base...' :
+                               selectedPersona === 'educationist' ? 'Generating Educational Analysis with Knowledge Base...' :
+                               'Generating Skill Analysis with Knowledge Base...') :
+                              (selectedPersona === 'minister' ? 'Generating Policy Analysis...' :
+                               selectedPersona === 'chro' ? 'Generating HR Analytics...' :
+                               selectedPersona === 'educationist' ? 'Generating Educational Analysis...' :
+                               'Generating Skills Analysis...')}
                           </> : <>
                             {useKnowledgeBase && uploadedFiles.length > 0 ? <>
                                 <Brain className="h-5 w-5 mr-3" />
-                                Generate Skill Analysis (with Knowledge Base)
+                                {selectedPersona === 'minister' ? 'Generate Policy Analysis (with Knowledge Base)' :
+                                 selectedPersona === 'chro' ? 'Generate HR Analytics (with Knowledge Base)' :
+                                 selectedPersona === 'educationist' ? 'Generate Educational Analysis (with Knowledge Base)' :
+                                 'Generate Skill Analysis (with Knowledge Base)'}
                               </> : <>
                                 <Sparkles className="h-5 w-5 mr-3" />
-                                Generate Skills Analysis
+                                {selectedPersona === 'minister' ? 'Generate Policy Analysis' :
+                                 selectedPersona === 'chro' ? 'Generate HR Analytics' :
+                                 selectedPersona === 'educationist' ? 'Generate Educational Analysis' :
+                                 'Generate Skills Analysis'}
                               </>}
                           </>}
                       </Button>
@@ -404,45 +509,6 @@ const Dashboard = () => {
                 </motion.div>
               </div>
 
-              {/* Feature Highlights */}
-              <motion.div initial={{
-            opacity: 0,
-            y: 20
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} transition={{
-            duration: 0.6,
-            delay: 0.4
-          }} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center p-6 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 hover:border-primary/40 transition-colors">
-                  <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <BarChart3 className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="font-semibold mb-2">Skills Mapping</h3>
-                  <p className="text-sm text-muted-foreground">
-                    AI-powered analysis of workforce skills supply and demand patterns
-                  </p>
-                </div>
-                <div className="text-center p-6 bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20 hover:border-secondary/40 transition-colors rounded-2xl">
-                  <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-secondary/10 flex items-center justify-center">
-                    <Brain className="h-6 w-6 text-secondary" />
-                  </div>
-                  <h3 className="font-semibold mb-2">Workforce Analytics</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Strategic insights for education and employment planning in the UAE
-                  </p>
-                </div>
-                <div className="text-center p-6 rounded-xl bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 hover:border-accent/40 transition-colors">
-                  <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-accent/10 flex items-center justify-center">
-                    <Lightbulb className="h-6 w-6 text-accent" />
-                  </div>
-                  <h3 className="font-semibold mb-2">Policy Intelligence</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Data-driven recommendations for strategic workforce development
-                  </p>
-                </div>
-              </motion.div>
             </motion.div>
           </div>}
 
@@ -529,8 +595,19 @@ const Dashboard = () => {
                       </div>
                       <div className="space-y-3">
                         <PersonaSelector selectedPersona={selectedPersona} onPersonaChange={setSelectedPersona} />
-                        <Textarea placeholder="Modify your workforce analysis requirements..." value={prompt} onChange={e => setPrompt(e.target.value)} rows={3} className="resize-none text-sm" />
-                        <Button onClick={handleGenerate} disabled={generating} size="sm" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                        <Textarea 
+                          placeholder={
+                            selectedPersona === 'minister' ? 'Modify your policy analysis requirements...' :
+                            selectedPersona === 'chro' ? 'Modify your HR analytics requirements...' :
+                            selectedPersona === 'educationist' ? 'Modify your educational planning requirements...' :
+                            'Modify your workforce analysis requirements...'
+                          }
+                          value={prompt} 
+                          onChange={e => setPrompt(e.target.value)} 
+                          rows={3} 
+                          className="resize-none text-sm" 
+                        />
+                        <Button onClick={handleGenerate} disabled={generating} size="sm" className={`w-full bg-gradient-to-r ${getPersonaStyles(selectedPersona).primaryColor} hover:opacity-90 text-white`}>
                           {generating ? <>
                               <motion.div animate={{
                         rotate: 360
@@ -539,11 +616,22 @@ const Dashboard = () => {
                         repeat: Infinity,
                         ease: "linear"
                       }} className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                              {useKnowledgeBase && uploadedFiles.length > 0 ? 'Analyzing...' : 'Generating...'}
+                              {useKnowledgeBase && uploadedFiles.length > 0 ? 
+                                (selectedPersona === 'minister' ? 'Analyzing Policy...' :
+                                 selectedPersona === 'chro' ? 'Analyzing HR Data...' :
+                                 selectedPersona === 'educationist' ? 'Analyzing Education...' :
+                                 'Analyzing...') :
+                                (selectedPersona === 'minister' ? 'Generating Policy...' :
+                                 selectedPersona === 'chro' ? 'Generating HR Analytics...' :
+                                 selectedPersona === 'educationist' ? 'Generating Education Analysis...' :
+                                 'Generating...')}
                             </> : <>
                               {useKnowledgeBase && uploadedFiles.length > 0 ? <>
                                   <Brain className="h-4 w-4 mr-2" />
-                                  Skill Analysis
+                                  {selectedPersona === 'minister' ? 'Policy Analysis' :
+                                   selectedPersona === 'chro' ? 'HR Analytics' :
+                                   selectedPersona === 'educationist' ? 'Education Analysis' :
+                                   'Skill Analysis'}
                                 </> : <>
                                   <Sparkles className="h-4 w-4 mr-2" />
                                   Regenerate
