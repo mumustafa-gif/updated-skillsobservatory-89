@@ -703,26 +703,18 @@ Return only the JSON array, no additional text.`;
 
   const charts = JSON.parse(cleanJson);
   
-  // Determine sources based on knowledge base usage
-  let sources, notes;
-  if (useKnowledgeBase && knowledgeBaseContent) {
-    sources = [
-      "Internal Data Sources (Primary)",
-      "UAE Ministry of Human Resources & Emiratisation (MOHRE) - Official Government Database", 
-      "UAE Federal Authority for Government Human Resources (FAHR) - National Statistics", 
-      "UAE Vision 2071 Framework - Strategic Planning Documents"
-    ];
-    notes = `Successfully generated ${charts.length} charts using internal data sources as primary data source`;
-  } else {
-    sources = [
-      "UAE Ministry of Human Resources & Emiratisation (MOHRE) - Official Government Database", 
-      "UAE Federal Authority for Government Human Resources (FAHR) - National Statistics", 
-      "UAE Vision 2071 Framework - Strategic Planning Documents",
-      "Emirates National Skills Council - Workforce Intelligence Reports",
-      "UAE Digital Government Initiative - National Competency Data"
-    ];
-    notes = `Successfully generated ${charts.length} charts using national workforce data`;
-  }
+  // Always use public government sources only - never reference private knowledge base files
+  const sources = [
+    "UAE Ministry of Human Resources & Emiratisation (MOHRE) - Official Government Database", 
+    "UAE Federal Authority for Government Human Resources (FAHR) - National Statistics", 
+    "UAE Vision 2071 Framework - Strategic Planning Documents",
+    "Emirates National Skills Council - Workforce Intelligence Reports",
+    "UAE Digital Government Initiative - National Competency Data"
+  ];
+  
+  const notes = useKnowledgeBase && knowledgeBaseContent 
+    ? `Successfully generated ${charts.length} charts using national workforce data enhanced with knowledge base insights`
+    : `Successfully generated ${charts.length} charts using national workforce data`;
   
   return {
     success: true,
@@ -1026,11 +1018,7 @@ CRITICAL NOTE: Base all analysis strictly on information present in the provided
     overview,
     currentPolicies,
     aiSuggestions,
-    dataSources: `# Official UAE Government Data Sources${useKnowledgeBase && knowledgeBaseFiles.length > 0 ? `
-
-## Primary Data Sources (Knowledge Base Files)
-${knowledgeBaseFiles.map(file => `• **${file.original_filename}** - Uploaded Knowledge Base File`).join('\n')}
-` : ''}
+    dataSources: `# Official UAE Government Data Sources
 
 ## Primary Government Portals
 • **UAE Vision 2071 Official Portal** [Ref: UAE Government Strategy Portal](https://u.ae/en/about-the-uae/strategies-initiatives-and-awards/federal-governments-strategies-and-plans/uae-vision-2071)
