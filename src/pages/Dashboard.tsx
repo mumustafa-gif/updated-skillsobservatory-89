@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, LogOut, Sparkles, FileText, Link, Brain, Lightbulb, ChevronUp, ChevronDown } from 'lucide-react';
+import { BarChart3, LogOut, Sparkles, FileText, Link, Brain, Lightbulb, ChevronUp, ChevronDown, Crown, Users, GraduationCap, Loader2, RefreshCw } from 'lucide-react';
 import ChartControls from '@/components/dashboard/ChartControls';
 import MultiChartDisplay from '@/components/dashboard/MultiChartDisplay';
 import DiagnosticsPanel from '@/components/dashboard/DiagnosticsPanel';
@@ -480,7 +480,38 @@ const Dashboard = () => {
           }} transition={{
             duration: 0.3
           }} className="p-4">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Current Persona Display */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Users className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium text-primary">Current Persona</span>
+                      </div>
+                      <div className="bg-gradient-to-br from-card to-card/50 border border-primary/20 rounded-xl p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                            {(() => {
+                              const currentPersona = [
+                                { value: 'minister', icon: Crown, color: 'text-purple-600' },
+                                { value: 'chro', icon: Users, color: 'text-blue-600' },
+                                { value: 'educationist', icon: GraduationCap, color: 'text-green-600' }
+                              ].find(p => p.value === selectedPersona);
+                              const IconComponent = currentPersona?.icon || Users;
+                              return <IconComponent className={`h-4 w-4 ${currentPersona?.color || 'text-primary'}`} />;
+                            })()}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-primary">
+                              {selectedPersona === 'minister' ? 'Minister' : 
+                               selectedPersona === 'chro' ? 'CHRO' : 
+                               selectedPersona === 'educationist' ? 'Educationist' : 'Default'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Active analysis perspective</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Configuration Section */}
                     <div className="space-y-4">
                       <div className="flex items-center gap-2 mb-3">
@@ -491,12 +522,13 @@ const Dashboard = () => {
                     </div>
 
                     {/* Regenerate Section */}
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Sparkles className="h-4 w-4 text-accent" />
-                          <span className="text-sm font-medium text-accent">Regenerate</span>
-                        </div>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Sparkles className="h-4 w-4 text-accent" />
+                        <span className="text-sm font-medium text-accent">Regenerate</span>
+                      </div>
                       <div className="space-y-3">
+                        <PersonaSelector selectedPersona={selectedPersona} onPersonaChange={setSelectedPersona} />
                         <Textarea placeholder="Modify your workforce analysis requirements..." value={prompt} onChange={e => setPrompt(e.target.value)} rows={3} className="resize-none text-sm" />
                         <Button onClick={handleGenerate} disabled={generating} size="sm" className="w-full text-white bg-slate-800 hover:bg-slate-700">
                           {generating ? <>

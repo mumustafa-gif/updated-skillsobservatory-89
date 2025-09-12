@@ -205,12 +205,40 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
     }
   };
 
-  const suggestedQuestions = [
-    "What are the main insights from this analysis?",
-    "What policy recommendations emerge from this data?",
-    "How can we improve workforce skills based on these findings?",
-    "What are the key challenges identified in the report?",
-  ];
+  const getPersonaSuggestedQuestions = (persona: string) => {
+    switch (persona) {
+      case 'minister':
+        return [
+          "What are the strategic policy implications of this analysis?",
+          "How does this data support UAE Vision 2071 objectives?",
+          "What executive decisions should be prioritized?",
+          "What are the national workforce development opportunities?"
+        ];
+      case 'chro':
+        return [
+          "What talent acquisition strategies emerge from this data?",
+          "How can we optimize our workforce development programs?",
+          "What are the key HR metrics and performance indicators?",
+          "Which skills gaps need immediate attention?"
+        ];
+      case 'educationist':
+        return [
+          "How can we enhance learning outcomes based on these insights?",
+          "What curriculum adjustments are recommended?",
+          "Which educational programs show the highest impact?",
+          "How can we improve student engagement and success rates?"
+        ];
+      default:
+        return [
+          "What are the main insights from this analysis?",
+          "What policy recommendations emerge from this data?",
+          "How can we improve workforce skills based on these findings?",
+          "What are the key challenges identified in the report?"
+        ];
+    }
+  };
+
+  const suggestedQuestions = getPersonaSuggestedQuestions(persona);
 
   const handleSuggestedQuestion = (question: string) => {
     setInputValue(question);
