@@ -78,7 +78,7 @@ serve(async (req) => {
       }
     };
 
-    const systemPrompt = getPersonaSystemPrompt(persona);
+    const systemPrompt = getPersonaSystemPrompt(persona) + ` Your task is to analyze data and create comprehensive, professional visualizations with detailed insights.
 
 ${isMapRequest ? `
 IMPORTANT: For geographic/map requests, return a Mapbox configuration with this exact structure and ALWAYS use the colorful outdoor terrain style:
