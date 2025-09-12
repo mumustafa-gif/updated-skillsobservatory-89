@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import { Brain, Database, BarChart3, Sparkles, Zap, Target, Lightbulb } from 'lucide-react';
+import { Brain, Database, BarChart3, Sparkles } from 'lucide-react';
 
 interface AIAgentLoaderProps {
   visible: boolean;
@@ -190,26 +190,6 @@ const AIAgentLoader: React.FC<AIAgentLoaderProps> = ({ visible }) => {
             </motion.div>
           </motion.div>
 
-          {/* Feature Highlights */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-4"
-          >
-            <div className="text-center p-4 rounded-lg bg-primary/20 border border-primary/30">
-              <Target className="h-6 w-6 text-primary mx-auto mb-2" />
-              <p className="text-sm font-medium text-primary">Smart Analytics</p>
-            </div>
-            <div className="text-center p-4 rounded-lg bg-accent/20 border border-accent/30">
-              <Lightbulb className="h-6 w-6 text-accent mx-auto mb-2" />
-              <p className="text-sm font-medium text-accent">AI Insights</p>
-            </div>
-            <div className="text-center p-4 rounded-lg bg-primary/15 border border-primary/25">
-              <Zap className="h-6 w-6 text-primary mx-auto mb-2" />
-              <p className="text-sm font-medium text-primary">Real-time Processing</p>
-            </div>
-          </motion.div>
 
           {/* Animated Background Elements */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-lg">
