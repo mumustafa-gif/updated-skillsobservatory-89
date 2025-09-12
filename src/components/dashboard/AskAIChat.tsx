@@ -19,9 +19,10 @@ interface Message {
 interface AskAIChatProps {
   generationResult: any;
   knowledgeFileIds?: string[];
+  persona?: string;
 }
 
-const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileIds = [] }) => {
+const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileIds = [], persona = 'minister' }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -102,6 +103,7 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
           question: userMessage.content,
           generationResult,
           knowledgeFileIds,
+          persona,
         }),
       });
 

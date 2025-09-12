@@ -331,7 +331,7 @@ serve(async (req) => {
       });
     }
 
-    const { prompt, numberOfCharts = 1, chartTypes = [], useKnowledgeBase = false, knowledgeBaseFiles = [], generateDetailedReports = true } = await req.json();
+    const { prompt, numberOfCharts = 1, chartTypes = [], useKnowledgeBase = false, knowledgeBaseFiles = [], generateDetailedReports = true, persona = 'minister' } = await req.json();
 
     console.log(`📊 Processing request: ${prompt.slice(0, 100)}...`);
     

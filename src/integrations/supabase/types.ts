@@ -235,6 +235,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          selected_persona: Database["public"]["Enums"]["persona_type"] | null
           updated_at: string
           user_id: string
         }
@@ -243,6 +244,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          selected_persona?: Database["public"]["Enums"]["persona_type"] | null
           updated_at?: string
           user_id: string
         }
@@ -251,6 +253,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          selected_persona?: Database["public"]["Enums"]["persona_type"] | null
           updated_at?: string
           user_id?: string
         }
@@ -264,7 +267,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      persona_type: "minister" | "chro" | "educationist"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -391,6 +394,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      persona_type: ["minister", "chro", "educationist"],
+    },
   },
 } as const

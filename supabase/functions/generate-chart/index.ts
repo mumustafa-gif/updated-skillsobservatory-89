@@ -20,7 +20,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, knowledgeBaseFiles = [] } = await req.json();
+    const { prompt, knowledgeBaseFiles = [], persona = 'minister' } = await req.json();
     
     // Get user from auth header
     const authHeader = req.headers.get('authorization');
@@ -64,8 +64,21 @@ serve(async (req) => {
       prompt.toLowerCase().includes('region') ||
       prompt.toLowerCase().includes('spatial');
 
-    // Create the system prompt for chart generation
-    const systemPrompt = `You are a professional chart generation assistant for UAE Ministry data visualization. Generate valid Apache ECharts configuration JSON with enterprise-grade styling and accessibility.
+    // Create persona-specific system prompt for chart generation
+    const getPersonaSystemPrompt = (persona: string) => {
+      switch (persona) {
+        case 'minister':
+          return `You are a professional chart generation assistant creating executive-level visualizations for UAE Ministers and senior government officials. Focus on strategic insights, policy implications, and high-level KPIs. Generate valid Apache ECharts configuration JSON with enterprise-grade styling.`;
+        case 'chro':
+          return `You are a professional chart generation assistant creating workforce analytics dashboards for Chief Human Resources Officers. Focus on talent metrics, employee engagement, retention data, and organizational development insights. Generate valid Apache ECharts configuration JSON with enterprise-grade styling.`;
+        case 'educationist':
+          return `You are a professional chart generation assistant creating learning analytics dashboards for education leaders and policymakers. Focus on student outcomes, curriculum effectiveness, skill development metrics, and educational performance insights. Generate valid Apache ECharts configuration JSON with enterprise-grade styling.`;
+        default:
+          return `You are a professional chart generation assistant for data visualization. Generate valid Apache ECharts configuration JSON with enterprise-grade styling and accessibility.`;
+      }
+    };
+
+    const systemPrompt = getPersonaSystemPrompt(persona);
 
 ${isMapRequest ? `
 IMPORTANT: For geographic/map requests, return a Mapbox configuration with this exact structure and ALWAYS use the colorful outdoor terrain style:

@@ -18,9 +18,10 @@ interface DetailedReportsProps {
     };
   } | null;
   knowledgeFileIds?: string[];
+  persona?: string;
 }
 
-const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult, knowledgeFileIds = [] }) => {
+const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult, knowledgeFileIds = [], persona = 'minister' }) => {
   const formatReport = (report: string | any) => {
     if (!report) return '';
     
@@ -602,6 +603,7 @@ const DetailedReports: React.FC<DetailedReportsProps> = ({ generationResult, kno
               <AskAIChat 
                 generationResult={generationResult}
                 knowledgeFileIds={knowledgeFileIds}
+                persona={persona}
               />
             </TabsContent>
           </Tabs>

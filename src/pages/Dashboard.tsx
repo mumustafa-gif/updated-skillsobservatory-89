@@ -18,6 +18,7 @@ import PolicyAnalysis from '@/components/dashboard/PolicyAnalysis';
 import ChartCustomizer from '@/components/dashboard/ChartCustomizer';
 import AIAgentLoader from '@/components/dashboard/AIAgentLoader';
 import DetailedReports from '@/components/dashboard/DetailedReports';
+import PersonaSelector from '@/components/dashboard/PersonaSelector';
 interface UploadedFile {
   id: string;
   filename: string;
@@ -44,6 +45,7 @@ const Dashboard = () => {
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
   const [configMinimized, setConfigMinimized] = useState(false);
+  const [selectedPersona, setSelectedPersona] = useState('minister');
   const {
     user,
     signOut,
@@ -120,7 +122,8 @@ const Dashboard = () => {
         chartTypes,
         useKnowledgeBase,
         knowledgeBaseFiles: useKnowledgeBase ? uploadedFiles.map(f => f.id) : [],
-        generateDetailedReports: true
+        generateDetailedReports: true,
+        persona: selectedPersona
       };
       console.log('Request body:', requestBody);
       console.log('Request body stringified:', JSON.stringify(requestBody));
@@ -292,6 +295,19 @@ const Dashboard = () => {
                   Supporting strategic planning in education, employment, and policy development.
                 </p>
               </div>
+
+              {/* Persona Selector */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="mb-8"
+              >
+                <PersonaSelector 
+                  selectedPersona={selectedPersona}
+                  onPersonaChange={setSelectedPersona}
+                />
+              </motion.div>
 
               {/* Centered Configuration Cards */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -563,7 +579,7 @@ const Dashboard = () => {
               duration: 0.5,
               delay: 0.4
             }} className="sticky top-6">
-                  <DetailedReports generationResult={generationResult} />
+                  <DetailedReports generationResult={generationResult} persona={selectedPersona} />
                 </motion.div>
               </div>
             </div>
