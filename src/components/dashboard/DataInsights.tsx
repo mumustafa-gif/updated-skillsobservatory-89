@@ -61,15 +61,15 @@ const DataInsights: React.FC<DataInsightsProps> = ({ insights, visible }) => {
                   transition={{ delay: index * 0.15, duration: 0.4 }}
                   className="group relative overflow-hidden"
                 >
-                  <div className="flex items-start gap-4 p-4 bg-white/70 dark:bg-gray-800/50 rounded-xl border border-amber-200/50 dark:border-amber-800/30 hover:border-amber-300 dark:hover:border-amber-700 transition-all duration-300 hover:shadow-md">
+                  <div className="flex items-start gap-4 p-4 bg-card/70 rounded-xl border border-accent/20 hover:border-accent/40 transition-all duration-300 hover:shadow-md">
                     {/* Priority indicator */}
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 text-white text-sm font-bold shadow-sm flex-shrink-0">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-primary text-accent-foreground text-sm font-bold shadow-sm flex-shrink-0">
                       {index + 1}
                     </div>
                     
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-200 break-words">
+                      <p className="text-sm leading-relaxed text-foreground break-words">
                         {insight}
                       </p>
                     </div>

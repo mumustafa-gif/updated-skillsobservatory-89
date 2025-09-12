@@ -164,7 +164,7 @@ const AIAgentLoader: React.FC<AIAgentLoaderProps> = ({ visible }) => {
                 className="p-3 rounded-full mr-4"
                 style={{ backgroundColor: currentStageData.color }}
               >
-                <CurrentIcon className="h-6 w-6 text-white" />
+                <CurrentIcon className="h-6 w-6 text-primary-foreground" />
               </motion.div>
               <div>
                 <h3 className="text-xl font-semibold">{currentStageData.title}</h3>

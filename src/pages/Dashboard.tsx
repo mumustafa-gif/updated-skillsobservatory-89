@@ -285,7 +285,7 @@ const Dashboard = () => {
               repeat: Infinity,
               ease: "easeInOut"
             }} className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-r from-primary via-secondary to-accent p-5 shadow-lg">
-                  <Sparkles className="h-10 w-10 text-white" />
+                  <Sparkles className="h-10 w-10 text-primary-foreground" />
                 </motion.div>
                 <h1 className="text-4xl font-bold mb-4 text-primary">
                   Skills Observatory
@@ -424,8 +424,8 @@ const Dashboard = () => {
                     AI-powered analysis of workforce skills supply and demand patterns
                   </p>
                 </div>
-                <div className="text-center p-6 bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20 hover:border-secondary/40 transition-colors rounded-2xl bg-gray-200">
-                  <div className="w-12 h-12 mx-auto mb-4 rounded-lg flex items-center justify-center bg-gray-400">
+                <div className="text-center p-6 bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20 hover:border-secondary/40 transition-colors rounded-2xl">
+                  <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-secondary/10 flex items-center justify-center">
                     <Brain className="h-6 w-6 text-secondary" />
                   </div>
                   <h3 className="font-semibold mb-2">Workforce Analytics</h3>
@@ -530,7 +530,7 @@ const Dashboard = () => {
                       <div className="space-y-3">
                         <PersonaSelector selectedPersona={selectedPersona} onPersonaChange={setSelectedPersona} />
                         <Textarea placeholder="Modify your workforce analysis requirements..." value={prompt} onChange={e => setPrompt(e.target.value)} rows={3} className="resize-none text-sm" />
-                        <Button onClick={handleGenerate} disabled={generating} size="sm" className="w-full text-white bg-slate-800 hover:bg-slate-700">
+                        <Button onClick={handleGenerate} disabled={generating} size="sm" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                           {generating ? <>
                               <motion.div animate={{
                         rotate: 360

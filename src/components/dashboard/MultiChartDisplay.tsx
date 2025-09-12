@@ -647,7 +647,7 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
                 <CardHeader className="pb-2 px-3 sm:px-4 lg:px-6 pt-3 sm:pt-4">
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex-1">
-                      <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-800 dark:text-gray-200 line-clamp-2 leading-tight">
+                      <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-foreground line-clamp-2 leading-tight">
                         {chartOption.title?.text || `Skills Analysis Chart ${index + 1}`}
                       </h3>
                       {chartOption.title?.subtext && (

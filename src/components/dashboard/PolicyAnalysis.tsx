@@ -83,7 +83,7 @@ const PolicyAnalysis: React.FC<PolicyAnalysisProps> = ({ policyData, visible }) 
                     transition={{ delay: index * 0.1, duration: 0.4 }}
                     className="group relative overflow-hidden"
                   >
-                    <div className="p-4 bg-white/70 dark:bg-gray-800/50 rounded-xl border border-blue-200/50 dark:border-blue-800/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-300 hover:shadow-md">
+                    <div className="p-4 bg-card/70 rounded-xl border border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-md">
                       <div className="flex items-start gap-4">
                         <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0 space-y-3">
@@ -157,8 +157,8 @@ const PolicyAnalysis: React.FC<PolicyAnalysisProps> = ({ policyData, visible }) 
                   transition={{ delay: index * 0.1, duration: 0.4 }}
                   className="group relative overflow-hidden"
                 >
-                  <div className="flex items-start gap-4 p-4 bg-white/70 dark:bg-gray-800/50 rounded-xl border border-purple-200/50 dark:border-purple-800/30 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-300 hover:shadow-md">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 text-white text-sm font-bold shadow-sm flex-shrink-0">
+                  <div className="flex items-start gap-4 p-4 bg-card/70 rounded-xl border border-accent/20 hover:border-accent/40 transition-all duration-300 hover:shadow-md">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-primary text-accent-foreground text-sm font-bold shadow-sm flex-shrink-0">
                       {index + 1}
                     </div>
                     <div className="flex-1 min-w-0">
