@@ -369,8 +369,8 @@ serve(async (req) => {
 
     // Run chart generation and insights in parallel for better performance
     const [chartsResult, insightsResult] = await Promise.allSettled([
-      generateCharts(prompt, numberOfCharts, chartTypes, knowledgeBaseContent, useKnowledgeBase),
-      generateDetailedReports ? generateInsights(prompt, numberOfCharts, knowledgeBaseContent, useKnowledgeBase) : Promise.resolve([])
+      generateCharts(prompt, numberOfCharts, chartTypes, knowledgeBaseContent, useKnowledgeBase, persona),
+      generateDetailedReports ? generateInsights(prompt, numberOfCharts, knowledgeBaseContent, useKnowledgeBase, persona) : Promise.resolve([])
     ]);
 
     // Handle charts result
@@ -525,7 +525,7 @@ function extractKeywords(prompt: string): string[] {
 }
 
 // Helper functions for better organization and parallel processing
-async function generateCharts(prompt: string, numberOfCharts: number, chartTypes: string[], knowledgeBaseContent: string, useKnowledgeBase: boolean = false) {
+async function generateCharts(prompt: string, numberOfCharts: number, chartTypes: string[], knowledgeBaseContent: string, useKnowledgeBase: boolean = false, persona: string = 'minister') {
   const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
   if (!openAIApiKey) {
     throw new Error('OpenAI API key not configured');
@@ -538,13 +538,44 @@ async function generateCharts(prompt: string, numberOfCharts: number, chartTypes
     prompt.toLowerCase().includes('location') ||
     prompt.toLowerCase().includes('region');
 
-  // Enhanced prompt generation based on knowledge base usage
+  // Enhanced prompt generation based on knowledge base usage and persona
+  const getPersonaContext = (persona: string) => {
+    switch (persona) {
+      case 'minister':
+        return `You are creating charts for UAE Ministry officials and senior government executives. Focus on:
+- Strategic policy implications and national-level metrics
+- Executive dashboard style with clear KPIs and performance indicators
+- Government sector analysis and public policy impact
+- Vision 2071 alignment and strategic objectives
+- Use official government colors (navy blue, gold, white) and professional styling`;
+      case 'chro':
+        return `You are creating charts for Chief Human Resources Officers and HR leadership. Focus on:
+- Workforce analytics and talent development metrics
+- Employee engagement, retention, and performance indicators
+- Skills gap analysis and training effectiveness
+- Organizational development and capability building
+- Use HR-focused colors (blue, green, orange) and people-centric styling`;
+      case 'educationist':
+        return `You are creating charts for educational leaders and learning strategists. Focus on:
+- Learning outcomes and educational effectiveness metrics
+- Skills development pathways and curriculum analysis
+- Student performance and achievement indicators
+- Educational ROI and learning investment analysis
+- Use education-focused colors (green, purple, teal) and learning-centric styling`;
+      default:
+        return `You are creating professional data visualizations with clear insights and actionable information.`;
+    }
+  };
+
   let chartPrompt;
   
   if (useKnowledgeBase && knowledgeBaseContent) {
     chartPrompt = `You are an expert data analyst. Create ${numberOfCharts} interactive chart configuration(s) for Apache ECharts based on this request: "${prompt}"
 
 Chart types requested: ${chartTypes.join(', ')}
+
+PERSONA CONTEXT:
+${getPersonaContext(persona)}
 
 IMPORTANT: Use the following internal data sources as your PRIMARY DATA SOURCE:
 ${knowledgeBaseContent}
@@ -585,6 +616,9 @@ Return only the JSON array, no additional text.`;
     chartPrompt = `Create ${numberOfCharts} interactive chart configuration(s) for Apache ECharts based on this request: "${prompt}"
 
 Chart types requested: ${chartTypes.join(', ')}
+
+PERSONA CONTEXT:
+${getPersonaContext(persona)}
 
 CRITICAL REQUIREMENTS TO AVOID HALLUCINATIONS:
 1. ONLY use verified UAE government statistics and official data sources
@@ -698,16 +732,47 @@ Return only the JSON array, no additional text.`;
   };
 }
 
-async function generateInsights(prompt: string, numberOfCharts: number, knowledgeBaseContent: string = '', useKnowledgeBase: boolean = false) {
+async function generateInsights(prompt: string, numberOfCharts: number, knowledgeBaseContent: string = '', useKnowledgeBase: boolean = false, persona: string = 'minister') {
   const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
   if (!openAIApiKey) {
     return [`Analysis completed for ${numberOfCharts} charts based on: ${prompt.slice(0, 100)}...`];
   }
 
+  const getPersonaInsightsContext = (persona: string) => {
+    switch (persona) {
+      case 'minister':
+        return `Generate insights for UAE Ministry officials and senior government executives. Focus on:
+- Strategic policy implications and national-level workforce trends
+- Government sector performance and public service effectiveness
+- Vision 2071 alignment and strategic workforce objectives
+- Policy recommendations and implementation priorities
+- Executive-level decision-making support and strategic intelligence`;
+      case 'chro':
+        return `Generate insights for Chief Human Resources Officers and HR leadership. Focus on:
+- Workforce analytics and talent development opportunities
+- Employee engagement, retention, and performance optimization
+- Skills gap analysis and training effectiveness
+- Organizational development and capability building
+- HR strategy recommendations and people-centric solutions`;
+      case 'educationist':
+        return `Generate insights for educational leaders and learning strategists. Focus on:
+- Learning outcomes and educational effectiveness metrics
+- Skills development pathways and curriculum optimization
+- Student performance and achievement indicators
+- Educational ROI and learning investment analysis
+- Learning strategy recommendations and educational excellence`;
+      default:
+        return `Generate professional insights with clear recommendations and actionable intelligence.`;
+    }
+  };
+
   let insightsPrompt;
   
   if (useKnowledgeBase && knowledgeBaseContent) {
     insightsPrompt = `Generate ${numberOfCharts} key insights for UAE workforce analysis based on this request: "${prompt}".
+
+PERSONA CONTEXT:
+${getPersonaInsightsContext(persona)}
 
 Use the following internal data sources as your primary source:
 ${knowledgeBaseContent.slice(0, 3000)}
@@ -723,6 +788,9 @@ CRITICAL REQUIREMENTS FOR AUTHENTIC INSIGHTS:
 Return a JSON array of strings with validated insights.`;
   } else {
     insightsPrompt = `Generate ${numberOfCharts} key insights for UAE workforce analysis based on this request: "${prompt}".
+
+PERSONA CONTEXT:
+${getPersonaInsightsContext(persona)}
 
 CRITICAL REQUIREMENTS FOR AUTHENTIC INSIGHTS:
 1. Base insights ONLY on verified UAE government data and official statistics
@@ -747,7 +815,7 @@ Return a JSON array of strings with evidence-based insights.`;
         messages: [
           { 
             role: 'system', 
-            content: 'You are an expert data analyst for UAE workforce skills. Extract key insights and provide actionable intelligence.'
+            content: `You are an expert data analyst for UAE workforce skills tailored for ${persona} perspective. Extract key insights and provide actionable intelligence that aligns with ${persona} decision-making needs and strategic priorities.`
           },
           { role: 'user', content: insightsPrompt }
         ],

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
@@ -34,7 +34,7 @@ interface GenerationResult {
     report: string;
   };
 }
-const Dashboard = () => {
+const Dashboard = memo(() => {
   const [prompt, setPrompt] = useState('');
   const [generating, setGenerating] = useState(false);
   const [numberOfCharts, setNumberOfCharts] = useState(1);
@@ -45,7 +45,10 @@ const Dashboard = () => {
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
   const [configMinimized, setConfigMinimized] = useState(false);
-  const [selectedPersona, setSelectedPersona] = useState('minister');
+  const { selectedPersona, updatePersona } = useAuth();
+  
+  // Use default persona if none is selected yet
+  const currentPersona = selectedPersona || 'minister';
 
   // Persona-specific styling functions
   const getPersonaStyles = (persona: string) => {
@@ -136,10 +139,10 @@ const Dashboard = () => {
 
   // Load user's uploaded files
   useEffect(() => {
-    if (user) {
+    if (user && !loading) {
       loadUploadedFiles();
     }
-  }, [user]);
+  }, [user, loading]);
 
   // Update chart types array when number of charts changes
   useEffect(() => {
@@ -197,7 +200,7 @@ const Dashboard = () => {
         useKnowledgeBase,
         knowledgeBaseFiles: useKnowledgeBase ? uploadedFiles.map(f => f.id) : [],
         generateDetailedReports: true,
-        persona: selectedPersona
+        persona: currentPersona
       };
       console.log('Request body:', requestBody);
       console.log('Request body stringified:', JSON.stringify(requestBody));
@@ -290,6 +293,7 @@ const Dashboard = () => {
           ease: "linear"
         }} className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
           <p>Loading...</p>
+          <p className="text-sm text-muted-foreground mt-2">Initializing application...</p>
         </div>
       </div>;
   }
@@ -358,17 +362,17 @@ const Dashboard = () => {
               duration: 4,
               repeat: Infinity,
               ease: "easeInOut"
-            }} className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${getPersonaStyles(selectedPersona).primaryColor} p-5 shadow-lg`}>
+            }} className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${getPersonaStyles(currentPersona).primaryColor} p-5 shadow-lg`}>
                   <Sparkles className="h-10 w-10 text-white" />
                 </motion.div>
-                <h1 className={`text-4xl font-bold mb-2 ${getPersonaStyles(selectedPersona).iconColor}`}>
-                  {getPersonaStyles(selectedPersona).title}
+                <h1 className={`text-4xl font-bold mb-2 ${getPersonaStyles(currentPersona).iconColor}`}>
+                  {getPersonaStyles(currentPersona).title}
                 </h1>
                 <p className="text-lg font-medium text-muted-foreground mb-3">
-                  {getPersonaStyles(selectedPersona).subtitle}
+                  {getPersonaStyles(currentPersona).subtitle}
                 </p>
                 <p className="text-base text-muted-foreground max-w-2xl mx-auto">
-                  {getPersonaStyles(selectedPersona).description}
+                  {getPersonaStyles(currentPersona).description}
                 </p>
               </div>
 
@@ -379,10 +383,10 @@ const Dashboard = () => {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="mb-8"
               >
-                <PersonaSelector 
-                  selectedPersona={selectedPersona}
-                  onPersonaChange={setSelectedPersona}
-                />
+                  <PersonaSelector 
+                    selectedPersona={selectedPersona}
+                    onPersonaChange={updatePersona}
+                  />
               </motion.div>
 
               {/* Centered Configuration Cards */}
@@ -398,11 +402,11 @@ const Dashboard = () => {
               duration: 0.6,
               delay: 0.2
             }}>
-                  <Card className={`h-full bg-gradient-to-br from-card to-card/50 ${getPersonaStyles(selectedPersona).borderColor} shadow-lg hover:shadow-xl transition-all duration-300`}>
+                  <Card className={`h-full bg-gradient-to-br from-card to-card/50 ${getPersonaStyles(currentPersona).borderColor} shadow-lg hover:shadow-xl transition-all duration-300`}>
                     <CardHeader className="pb-4">
                       <CardTitle className="flex items-center gap-3 text-xl">
-                        <div className={`p-2 rounded-lg ${getPersonaStyles(selectedPersona).iconBg}`}>
-                          <BarChart3 className={`h-5 w-5 ${getPersonaStyles(selectedPersona).iconColor}`} />
+                        <div className={`p-2 rounded-lg ${getPersonaStyles(currentPersona).iconBg}`}>
+                          <BarChart3 className={`h-5 w-5 ${getPersonaStyles(currentPersona).iconColor}`} />
                         </div>
                         Chart Configuration
                       </CardTitle>
@@ -424,11 +428,11 @@ const Dashboard = () => {
               duration: 0.6,
               delay: 0.3
             }}>
-                  <Card className={`h-full bg-gradient-to-br from-card to-card/50 ${getPersonaStyles(selectedPersona).borderColor} shadow-lg hover:shadow-xl transition-all duration-300`}>
+                  <Card className={`h-full bg-gradient-to-br from-card to-card/50 ${getPersonaStyles(currentPersona).borderColor} shadow-lg hover:shadow-xl transition-all duration-300`}>
                     <CardHeader className="pb-4">
                       <CardTitle className="flex items-center gap-3 text-xl">
-                        <div className={`p-2 rounded-lg ${getPersonaStyles(selectedPersona).iconBg}`}>
-                          <Sparkles className={`h-5 w-5 ${getPersonaStyles(selectedPersona).iconColor}`} />
+                        <div className={`p-2 rounded-lg ${getPersonaStyles(currentPersona).iconBg}`}>
+                          <Sparkles className={`h-5 w-5 ${getPersonaStyles(currentPersona).iconColor}`} />
                         </div>
                         Generate Analysis
                       </CardTitle>
@@ -436,17 +440,17 @@ const Dashboard = () => {
                     <CardContent className="space-y-6">
                       <div className="space-y-4">
                         <Label htmlFor="prompt" className="text-base font-medium">
-                          {selectedPersona === 'minister' ? 'Describe your policy analysis requirements' :
-                           selectedPersona === 'chro' ? 'Describe your HR analytics needs' :
-                           selectedPersona === 'educationist' ? 'Describe your educational planning requirements' :
+                          {currentPersona === 'minister' ? 'Describe your policy analysis requirements' :
+                           currentPersona === 'chro' ? 'Describe your HR analytics needs' :
+                           currentPersona === 'educationist' ? 'Describe your educational planning requirements' :
                            'Describe your workforce analysis needs'}
                         </Label>
                         <Textarea 
                           id="prompt" 
                           placeholder={
-                            selectedPersona === 'minister' ? 'Example: Analyze current workforce policies and recommend strategic initiatives for UAE Vision 2071 alignment...' :
-                            selectedPersona === 'chro' ? 'Example: Analyze talent acquisition trends and retention strategies for tech companies in Dubai...' :
-                            selectedPersona === 'educationist' ? 'Example: Evaluate skills gap in STEM education and recommend curriculum improvements for 2025...' :
+                            currentPersona === 'minister' ? 'Example: Analyze current workforce policies and recommend strategic initiatives for UAE Vision 2071 alignment...' :
+                            currentPersona === 'chro' ? 'Example: Analyze talent acquisition trends and retention strategies for tech companies in Dubai...' :
+                            currentPersona === 'educationist' ? 'Example: Evaluate skills gap in STEM education and recommend curriculum improvements for 2025...' :
                             'Example: Analyze demand for AI and data science skills in Dubai\'s financial sector for 2025 workforce planning...'
                           }
                           value={prompt} 
@@ -470,7 +474,7 @@ const Dashboard = () => {
                           <Switch checked={useKnowledgeBase} onCheckedChange={setUseKnowledgeBase} className="data-[state=checked]:bg-primary" />
                         </div>}
 
-                      <Button onClick={handleGenerate} disabled={generating} size="lg" className={`w-full h-12 text-base font-medium transition-all duration-300 ${useKnowledgeBase && uploadedFiles.length > 0 ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700' : `bg-gradient-to-r ${getPersonaStyles(selectedPersona).primaryColor} hover:opacity-90`}`}>
+                      <Button onClick={handleGenerate} disabled={generating} size="lg" className={`w-full h-12 text-base font-medium transition-all duration-300 ${useKnowledgeBase && uploadedFiles.length > 0 ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700' : `bg-gradient-to-r ${getPersonaStyles(currentPersona).primaryColor} hover:opacity-90`}`}>
                         {generating ? <>
                             <motion.div animate={{
                         rotate: 360
@@ -480,26 +484,26 @@ const Dashboard = () => {
                         ease: "linear"
                       }} className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-3" />
                             {useKnowledgeBase && uploadedFiles.length > 0 ? 
-                              (selectedPersona === 'minister' ? 'Generating Policy Analysis with Knowledge Base...' :
-                               selectedPersona === 'chro' ? 'Generating HR Analytics with Knowledge Base...' :
-                               selectedPersona === 'educationist' ? 'Generating Educational Analysis with Knowledge Base...' :
+                              (currentPersona === 'minister' ? 'Generating Policy Analysis with Knowledge Base...' :
+                               currentPersona === 'chro' ? 'Generating HR Analytics with Knowledge Base...' :
+                               currentPersona === 'educationist' ? 'Generating Educational Analysis with Knowledge Base...' :
                                'Generating Skill Analysis with Knowledge Base...') :
-                              (selectedPersona === 'minister' ? 'Generating Policy Analysis...' :
-                               selectedPersona === 'chro' ? 'Generating HR Analytics...' :
-                               selectedPersona === 'educationist' ? 'Generating Educational Analysis...' :
+                              (currentPersona === 'minister' ? 'Generating Policy Analysis...' :
+                               currentPersona === 'chro' ? 'Generating HR Analytics...' :
+                               currentPersona === 'educationist' ? 'Generating Educational Analysis...' :
                                'Generating Skills Analysis...')}
                           </> : <>
                             {useKnowledgeBase && uploadedFiles.length > 0 ? <>
                                 <Brain className="h-5 w-5 mr-3" />
-                                {selectedPersona === 'minister' ? 'Generate Policy Analysis (with Knowledge Base)' :
-                                 selectedPersona === 'chro' ? 'Generate HR Analytics (with Knowledge Base)' :
-                                 selectedPersona === 'educationist' ? 'Generate Educational Analysis (with Knowledge Base)' :
+                                {currentPersona === 'minister' ? 'Generate Policy Analysis (with Knowledge Base)' :
+                                 currentPersona === 'chro' ? 'Generate HR Analytics (with Knowledge Base)' :
+                                 currentPersona === 'educationist' ? 'Generate Educational Analysis (with Knowledge Base)' :
                                  'Generate Skill Analysis (with Knowledge Base)'}
                               </> : <>
                                 <Sparkles className="h-5 w-5 mr-3" />
-                                {selectedPersona === 'minister' ? 'Generate Policy Analysis' :
-                                 selectedPersona === 'chro' ? 'Generate HR Analytics' :
-                                 selectedPersona === 'educationist' ? 'Generate Educational Analysis' :
+                                {currentPersona === 'minister' ? 'Generate Policy Analysis' :
+                                 currentPersona === 'chro' ? 'Generate HR Analytics' :
+                                 currentPersona === 'educationist' ? 'Generate Educational Analysis' :
                                  'Generate Skills Analysis'}
                               </>}
                           </>}
@@ -557,20 +561,20 @@ const Dashboard = () => {
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
                             {(() => {
-                              const currentPersona = [
+                              const personaData = [
                                 { value: 'minister', icon: Crown, color: 'text-purple-600' },
                                 { value: 'chro', icon: Users, color: 'text-blue-600' },
                                 { value: 'educationist', icon: GraduationCap, color: 'text-green-600' }
-                              ].find(p => p.value === selectedPersona);
-                              const IconComponent = currentPersona?.icon || Users;
-                              return <IconComponent className={`h-4 w-4 ${currentPersona?.color || 'text-primary'}`} />;
+                              ].find(p => p.value === currentPersona);
+                              const IconComponent = personaData?.icon || Users;
+                              return <IconComponent className={`h-4 w-4 ${personaData?.color || 'text-primary'}`} />;
                             })()}
                           </div>
                           <div>
                             <p className="text-sm font-medium text-primary">
-                              {selectedPersona === 'minister' ? 'Minister' : 
-                               selectedPersona === 'chro' ? 'CHRO' : 
-                               selectedPersona === 'educationist' ? 'Educationist' : 'Default'}
+                              {currentPersona === 'minister' ? 'Minister' : 
+                               currentPersona === 'chro' ? 'CHRO' : 
+                               currentPersona === 'educationist' ? 'Educationist' : 'Default'}
                             </p>
                             <p className="text-xs text-muted-foreground">Active analysis perspective</p>
                           </div>
@@ -593,13 +597,13 @@ const Dashboard = () => {
                         <Sparkles className="h-4 w-4 text-accent" />
                         <span className="text-sm font-medium text-accent">Regenerate</span>
                       </div>
-                      <div className="space-y-3">
-                        <PersonaSelector selectedPersona={selectedPersona} onPersonaChange={setSelectedPersona} />
+                        <div className="space-y-3">
+                         <PersonaSelector selectedPersona={selectedPersona} onPersonaChange={updatePersona} />
                         <Textarea 
                           placeholder={
-                            selectedPersona === 'minister' ? 'Modify your policy analysis requirements...' :
-                            selectedPersona === 'chro' ? 'Modify your HR analytics requirements...' :
-                            selectedPersona === 'educationist' ? 'Modify your educational planning requirements...' :
+                            currentPersona === 'minister' ? 'Modify your policy analysis requirements...' :
+                            currentPersona === 'chro' ? 'Modify your HR analytics requirements...' :
+                            currentPersona === 'educationist' ? 'Modify your educational planning requirements...' :
                             'Modify your workforce analysis requirements...'
                           }
                           value={prompt} 
@@ -607,7 +611,7 @@ const Dashboard = () => {
                           rows={3} 
                           className="resize-none text-sm" 
                         />
-                        <Button onClick={handleGenerate} disabled={generating} size="sm" className={`w-full bg-gradient-to-r ${getPersonaStyles(selectedPersona).primaryColor} hover:opacity-90 text-white`}>
+                        <Button onClick={handleGenerate} disabled={generating} size="sm" className={`w-full bg-gradient-to-r ${getPersonaStyles(currentPersona).primaryColor} hover:opacity-90 text-white`}>
                           {generating ? <>
                               <motion.div animate={{
                         rotate: 360
@@ -617,20 +621,20 @@ const Dashboard = () => {
                         ease: "linear"
                       }} className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
                               {useKnowledgeBase && uploadedFiles.length > 0 ? 
-                                (selectedPersona === 'minister' ? 'Analyzing Policy...' :
-                                 selectedPersona === 'chro' ? 'Analyzing HR Data...' :
-                                 selectedPersona === 'educationist' ? 'Analyzing Education...' :
+                                (currentPersona === 'minister' ? 'Analyzing Policy...' :
+                                 currentPersona === 'chro' ? 'Analyzing HR Data...' :
+                                 currentPersona === 'educationist' ? 'Analyzing Education...' :
                                  'Analyzing...') :
-                                (selectedPersona === 'minister' ? 'Generating Policy...' :
-                                 selectedPersona === 'chro' ? 'Generating HR Analytics...' :
-                                 selectedPersona === 'educationist' ? 'Generating Education Analysis...' :
+                                (currentPersona === 'minister' ? 'Generating Policy...' :
+                                 currentPersona === 'chro' ? 'Generating HR Analytics...' :
+                                 currentPersona === 'educationist' ? 'Generating Education Analysis...' :
                                  'Generating...')}
                             </> : <>
                               {useKnowledgeBase && uploadedFiles.length > 0 ? <>
                                   <Brain className="h-4 w-4 mr-2" />
-                                  {selectedPersona === 'minister' ? 'Policy Analysis' :
-                                   selectedPersona === 'chro' ? 'HR Analytics' :
-                                   selectedPersona === 'educationist' ? 'Education Analysis' :
+                                  {currentPersona === 'minister' ? 'Policy Analysis' :
+                                   currentPersona === 'chro' ? 'HR Analytics' :
+                                   currentPersona === 'educationist' ? 'Education Analysis' :
                                    'Skill Analysis'}
                                 </> : <>
                                   <Sparkles className="h-4 w-4 mr-2" />
@@ -683,7 +687,7 @@ const Dashboard = () => {
               duration: 0.5,
               delay: 0.3
             }}>
-                  <DataInsights insights={generationResult?.insights || []} visible={!!(generationResult?.insights && generationResult.insights.length > 0)} />
+                  <DataInsights insights={generationResult?.insights || []} visible={!!(generationResult?.insights && generationResult.insights.length > 0)} persona={currentPersona} />
                 </motion.div>
               </div>
 
@@ -699,7 +703,7 @@ const Dashboard = () => {
               duration: 0.5,
               delay: 0.4
             }} className="sticky top-6">
-                  <DetailedReports generationResult={generationResult} persona={selectedPersona} />
+                  <DetailedReports generationResult={generationResult} persona={currentPersona} />
                 </motion.div>
               </div>
             </div>
@@ -708,5 +712,8 @@ const Dashboard = () => {
         <ChartCustomizer charts={generationResult?.charts || []} onChartsUpdate={handleChartsUpdate} isVisible={showCustomizer && generationResult?.charts.length > 0} onToggle={() => setShowCustomizer(!showCustomizer)} />
       </div>
     </div>;
-};
+});
+
+Dashboard.displayName = 'Dashboard';
+
 export default Dashboard;

@@ -3,14 +3,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Crown, Users, GraduationCap } from 'lucide-react';
+import { Database } from '@/integrations/supabase/types';
+
+type PersonaType = Database['public']['Enums']['persona_type'];
 
 interface PersonaSelectorProps {
-  selectedPersona: string;
-  onPersonaChange: (persona: string) => void;
+  selectedPersona: PersonaType | null;
+  onPersonaChange: (persona: PersonaType) => void;
 }
 
 const PersonaSelector: React.FC<PersonaSelectorProps> = ({ selectedPersona, onPersonaChange }) => {
-  const personas = [
+  const currentPersona = selectedPersona || 'minister';
+  const personas: Array<{
+    value: PersonaType;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    description: string;
+    color: string;
+  }> = [
     {
       value: 'minister',
       label: 'Minister',
@@ -34,14 +44,14 @@ const PersonaSelector: React.FC<PersonaSelectorProps> = ({ selectedPersona, onPe
     }
   ];
 
-  const selectedPersonaData = personas.find(p => p.value === selectedPersona);
+  const selectedPersonaData = personas.find(p => p.value === currentPersona);
 
   return (
     <Card className="bg-gradient-to-br from-card to-card/50 border-primary/20 shadow-sm hover:shadow-md transition-shadow">
       <CardContent className="p-5">
         <div className="space-y-3">
           <Label className="text-sm font-medium">Analysis Persona</Label>
-          <Select value={selectedPersona} onValueChange={onPersonaChange}>
+          <Select value={currentPersona} onValueChange={onPersonaChange}>
             <SelectTrigger className="w-full h-12 bg-background/50 border-primary/20 hover:border-primary/40 transition-colors">
               <SelectValue>
                 {selectedPersonaData && (
