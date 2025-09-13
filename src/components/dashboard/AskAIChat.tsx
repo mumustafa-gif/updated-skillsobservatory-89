@@ -273,7 +273,7 @@ const AskAIChat: React.FC<AskAIChatProps> = ({ generationResult, knowledgeFileId
                     variant="ghost"
                     size="sm"
                     onClick={() => handleSuggestedQuestion(question)}
-                    className="text-xs text-left h-auto p-3 bg-primary/5 hover:bg-primary/10 border border-primary/10 hover:border-primary/20"
+                    className="text-xs text-left h-auto p-3 bg-primary/5 hover:bg-primary/10 border border-primary/10 hover:border-primary/20 text-foreground hover:text-foreground"
                   >
                     {question}
                   </Button>

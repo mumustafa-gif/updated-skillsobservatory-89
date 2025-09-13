@@ -358,7 +358,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
       grid: {
         left: '12%',
         right: config.legend !== false && config.legend?.show !== false ? '12%' : '10%',
-        bottom: config.legend !== false && config.legend?.show !== false ? '24%' : '18%',
+        bottom: config.series?.[0]?.type === 'heatmap' ? '30%' : (config.legend !== false && config.legend?.show !== false ? '24%' : '18%'),
         top: config.title ? '25%' : '18%',
         containLabel: true,
         ...config.grid
@@ -368,7 +368,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
       xAxis: Array.isArray(config.xAxis) ? config.xAxis.map((axis: any) => ({
         ...axis,
         name: axis.name || (axis.type === 'category' ? 'Categories' : 'X Values'),
-        nameLocation: 'middle',
+        nameLocation: 'start',
         nameGap: 30,
         nameTextStyle: {
           fontSize: 13,
@@ -403,7 +403,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
       })) : config.xAxis ? {
         ...config.xAxis,
         name: config.xAxis.name || (config.xAxis.type === 'category' ? 'Categories' : 'X Values'),
-        nameLocation: 'middle',
+        nameLocation: 'start',
         nameGap: 30,
         nameTextStyle: {
           fontSize: 13,
@@ -441,7 +441,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
       yAxis: Array.isArray(config.yAxis) ? config.yAxis.map((axis: any) => ({
         ...axis,
         name: axis.name || (axis.type === 'value' ? 'Values' : 'Categories'),
-        nameLocation: 'middle',
+        nameLocation: 'start',
         nameGap: 50,
         nameTextStyle: {
           fontSize: 13,
@@ -475,7 +475,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
       })) : config.yAxis ? {
         ...config.yAxis,
         name: config.yAxis.name || (config.yAxis.type === 'value' ? 'Values' : 'Categories'),
-        nameLocation: 'middle',
+        nameLocation: 'start',
         nameGap: 50,
         nameTextStyle: {
           fontSize: 13,
@@ -516,7 +516,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
         calculable: true,
         orient: 'horizontal',
         left: 'center',
-        bottom: '5%',
+        bottom: '8%',
         inRange: {
           color: heatmapColors
         },
@@ -532,7 +532,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
         calculable: true,
         orient: 'horizontal',
         left: 'center',
-        bottom: '5%',
+        bottom: '8%',
         inRange: {
           color: heatmapColors
         },

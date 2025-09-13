@@ -313,10 +313,6 @@ const Dashboard = memo(() => {
         }} transition={{
           duration: 0.5
         }}>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/knowledge-base')} className="transition-all duration-300 hover:shadow-md">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
             <img src="/lovable-uploads/c4d663bc-27ef-4ba5-9a5e-f8401832952e.png" alt="Logo" className="h-16 w-auto hover-scale transition-transform duration-200" />
           </motion.div>
           <motion.div className="flex items-center space-x-4" initial={{
@@ -523,6 +519,14 @@ const Dashboard = memo(() => {
 
         {/* New Layout (After Generation) */}
         {hasGenerated && !generating && <div className="space-y-6">
+            {/* Back Button */}
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+              <Button variant="outline" size="sm" onClick={() => setHasGenerated(false)} className="flex items-center gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+            </motion.div>
+
             {/* Top Configuration Section - Two Columns with Minimize */}
             <motion.div initial={{
           opacity: 0,

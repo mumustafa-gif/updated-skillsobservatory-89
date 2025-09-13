@@ -330,7 +330,7 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         left: isMobile ? '15%' : '12%',
         right: isMobile ? '12%' : '12%',
         top: chartOption.title ? (isMobile ? '25%' : '22%') : (isMobile ? '18%' : '15%'),
-        bottom: isMobile ? '30%' : '26%',
+        bottom: chartOption.series?.[0]?.type === 'heatmap' ? (isMobile ? '35%' : '32%') : (isMobile ? '30%' : '26%'),
         containLabel: true,
         ...chartOption.grid
       },
@@ -466,7 +466,7 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         ? chartOption.xAxis.map(axis => ({
             ...axis,
             name: axis.name || (axis.type === 'category' ? 'Categories' : 'X Values'),
-            nameLocation: 'middle',
+            nameLocation: 'start',
             nameGap: isMobile ? 25 : 30,
             nameTextStyle: {
               fontSize: baseFontSize + 1,
@@ -504,7 +504,7 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         : chartOption.xAxis ? {
             ...chartOption.xAxis,
             name: chartOption.xAxis.name || (chartOption.xAxis.type === 'category' ? 'Categories' : 'X Values'),
-            nameLocation: 'middle',
+            nameLocation: 'start',
             nameGap: isMobile ? 25 : 30,
             nameTextStyle: {
               fontSize: baseFontSize + 1,
@@ -545,7 +545,7 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         ? chartOption.yAxis.map(axis => ({
             ...axis,
             name: axis.name || (axis.type === 'value' ? 'Values' : 'Categories'),
-            nameLocation: 'middle',
+            nameLocation: 'start',
             nameGap: isMobile ? 40 : 50,
             nameTextStyle: {
               fontSize: baseFontSize + 1,
@@ -583,7 +583,7 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         : chartOption.yAxis ? {
             ...chartOption.yAxis,
             name: chartOption.yAxis.name || (chartOption.yAxis.type === 'value' ? 'Values' : 'Categories'),
-            nameLocation: 'middle',
+            nameLocation: 'start',
             nameGap: isMobile ? 40 : 50,
             nameTextStyle: {
               fontSize: baseFontSize + 1,
@@ -630,7 +630,7 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         calculable: true,
         orient: 'horizontal',
         left: 'center',
-        bottom: '5%',
+        bottom: '8%',
         inRange: {
           color: heatmapColors
         },
@@ -646,7 +646,7 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         calculable: true,
         orient: 'horizontal',
         left: 'center',
-        bottom: '5%',
+        bottom: '8%',
         inRange: {
           color: heatmapColors
         },

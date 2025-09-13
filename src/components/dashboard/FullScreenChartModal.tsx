@@ -370,7 +370,7 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
       grid: {
         left: '10%',
         right: config.legend !== false && config.legend?.show !== false ? '12%' : '10%',
-        bottom: config.legend !== false && config.legend?.show !== false ? '26%' : '18%',
+        bottom: config.series?.[0]?.type === 'heatmap' ? '32%' : (config.legend !== false && config.legend?.show !== false ? '26%' : '18%'),
         top: config.title ? '28%' : '20%',
         containLabel: true,
         ...config.grid
@@ -380,7 +380,7 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
       xAxis: Array.isArray(config.xAxis) ? config.xAxis.map((axis: any) => ({
         ...axis,
         name: axis.name || (axis.type === 'category' ? 'Categories' : 'X Values'),
-        nameLocation: 'middle',
+        nameLocation: 'start',
         nameGap: 35,
         nameTextStyle: {
           fontSize: 16,
@@ -416,7 +416,7 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
       })) : config.xAxis ? {
         ...config.xAxis,
         name: config.xAxis.name || (config.xAxis.type === 'category' ? 'Categories' : 'X Values'),
-        nameLocation: 'middle',
+        nameLocation: 'start',
         nameGap: 35,
         nameTextStyle: {
           fontSize: 16,
@@ -455,7 +455,7 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
       yAxis: Array.isArray(config.yAxis) ? config.yAxis.map((axis: any) => ({
         ...axis,
         name: axis.name || (axis.type === 'value' ? 'Values' : 'Categories'),
-        nameLocation: 'middle',
+        nameLocation: 'start',
         nameGap: 60,
         nameTextStyle: {
           fontSize: 16,
@@ -490,7 +490,7 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
       })) : config.yAxis ? {
         ...config.yAxis,
         name: config.yAxis.name || (config.yAxis.type === 'value' ? 'Values' : 'Categories'),
-        nameLocation: 'middle',
+        nameLocation: 'start',
         nameGap: 60,
         nameTextStyle: {
           fontSize: 16,
@@ -532,7 +532,7 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
         calculable: true,
         orient: 'horizontal',
         left: 'center',
-        bottom: '5%',
+        bottom: '8%',
         inRange: {
           color: heatmapColors
         },
@@ -549,7 +549,7 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
         calculable: true,
         orient: 'horizontal',
         left: 'center',
-        bottom: '5%',
+        bottom: '8%',
         inRange: {
           color: heatmapColors
         },
