@@ -389,23 +389,6 @@ const Dashboard = memo(() => {
                   />
               </motion.div>
 
-              {/* Back Button */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.15 }}
-                className="mb-6"
-              >
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/')}
-                  className="flex items-center gap-2 hover:shadow-md transition-all duration-300"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to Home
-                </Button>
-              </motion.div>
-
               {/* Centered Configuration Cards */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                 {/* Chart Configuration */}
@@ -536,6 +519,23 @@ const Dashboard = memo(() => {
 
         {/* New Layout (After Generation) */}
         {hasGenerated && !generating && <div className="space-y-6">
+            {/* Back Button */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex justify-start"
+            >
+              <Button
+                variant="outline"
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 hover:shadow-md transition-all duration-300"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Home
+              </Button>
+            </motion.div>
+            
             {/* Top Configuration Section - Two Columns with Minimize */}
             <motion.div initial={{
           opacity: 0,
