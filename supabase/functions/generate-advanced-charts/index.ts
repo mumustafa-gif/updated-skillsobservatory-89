@@ -350,6 +350,13 @@ serve(async (req) => {
     }
 
     const { prompt, numberOfCharts = 1, chartTypes = [], useKnowledgeBase = false, knowledgeBaseFiles = [], generateDetailedReports = true, persona = 'minister' } = await req.json();
+    
+    // Debug logging
+    console.log('=== CHART GENERATION REQUEST ===');
+    console.log('Number of charts:', numberOfCharts);
+    console.log('Chart types:', chartTypes);
+    console.log('All auto?', chartTypes.every(type => type === 'auto'));
+    console.log('================================');
 
     console.log(`📊 Processing request: ${prompt.slice(0, 100)}...`);
     
@@ -405,9 +412,18 @@ serve(async (req) => {
       console.error('Chart generation failed:', chartsResult.status === 'rejected' ? chartsResult.reason : 'Unknown error');
       // Create fallback charts
       charts = [];
+      const allAuto = chartTypes.every(type => type === 'auto');
+      const fallbackTypes = ['bar', 'line', 'pie', 'scatter', 'heatmap'];
+      
       for (let i = 0; i < numberOfCharts; i++) {
-        const chartType = chartTypes[i] || 'bar';
-        console.log(`Fallback Chart ${i + 1}: User selected "${chartType}", using "${chartType}"`);
+        let chartType = chartTypes[i] || 'bar';
+        
+        // If all are auto, use different types for variety
+        if (allAuto) {
+          chartType = fallbackTypes[i % fallbackTypes.length];
+        }
+        
+        console.log(`Fallback Chart ${i + 1}: User selected "${chartTypes[i] || 'auto'}", using "${chartType}"`);
         charts.push(createFallbackChart(chartType, i));
       }
       
@@ -588,9 +604,17 @@ async function generateCharts(prompt: string, numberOfCharts: number, chartTypes
   let chartPrompt;
   
   if (useKnowledgeBase && knowledgeBaseContent) {
-    chartPrompt = `You are an expert data analyst. Create ${numberOfCharts} interactive chart configuration(s) for Apache ECharts based on this request: "${prompt}"
+    // Check if all chart types are 'auto' - if so, instruct AI to choose different types
+    const allAuto = chartTypes.every(type => type === 'auto');
+    console.log('Chart types received:', chartTypes);
+    console.log('All auto?', allAuto);
+    
+    const autoInstruction = allAuto ? 
+      `\nCRITICAL: You must create ${numberOfCharts} COMPLETELY DIFFERENT chart types. DO NOT create the same chart type twice. Use different chart types from: bar, line, pie, area, scatter, heatmap, treemap, radar, gauge, funnel, polar. Each chart must have a unique title and show different data aspects. For example: Chart 1 = bar chart, Chart 2 = pie chart, Chart 3 = scatter plot, etc.` : 
+      `\nChart types requested: ${chartTypes.join(', ')}`;
 
-Chart types requested: ${chartTypes.join(', ')}
+    chartPrompt = `You are an expert data analyst. Create ${numberOfCharts} interactive chart configuration(s) for Apache ECharts based on this request: "${prompt}"
+${autoInstruction}
 
 PERSONA CONTEXT:
 ${getPersonaContext(persona)}
@@ -645,11 +669,27 @@ For treemap charts, use this structure:
 
 For other chart types, use standard ECharts configuration with proper series data structure.
 
+CRITICAL FOR MULTIPLE CHARTS: When creating multiple charts, ensure each chart:
+1. Uses a COMPLETELY DIFFERENT chart type (bar, line, pie, scatter, heatmap, etc.) - NO DUPLICATES
+2. Shows a DIFFERENT aspect or dimension of the data
+3. Has a UNIQUE title that reflects its specific focus
+4. Provides complementary insights rather than duplicating information
+
+MANDATORY: If creating 5 charts, use 5 different chart types. Example: Chart 1 = bar, Chart 2 = pie, Chart 3 = scatter, Chart 4 = heatmap, Chart 5 = radar.
+
 Return only the JSON array, no additional text.`;
   } else {
-    chartPrompt = `Create ${numberOfCharts} interactive chart configuration(s) for Apache ECharts based on this request: "${prompt}"
+    // Check if all chart types are 'auto' - if so, instruct AI to choose different types
+    const allAuto = chartTypes.every(type => type === 'auto');
+    console.log('Chart types received:', chartTypes);
+    console.log('All auto?', allAuto);
+    
+    const autoInstruction = allAuto ? 
+      `\nCRITICAL: You must create ${numberOfCharts} COMPLETELY DIFFERENT chart types. DO NOT create the same chart type twice. Use different chart types from: bar, line, pie, area, scatter, heatmap, treemap, radar, gauge, funnel, polar. Each chart must have a unique title and show different data aspects. For example: Chart 1 = bar chart, Chart 2 = pie chart, Chart 3 = scatter plot, etc.` : 
+      `\nChart types requested: ${chartTypes.join(', ')}`;
 
-Chart types requested: ${chartTypes.join(', ')}
+    chartPrompt = `Create ${numberOfCharts} interactive chart configuration(s) for Apache ECharts based on this request: "${prompt}"
+${autoInstruction}
 
 PERSONA CONTEXT:
 ${getPersonaContext(persona)}
@@ -684,6 +724,14 @@ For treemap charts, use this structure:
 }
 
 For other chart types, use standard ECharts configuration with proper series data structure.
+
+CRITICAL FOR MULTIPLE CHARTS: When creating multiple charts, ensure each chart:
+1. Uses a COMPLETELY DIFFERENT chart type (bar, line, pie, scatter, heatmap, etc.) - NO DUPLICATES
+2. Shows a DIFFERENT aspect or dimension of the data
+3. Has a UNIQUE title that reflects its specific focus
+4. Provides complementary insights rather than duplicating information
+
+MANDATORY: If creating 5 charts, use 5 different chart types. Example: Chart 1 = bar, Chart 2 = pie, Chart 3 = scatter, Chart 4 = heatmap, Chart 5 = radar.
 
 Return only the JSON array, no additional text.`;
   }
