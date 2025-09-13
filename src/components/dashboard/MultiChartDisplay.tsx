@@ -160,9 +160,11 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
                   color: '#333',
                   formatter: function(params: any) {
                     if (typeof params.value === 'number') {
-                      // Ensure percentage is within 0-100% range
-                      const percentage = Math.min(Math.max(params.value, 0), 100);
-                      return percentage.toFixed(1) + '%';
+                      // For bar charts, show actual values, not percentages
+                      if (params.value >= 1000) {
+                        return (params.value / 1000).toFixed(1) + 'K';
+                      }
+                      return params.value.toLocaleString();
                     }
                     return params.value;
                   },
@@ -413,6 +415,30 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
           color: '#333'
         },
         formatter: function(params: any) {
+          // Special handling for heatmaps - show only the hovered cell
+          if (chartOption.series?.[0]?.type === 'heatmap') {
+            if (Array.isArray(params)) {
+              const param = params[0];
+              const value = Array.isArray(param.value) ? param.value[2] : param.value;
+              const xAxisData = chartOption.xAxis?.data || [];
+              const yAxisData = chartOption.yAxis?.data || [];
+              const xIndex = Array.isArray(param.value) ? param.value[0] : param.dataIndex;
+              const yIndex = Array.isArray(param.value) ? param.value[1] : param.seriesIndex;
+              const xLabel = xAxisData[xIndex] || `Category ${xIndex}`;
+              const yLabel = yAxisData[yIndex] || `Series ${yIndex}`;
+              return `<strong>${yLabel}</strong><br/><span style="color:${param.color}">●</span> ${xLabel}: <strong>${value}</strong>`;
+            } else {
+              const value = Array.isArray(params.value) ? params.value[2] : params.value;
+              const xAxisData = chartOption.xAxis?.data || [];
+              const yAxisData = chartOption.yAxis?.data || [];
+              const xIndex = Array.isArray(params.value) ? params.value[0] : params.dataIndex;
+              const yIndex = Array.isArray(params.value) ? params.value[1] : params.seriesIndex;
+              const xLabel = xAxisData[xIndex] || `Category ${xIndex}`;
+              const yLabel = yAxisData[yIndex] || `Series ${yIndex}`;
+              return `<strong>${yLabel}</strong><br/><span style="color:${params.color}">●</span> ${xLabel}: <strong>${value}</strong>`;
+            }
+          }
+          
           // Special handling for radar charts - show only the hovered point
           if (chartOption.series?.[0]?.type === 'radar') {
             if (Array.isArray(params)) {
