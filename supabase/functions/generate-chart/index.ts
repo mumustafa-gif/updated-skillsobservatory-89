@@ -149,17 +149,21 @@ MANDATORY JSON STRUCTURE:
       "show": true,
       "type": "scroll",
       "orient": "horizontal",
-      "right": "2%",
-      "bottom": "2%",
+      "right": "3%",
+      "bottom": "3%",
       "data": ["Series 1 (25.5%)", "Series 2 (35.2%)", "Series 3 (39.3%)"],
-      "textStyle": {"fontSize": 12, "color": "#333"},
-      "itemWidth": 18,
-      "itemHeight": 12,
-      "backgroundColor": "rgba(255,255,255,0.9)",
-      "borderColor": "#ddd",
+      "textStyle": {"fontSize": 12, "color": "#333", "fontWeight": "600"},
+      "itemWidth": 20,
+      "itemHeight": 14,
+      "itemGap": 18,
+      "backgroundColor": "rgba(255,255,255,0.98)",
+      "borderColor": "#d1d5db",
       "borderWidth": 1,
       "padding": [8, 12],
-      "borderRadius": 4
+      "borderRadius": 8,
+      "shadowColor": "rgba(0,0,0,0.1)",
+      "shadowBlur": 8,
+      "shadowOffsetY": 2
     },
     "tooltip": {
       "trigger": "axis|item",
@@ -170,7 +174,7 @@ MANDATORY JSON STRUCTURE:
     "grid": {
       "left": "10%",
       "right": "10%",
-      "bottom": "15%",
+      "bottom": "22%",
       "top": "20%",
       "containLabel": true
     },

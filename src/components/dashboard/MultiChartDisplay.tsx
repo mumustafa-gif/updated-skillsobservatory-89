@@ -318,9 +318,9 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
       // Grid configuration for proper spacing with bottom legend
       grid: {
         left: isMobile ? '12%' : '10%',
-        right: isMobile ? '8%' : '8%',
+        right: isMobile ? '10%' : '10%',
         top: chartOption.title ? (isMobile ? '18%' : '15%') : (isMobile ? '10%' : '8%'),
-        bottom: isMobile ? '25%' : '20%',
+        bottom: isMobile ? '28%' : '24%',
         containLabel: true,
         ...chartOption.grid
       },
@@ -348,34 +348,47 @@ const MultiChartDisplay: React.FC<MultiChartDisplayProps> = ({ chartOptions, loa
         show: true,
         type: 'scroll',
         orient: 'horizontal',
-        right: '2%',
-        bottom: '2%',
-        itemWidth: isMobile ? 14 : 16,
-        itemHeight: isMobile ? 10 : 12,
-        itemGap: isMobile ? 10 : 15,
+        right: '3%',
+        bottom: '3%',
+        itemWidth: isMobile ? 16 : 20,
+        itemHeight: isMobile ? 12 : 14,
+        itemGap: isMobile ? 12 : 18,
         textStyle: {
-          fontSize: legendFontSize,
+          fontSize: legendFontSize + 1,
           color: '#333',
-          fontWeight: 500
+          fontWeight: 600,
+          lineHeight: isMobile ? 14 : 16
         },
         formatter: function(name: string) {
           // Enhanced legend with percentage information where available
-          return name.includes('(') ? name : `${name}`;
+          if (name.includes('(')) {
+            return name;
+          }
+          // Truncate long names to prevent overlap
+          const maxLength = isMobile ? 15 : 20;
+          if (name.length > maxLength) {
+            return name.substring(0, maxLength - 3) + '...';
+          }
+          return name;
         },
-        pageButtonItemGap: isMobile ? 5 : 8,
-        pageButtonGap: isMobile ? 8 : 12,
+        pageButtonItemGap: isMobile ? 8 : 12,
+        pageButtonGap: isMobile ? 10 : 18,
         pageTextStyle: {
-          fontSize: legendFontSize - 1,
-          color: '#666'
+          fontSize: legendFontSize,
+          color: '#666',
+          fontWeight: 500
         },
-        backgroundColor: 'rgba(255,255,255,0.95)',
-        borderColor: '#e0e0e0',
+        backgroundColor: 'rgba(255,255,255,0.98)',
+        borderColor: '#d1d5db',
         borderWidth: 1,
-        borderRadius: 4,
-        padding: [4, 8],
-        shadowColor: 'rgba(0,0,0,0.08)',
-        shadowBlur: 4,
-        shadowOffsetY: 1,
+        borderRadius: isMobile ? 6 : 8,
+        padding: isMobile ? [6, 10] : [8, 12],
+        shadowColor: 'rgba(0,0,0,0.1)',
+        shadowBlur: isMobile ? 6 : 8,
+        shadowOffsetY: isMobile ? 1 : 2,
+        // Ensure legend doesn't overlap with chart content
+        width: 'auto',
+        height: 'auto',
         ...chartOption.legend
       } : false,
 

@@ -283,42 +283,54 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
         show: true,
         type: 'scroll',
         orient: 'horizontal',
-        right: '2%',
-        bottom: '2%',
-        itemWidth: 18,
-        itemHeight: 12,
-        itemGap: 15,
+        right: '3%',
+        bottom: '3%',
+        itemWidth: 20,
+        itemHeight: 14,
+        itemGap: 18,
         textStyle: {
           color: '#333',
-          fontSize: 11,
-          fontWeight: 500
+          fontSize: 12,
+          fontWeight: 600,
+          lineHeight: 16
         },
         formatter: function(name: string) {
           // Enhanced legend with percentage information where available
-          return name.includes('(') ? name : `${name}`;
+          if (name.includes('(')) {
+            return name;
+          }
+          // Truncate long names to prevent overlap
+          if (name.length > 20) {
+            return name.substring(0, 17) + '...';
+          }
+          return name;
         },
-        pageButtonItemGap: 10,
-        pageButtonGap: 15,
+        pageButtonItemGap: 12,
+        pageButtonGap: 18,
         pageTextStyle: {
           color: '#666',
-          fontSize: 10
+          fontSize: 11,
+          fontWeight: 500
         },
-        backgroundColor: 'rgba(255,255,255,0.95)',
-        borderColor: '#e0e0e0',
+        backgroundColor: 'rgba(255,255,255,0.98)',
+        borderColor: '#d1d5db',
         borderWidth: 1,
-        borderRadius: 6,
-        padding: [6, 10],
-        shadowColor: 'rgba(0,0,0,0.08)',
-        shadowBlur: 6,
+        borderRadius: 8,
+        padding: [8, 12],
+        shadowColor: 'rgba(0,0,0,0.1)',
+        shadowBlur: 8,
         shadowOffsetY: 2,
+        // Ensure legend doesn't overlap with chart content
+        width: 'auto',
+        height: 'auto',
         ...config.legend
       } : false,
       
       // Responsive grid styling with space for bottom-right legend
       grid: {
         left: '10%',
-        right: config.legend !== false && config.legend?.show !== false ? '8%' : '8%',
-        bottom: config.legend !== false && config.legend?.show !== false ? '18%' : '15%',
+        right: config.legend !== false && config.legend?.show !== false ? '10%' : '8%',
+        bottom: config.legend !== false && config.legend?.show !== false ? '22%' : '15%',
         top: config.title ? '18%' : '10%',
         containLabel: true,
         ...config.grid

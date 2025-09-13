@@ -299,42 +299,54 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
         show: true,
         type: 'scroll',
         orient: 'horizontal',
-        right: '2%',
-        bottom: '2%',
-        itemWidth: 20,
-        itemHeight: 16,
-        itemGap: 20,
+        right: '3%',
+        bottom: '3%',
+        itemWidth: 22,
+        itemHeight: 18,
+        itemGap: 22,
         textStyle: {
           color: '#333',
-          fontSize: 13,
-          fontWeight: 500
+          fontSize: 14,
+          fontWeight: 600,
+          lineHeight: 18
         },
         formatter: function(name: string) {
           // Enhanced legend with percentage information where available
-          return name.includes('(') ? name : `${name}`;
+          if (name.includes('(')) {
+            return name;
+          }
+          // Truncate long names to prevent overlap
+          if (name.length > 25) {
+            return name.substring(0, 22) + '...';
+          }
+          return name;
         },
-        pageButtonItemGap: 12,
-        pageButtonGap: 20,
+        pageButtonItemGap: 14,
+        pageButtonGap: 22,
         pageTextStyle: {
           color: '#666',
-          fontSize: 11
+          fontSize: 12,
+          fontWeight: 500
         },
-        backgroundColor: 'rgba(255,255,255,0.95)',
-        borderColor: '#e0e0e0',
+        backgroundColor: 'rgba(255,255,255,0.98)',
+        borderColor: '#d1d5db',
         borderWidth: 1,
-        borderRadius: 8,
-        padding: [10, 14],
-        shadowColor: 'rgba(0,0,0,0.08)',
-        shadowBlur: 8,
-        shadowOffsetY: 2,
+        borderRadius: 10,
+        padding: [12, 16],
+        shadowColor: 'rgba(0,0,0,0.1)',
+        shadowBlur: 10,
+        shadowOffsetY: 3,
+        // Ensure legend doesn't overlap with chart content
+        width: 'auto',
+        height: 'auto',
         ...config.legend
       } : false,
       
       // Responsive grid styling with space for bottom-right legend
       grid: {
         left: '8%',
-        right: config.legend !== false && config.legend?.show !== false ? '8%' : '8%',
-        bottom: config.legend !== false && config.legend?.show !== false ? '20%' : '15%',
+        right: config.legend !== false && config.legend?.show !== false ? '10%' : '8%',
+        bottom: config.legend !== false && config.legend?.show !== false ? '24%' : '15%',
         top: config.title ? '20%' : '10%',
         containLabel: true,
         ...config.grid
