@@ -217,6 +217,17 @@ MANDATORY JSON STRUCTURE:
           "position": "top|inside",
           "fontSize": 10,
           "formatter": function(params) {
+            // For heatmaps, show high/medium/low instead of percentages
+            if (params.seriesType === 'heatmap' || params.componentType === 'heatmap') {
+              const value = params.value;
+              if (typeof value === 'number') {
+                if (value >= 80) return 'High';
+                if (value >= 50) return 'Medium';
+                return 'Low';
+              }
+              return value;
+            }
+            // For other chart types, show percentages
             if (typeof params.value === 'number') {
               return params.value.toFixed(1) + '%';
             }
@@ -238,9 +249,9 @@ Supported chart types: bar, line, pie, scatter, radar, heatmap, treemap
 `}
 
 CHART-SPECIFIC PERCENTAGE ENHANCEMENTS:
-- Bar/Line: Convert all values to percentages of total, show percentage labels on bars/points
+- Bar/Line: Ensure all values are within 0-100% range, show percentage labels on bars/points
 - Pie: ALWAYS show percentages (calculate if not provided), format as "Label: 25.5%"
-- Heatmap: Use percentage scale (0-100%), show percentage values in cells
+- Heatmap: Use percentage scale (0-100%), show high/medium/low values in cells
 - Treemap: Show both percentage of total and absolute values: "Category A\n25.5% (1,250)"
 - Scatter: Use percentage scales for both axes when applicable
 
@@ -248,12 +259,13 @@ MANDATORY PERCENTAGE CONVERSION LOGIC:
 1. Calculate total sum of all values in dataset
 2. Convert each value to percentage: (value/total) * 100
 3. Format with 1 decimal place: "25.5%"
-4. Ensure percentages never exceed 100% - if data is already in percentage format, use as-is
+4. Ensure percentages never exceed 100% - cap at 100% if needed
 5. For pie charts: values should sum to exactly 100%
-6. Include in tooltips: "Series A: 1,250 (25.5%)"
-7. Update legend labels: "Category A (25.5%)"
+6. For bar charts: use relative percentages (0-100%) not absolute values
+7. Include in tooltips: "Series A: 1,250 (25.5%)"
+8. Update legend labels: "Category A (25.5%)"
 
-CRITICAL: If input data appears to already be in percentage format (values between 0-100), do NOT multiply by 100 again. Only convert to percentage if values are raw counts or decimals between 0-1.
+CRITICAL: If input data appears to already be in percentage format (values between 0-100), do NOT multiply by 100 again. Only convert to percentage if values are raw counts or decimals between 0-1. Always ensure final values are within 0-100% range.
 
 Always generate realistic, meaningful sample data if no specific data is provided.
 Include proper percentage formatting, units, and contextual information.

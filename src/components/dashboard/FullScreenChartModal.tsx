@@ -78,6 +78,8 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
           case 'bar':
             return {
               ...series,
+              barWidth: '75%',
+              barMaxWidth: 50,
               itemStyle: {
                 color: baseColor,
                 borderRadius: [6, 6, 0, 0],
@@ -90,10 +92,12 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
                 color: '#333',
                 fontWeight: 'bold',
                 formatter: function(params: any) {
-                  const value = typeof params.value === 'number' 
-                    ? params.value.toFixed(1) + '%' 
-                    : params.value;
-                  return value;
+                  if (typeof params.value === 'number') {
+                    // Ensure percentage is within 0-100% range
+                    const percentage = Math.min(Math.max(params.value, 0), 100);
+                    return percentage.toFixed(1) + '%';
+                  }
+                  return params.value;
                 },
                 ...series.label
               }
@@ -126,8 +130,8 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
           case 'pie':
             return {
               ...series,
-              radius: ['45%', '75%'],
-              center: ['50%', '55%'],
+              radius: ['35%', '70%'],
+              center: ['50%', '50%'],
               itemStyle: {
                 borderRadius: 10,
                 borderColor: '#fff',
@@ -167,7 +171,13 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
                 fontWeight: 'bold',
                 formatter: function(params: any) {
                   const value = params.value[2] || params.value;
-                  return typeof value === 'number' ? value.toFixed(1) + '%' : value;
+                  if (typeof value === 'number') {
+                    // Show high/medium/low instead of percentages
+                    if (value >= 80) return 'High';
+                    if (value >= 50) return 'Medium';
+                    return 'Low';
+                  }
+                  return value;
                 }
               }
             };
@@ -275,6 +285,20 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
           fontWeight: 400
         },
         formatter: function(params: any) {
+          // Special handling for radar charts - show only the hovered point
+          if (config.series?.[0]?.type === 'radar') {
+            if (Array.isArray(params)) {
+              // For radar charts, show only the first (hovered) point
+              const param = params[0];
+              const value = typeof param.value === 'number' ? param.value.toLocaleString() : param.value;
+              return `<strong>${param.name}</strong><br/><span style="color:${param.color}">●</span> ${param.seriesName}: <strong>${value}</strong>`;
+            } else {
+              const value = typeof params.value === 'number' ? params.value.toLocaleString() : params.value;
+              return `<strong>${params.name}</strong><br/><span style="color:${params.color}">●</span> ${params.seriesName}: <strong>${value}</strong>`;
+            }
+          }
+          
+          // Default handling for other chart types
           if (Array.isArray(params)) {
             let result = `<strong>${params[0].axisValue}</strong><br/>`;
             params.forEach((param: any) => {
@@ -344,10 +368,10 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
       
       // Responsive grid styling with space for bottom-right legend
       grid: {
-        left: '8%',
-        right: config.legend !== false && config.legend?.show !== false ? '10%' : '8%',
-        bottom: config.legend !== false && config.legend?.show !== false ? '24%' : '15%',
-        top: config.title ? '20%' : '10%',
+        left: '10%',
+        right: config.legend !== false && config.legend?.show !== false ? '12%' : '10%',
+        bottom: config.legend !== false && config.legend?.show !== false ? '26%' : '18%',
+        top: config.title ? '28%' : '20%',
         containLabel: true,
         ...config.grid
       },

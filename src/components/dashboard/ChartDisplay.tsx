@@ -58,6 +58,8 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
           case 'bar':
             return {
               ...series,
+              barWidth: '70%',
+              barMaxWidth: 40,
               itemStyle: {
                 color: baseColor,
                 borderRadius: [4, 4, 0, 0],
@@ -69,10 +71,12 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
                 fontSize: 11,
                 color: '#333',
                 formatter: function(params: any) {
-                  const value = typeof params.value === 'number' 
-                    ? params.value.toFixed(1) + '%' 
-                    : params.value;
-                  return value;
+                  if (typeof params.value === 'number') {
+                    // Ensure percentage is within 0-100% range
+                    const percentage = Math.min(Math.max(params.value, 0), 100);
+                    return percentage.toFixed(1) + '%';
+                  }
+                  return params.value;
                 },
                 ...series.label
               }
@@ -105,8 +109,8 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
           case 'pie':
             return {
               ...series,
-              radius: ['40%', '70%'],
-              center: ['50%', '60%'],
+              radius: ['30%', '65%'],
+              center: ['50%', '50%'],
               itemStyle: {
                 borderRadius: 8,
                 borderColor: '#fff',
@@ -146,7 +150,13 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
                   fontWeight: 'bold',
                   formatter: function(params: any) {
                     const value = params.value[2] || params.value;
-                    return typeof value === 'number' ? value.toFixed(1) + '%' : value;
+                    if (typeof value === 'number') {
+                      // Show high/medium/low instead of percentages
+                      if (value >= 80) return 'High';
+                      if (value >= 50) return 'Medium';
+                      return 'Low';
+                    }
+                    return value;
                   }
                 }
             };
@@ -255,6 +265,24 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
           fontWeight: 400
         },
           formatter: function(params: any) {
+            // Special handling for radar charts - show only the hovered point
+            if (config.series?.[0]?.type === 'radar') {
+              if (Array.isArray(params)) {
+                // For radar charts, show only the first (hovered) point
+                const param = params[0];
+                const value = typeof param.value === 'number' 
+                  ? param.value.toFixed(1) + '%' 
+                  : param.value;
+                return `<strong>${param.name}</strong><br/><span style="color:${param.color}">●</span> ${param.seriesName}: <strong>${value}</strong>`;
+              } else {
+                const value = typeof params.value === 'number' 
+                  ? params.value.toFixed(1) + '%' 
+                  : params.value;
+                return `<strong>${params.name}</strong><br/><span style="color:${params.color}">●</span> ${params.seriesName}: <strong>${value}</strong>`;
+              }
+            }
+            
+            // Default handling for other chart types
             if (Array.isArray(params)) {
               let result = `<strong>${params[0].axisValue}</strong><br/>`;
               params.forEach((param: any) => {
@@ -328,10 +356,10 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ chartOption, loading }) => 
       
       // Responsive grid styling with space for bottom-right legend
       grid: {
-        left: '10%',
-        right: config.legend !== false && config.legend?.show !== false ? '10%' : '8%',
-        bottom: config.legend !== false && config.legend?.show !== false ? '22%' : '15%',
-        top: config.title ? '18%' : '10%',
+        left: '12%',
+        right: config.legend !== false && config.legend?.show !== false ? '12%' : '10%',
+        bottom: config.legend !== false && config.legend?.show !== false ? '24%' : '18%',
+        top: config.title ? '25%' : '18%',
         containLabel: true,
         ...config.grid
       },
