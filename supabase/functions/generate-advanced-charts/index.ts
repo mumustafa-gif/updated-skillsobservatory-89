@@ -23,33 +23,51 @@ function createFallbackChart(chartType: string, index: number) {
         text: 'UAE Skills Distribution Map',
         subtext: 'Regional skill demand analysis'
       },
-      mapStyle: 'mapbox://styles/mapbox/light-v11',
+      mapStyle: 'mapbox://styles/mapbox/outdoors-v12',
       center: [54.3773, 24.4539], // UAE coordinates
-      zoom: 6,
+      zoom: 7,
       markers: [
         {
-          coordinates: [55.2708, 25.2048], // Dubai
+          coordinates: [55.2708, 25.2048], // Dubai - Burj Khalifa area (more precise)
           title: 'Dubai',
-          description: 'AI/ML and FinTech Hub - High demand for AI/ML, Cloud Computing, and Data Science skills',
+          description: '🏙️ Dubai Financial Center - Leading AI/ML hub with 45% of UAE tech startups. Key skills: AI/ML (95%), Cloud Computing (88%), Data Science (82%), FinTech (78%)',
           color: '#3b82f6'
         },
         {
-          coordinates: [54.3773, 24.4539], // Abu Dhabi
+          coordinates: [54.3773, 24.4539], // Abu Dhabi - Corniche area (more precise)
           title: 'Abu Dhabi',
-          description: 'Government and Energy Sector - Strong demand for Cybersecurity and DevOps skills',
+          description: '🏛️ Capital & Energy Hub - Government sector dominance with 60% public sector jobs. Key skills: Cybersecurity (92%), DevOps (85%), Energy Tech (78%), Public Policy (75%)',
           color: '#10b981'
         },
         {
-          coordinates: [55.9185, 25.3385], // Sharjah
+          coordinates: [55.9185, 25.3385], // Sharjah - University area (more precise)
           title: 'Sharjah',
-          description: 'Manufacturing and Education - Growing need for Data Science and Cloud Computing',
+          description: '🎓 Education & Manufacturing Hub - 3 major universities, 25% of UAE manufacturing. Key skills: Data Science (88%), Cloud Computing (82%), Manufacturing Tech (75%), Education Tech (70%)',
           color: '#f59e0b'
         },
         {
-          coordinates: [56.3269, 25.2867], // Ajman
+          coordinates: [56.3269, 25.2867], // Ajman - City center (more precise)
           title: 'Ajman',
-          description: 'SME and Logistics - Emerging demand for DevOps and Cybersecurity',
+          description: '🏭 SME & Logistics Hub - 40% of UAE SMEs, major logistics center. Key skills: DevOps (78%), Cybersecurity (75%), Supply Chain Tech (72%), E-commerce (68%)',
           color: '#ef4444'
+        },
+        {
+          coordinates: [55.9508, 25.7895], // Ras Al Khaimah - Industrial area
+          title: 'Ras Al Khaimah',
+          description: '🏗️ Industrial & Tourism Hub - Major cement industry, growing tourism. Key skills: Industrial Automation (80%), Tourism Tech (65%), Construction Tech (70%), Renewable Energy (60%)',
+          color: '#8b5cf6'
+        },
+        {
+          coordinates: [56.3269, 25.1289], // Fujairah - Port area
+          title: 'Fujairah',
+          description: '⚓ Port & Energy Hub - Major oil storage, strategic port location. Key skills: Port Management Tech (75%), Energy Logistics (70%), Maritime Tech (65%), Supply Chain (68%)',
+          color: '#06b6d4'
+        },
+        {
+          coordinates: [55.7432, 25.5649], // Umm Al Quwain - Industrial zone
+          title: 'Umm Al Quwain',
+          description: '🏭 Emerging Industrial Hub - Growing manufacturing sector, strategic location. Key skills: Manufacturing Tech (70%), Industrial IoT (65%), Supply Chain (60%), Automation (55%)',
+          color: '#84cc16'
         }
       ]
     };
@@ -592,11 +610,27 @@ For map charts, use this structure (return as regular ECharts config, the fronte
 {
   "chartType": "Map Visualization",
   "title": {"text": "Title", "subtext": "Subtitle"},
-  "mapStyle": "mapbox://styles/mapbox/light-v11",
+  "mapStyle": "mapbox://styles/mapbox/outdoors-v12",
   "center": [longitude, latitude],
   "zoom": number,
-  "markers": [{"coordinates": [lng, lat], "title": "Name", "description": "Details", "color": "#color"}]
+  "markers": [{"coordinates": [lng, lat], "title": "Name", "description": "Detailed description with emojis, statistics, and key skills", "color": "#color"}]
 }
+
+CRITICAL MAP REQUIREMENTS:
+1. Use accurate coordinates for UAE locations:
+   - Dubai: [55.2708, 25.2048] (Burj Khalifa area)
+   - Abu Dhabi: [54.3773, 24.4539] (Corniche area)
+   - Sharjah: [55.9185, 25.3385] (University area)
+   - Ajman: [56.3269, 25.2867] (City center)
+   - Ras Al Khaimah: [55.9508, 25.7895] (Industrial area)
+   - Fujairah: [56.3269, 25.1289] (Port area)
+   - Umm Al Quwain: [55.7432, 25.5649] (Industrial zone)
+
+2. Always use "mapbox://styles/mapbox/outdoors-v12" for colorful terrain
+3. Include detailed descriptions with emojis, statistics, and specific skill percentages
+4. Use distinct colors for each marker (#3b82f6, #10b981, #f59e0b, #ef4444, #8b5cf6, #06b6d4, #84cc16)
+5. Set appropriate zoom level (6-8) to show all UAE emirates
+6. Center map on UAE coordinates [54.3773, 24.4539]
 
 For treemap charts, use this structure:
 {

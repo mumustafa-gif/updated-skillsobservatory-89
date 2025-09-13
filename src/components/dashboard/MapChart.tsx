@@ -32,6 +32,13 @@ const MapChart: React.FC<MapChartProps> = ({ config, loading = false }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
+
+  // Coordinate validation function
+  const validateCoordinates = (coordinates: [number, number]): boolean => {
+    const [lng, lat] = coordinates;
+    // UAE bounds: longitude 51.0-56.4, latitude 22.5-26.1
+    return lng >= 51.0 && lng <= 56.4 && lat >= 22.5 && lat <= 26.1;
+  };
   const [tokenError, setTokenError] = useState<string | null>(null);
 
   // Fetch Mapbox token from edge function
@@ -121,48 +128,194 @@ const MapChart: React.FC<MapChartProps> = ({ config, loading = false }) => {
       document.querySelector('.mapboxgl-ctrl-top-right')?.appendChild(styleControl);
     }
 
+    // Add CSS for pulse animation and marker positioning
+    const pulseStyle = document.createElement('style');
+    pulseStyle.textContent = `
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(255, 255, 255, 0.8);
+        }
+        50% {
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(255, 255, 255, 0.6);
+        }
+        100% {
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(255, 255, 255, 0.8);
+        }
+      }
+      
+      .mapboxgl-marker {
+        transition: box-shadow 0.2s ease, opacity 0.2s ease !important;
+      }
+      
+      .mapboxgl-popup-content {
+        border-radius: 12px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+        z-index: 10000 !important;
+      }
+      
+      .mapboxgl-popup {
+        z-index: 10000 !important;
+      }
+      
+      .mapboxgl-popup-tip {
+        border-top-color: rgba(255, 255, 255, 0.9) !important;
+        z-index: 10000 !important;
+      }
+      
+      .mapboxgl-popup-close-button {
+        width: 20px !important;
+        height: 20px !important;
+        font-size: 14px !important;
+        font-weight: bold !important;
+        color: #666 !important;
+        background: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        top: 6px !important;
+        right: 6px !important;
+      }
+      
+      .mapboxgl-popup-close-button:hover {
+        background: rgba(255, 255, 255, 1) !important;
+        color: #333 !important;
+        border-color: rgba(0, 0, 0, 0.2) !important;
+        transform: scale(1.1) !important;
+      }
+    `;
+    document.head.appendChild(pulseStyle);
+
     // Add markers if provided
     if (config.markers && config.markers.length > 0) {
-      config.markers.forEach((marker) => {
+      config.markers.forEach((marker, index) => {
+        // Validate coordinates
+        if (!validateCoordinates(marker.coordinates)) {
+          console.warn(`Invalid coordinates for marker ${marker.title}:`, marker.coordinates);
+          return; // Skip invalid markers
+        }
         const el = document.createElement('div');
         el.className = 'marker';
-        el.style.backgroundColor = marker.color || 'hsl(15, 85%, 60%)'; // Theme orange
-        el.style.width = '24px';
-        el.style.height = '24px';
+        el.style.backgroundColor = marker.color || 'hsl(15, 85%, 60%)';
+        el.style.width = '32px';
+        el.style.height = '32px';
         el.style.borderRadius = '50%';
-        el.style.border = '3px solid hsl(220, 85%, 25%)'; // Theme navy
-        el.style.boxShadow = '0 4px 12px hsla(220, 85%, 25%, 0.4)';
+        el.style.border = '4px solid white';
+        el.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(255, 255, 255, 0.8)';
         el.style.cursor = 'pointer';
-        el.style.transition = 'all 0.2s ease';
+        el.style.transition = 'all 0.3s ease';
+        el.style.position = 'relative';
+        el.style.zIndex = '1000';
 
+        // Add pulse animation
+        el.style.animation = 'pulse 2s infinite';
+
+        // Add hover effects that don't change marker position
+        el.addEventListener('mouseenter', () => {
+          el.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.4), 0 0 0 3px rgba(255, 255, 255, 0.9)';
+          el.style.zIndex = '1001';
+          el.style.opacity = '0.9';
+        });
+
+        el.addEventListener('mouseleave', () => {
+          el.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(255, 255, 255, 0.8)';
+          el.style.zIndex = '1000';
+          el.style.opacity = '1';
+        });
+
+        // Compact popup with better fit
         const popup = new mapboxgl.Popup({ 
-          offset: 30,
-          className: 'custom-popup'
+          offset: 25,
+          className: 'custom-popup',
+          closeButton: true,
+          closeOnClick: false,
+          maxWidth: '280px'
         }).setHTML(
           `<div style="
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            padding: 8px;
-            border-radius: 6px;
+            padding: 14px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            position: relative;
           ">
-            <h3 style="
-              font-weight: 600; 
-              margin: 0 0 8px 0; 
-              color: hsl(220, 85%, 25%);
-              font-size: 16px;
-            ">${marker.title}</h3>
-            ${marker.description ? `<p style="
-              margin: 0; 
-              font-size: 14px; 
-              color: hsl(220, 20%, 50%);
+            <div style="
+              display: flex;
+              align-items: center;
+              margin-bottom: 10px;
+              padding-bottom: 8px;
+              border-bottom: 2px solid ${marker.color || 'hsl(15, 85%, 60%)'};
+            ">
+              <div style="
+                width: 10px;
+                height: 10px;
+                background-color: ${marker.color || 'hsl(15, 85%, 60%)'};
+                border-radius: 50%;
+                margin-right: 8px;
+              "></div>
+              <h3 style="
+                font-weight: 700; 
+                margin: 0; 
+                color: hsl(220, 85%, 25%);
+                font-size: 16px;
+                letter-spacing: -0.025em;
+              ">${marker.title}</h3>
+            </div>
+            ${marker.description ? `<div style="
+              margin: 0 0 10px 0; 
+              font-size: 13px; 
+              color: hsl(220, 20%, 40%);
               line-height: 1.4;
-            ">${marker.description}</p>` : ''}
+              font-weight: 400;
+            ">${marker.description}</div>` : ''}
+            <div style="
+              background: linear-gradient(135deg, ${marker.color || 'hsl(15, 85%, 60%)'}15, ${marker.color || 'hsl(15, 85%, 60%)'}08);
+              padding: 8px;
+              border-radius: 6px;
+              border-left: 3px solid ${marker.color || 'hsl(15, 85%, 60%)'};
+              margin-bottom: 8px;
+            ">
+              <div style="
+                font-size: 11px;
+                color: hsl(220, 20%, 50%);
+                font-weight: 500;
+                margin-bottom: 2px;
+              ">📍 ${marker.coordinates[0].toFixed(3)}, ${marker.coordinates[1].toFixed(3)}</div>
+            </div>
           </div>`
         );
 
-        new mapboxgl.Marker(el)
+        const markerElement = new mapboxgl.Marker(el)
           .setLngLat(marker.coordinates)
           .setPopup(popup)
           .addTo(map.current!);
+
+        // Handle popup events to manage marker layering
+        popup.on('open', () => {
+          // Dim other markers when this popup opens
+          const allMarkers = document.querySelectorAll('.mapboxgl-marker');
+          allMarkers.forEach(m => {
+            if (m !== el) {
+              (m as HTMLElement).style.opacity = '0.6';
+              (m as HTMLElement).style.zIndex = '100';
+            }
+          });
+          // Ensure current marker is on top
+          el.style.zIndex = '1000';
+        });
+
+        popup.on('close', () => {
+          // Restore all markers when popup closes
+          const allMarkers = document.querySelectorAll('.mapboxgl-marker');
+          allMarkers.forEach(m => {
+            (m as HTMLElement).style.opacity = '1';
+            (m as HTMLElement).style.zIndex = '500';
+          });
+        });
       });
     }
 
