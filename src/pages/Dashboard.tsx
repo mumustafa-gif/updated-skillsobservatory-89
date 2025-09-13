@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, LogOut, Sparkles, FileText, Link, Brain, Lightbulb, ChevronUp, ChevronDown, Crown, Users, GraduationCap, Loader2, RefreshCw, Shield, Target, TrendingUp, BookOpen } from 'lucide-react';
+import { BarChart3, LogOut, Sparkles, FileText, Link, Brain, Lightbulb, ChevronUp, ChevronDown, Crown, Users, GraduationCap, Loader2, RefreshCw, Shield, Target, TrendingUp, BookOpen, ArrowLeft } from 'lucide-react';
 import ChartControls from '@/components/dashboard/ChartControls';
 import MultiChartDisplay from '@/components/dashboard/MultiChartDisplay';
 import DiagnosticsPanel from '@/components/dashboard/DiagnosticsPanel';
@@ -387,6 +387,23 @@ const Dashboard = memo(() => {
                     selectedPersona={selectedPersona}
                     onPersonaChange={updatePersona}
                   />
+              </motion.div>
+
+              {/* Back Button */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.15 }}
+                className="mb-6"
+              >
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/')}
+                  className="flex items-center gap-2 hover:shadow-md transition-all duration-300"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Home
+                </Button>
               </motion.div>
 
               {/* Centered Configuration Cards */}
