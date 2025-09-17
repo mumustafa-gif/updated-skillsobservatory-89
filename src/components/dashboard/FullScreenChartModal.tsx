@@ -324,6 +324,48 @@ const FullScreenChartModal: React.FC<FullScreenChartModalProps> = ({
             }
           }
           
+          // Special handling for scatter plots - show axis labels instead of series name
+          if (config.series?.[0]?.type === 'scatter') {
+            if (Array.isArray(params)) {
+              const param = params[0];
+              const xAxisName = config.xAxis?.name || 'X Axis';
+              const yAxisName = config.yAxis?.name || 'Y Axis';
+              const xValue = param.value[0];
+              const yValue = param.value[1];
+              // Add comparison text for demand vs supply
+              let comparisonText = '';
+              console.log('Debug - xAxisName:', xAxisName, 'yAxisName:', yAxisName, 'xValue:', xValue, 'yValue:', yValue);
+              if ((xAxisName.toLowerCase().includes('demand') && yAxisName.toLowerCase().includes('supply')) ||
+                  (xAxisName.toLowerCase().includes('supply') && yAxisName.toLowerCase().includes('demand'))) {
+                if (xValue > yValue) {
+                  comparisonText = '<br/><em style="color: #666; font-size: 11px;">The demand is higher than supply</em>';
+                } else if (yValue > xValue) {
+                  comparisonText = '<br/><em style="color: #666; font-size: 11px;">The supply is higher than demand</em>';
+                }
+              }
+              
+              return `<strong>${param.seriesName}</strong><br/><span style="color:${param.color}">●</span> ${xAxisName}: <strong>${xValue}</strong><br/><span style="color:${param.color}">●</span> ${yAxisName}: <strong>${yValue}</strong>${comparisonText}`;
+            } else {
+              const xAxisName = config.xAxis?.name || 'X Axis';
+              const yAxisName = config.yAxis?.name || 'Y Axis';
+              const xValue = params.value[0];
+              const yValue = params.value[1];
+              // Add comparison text for demand vs supply
+              let comparisonText = '';
+              console.log('Debug - xAxisName:', xAxisName, 'yAxisName:', yAxisName, 'xValue:', xValue, 'yValue:', yValue);
+              if ((xAxisName.toLowerCase().includes('demand') && yAxisName.toLowerCase().includes('supply')) ||
+                  (xAxisName.toLowerCase().includes('supply') && yAxisName.toLowerCase().includes('demand'))) {
+                if (xValue > yValue) {
+                  comparisonText = '<br/><em style="color: #666; font-size: 11px;">The demand is higher than supply</em>';
+                } else if (yValue > xValue) {
+                  comparisonText = '<br/><em style="color: #666; font-size: 11px;">The supply is higher than demand</em>';
+                }
+              }
+              
+              return `<strong>${params.seriesName}</strong><br/><span style="color:${params.color}">●</span> ${xAxisName}: <strong>${xValue}</strong><br/><span style="color:${params.color}">●</span> ${yAxisName}: <strong>${yValue}</strong>${comparisonText}`;
+            }
+          }
+          
           // Default handling for other chart types
           if (Array.isArray(params)) {
             let result = `<strong>${params[0].axisValue}</strong><br/>`;
