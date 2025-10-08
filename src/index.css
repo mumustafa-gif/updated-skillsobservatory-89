@@ -8,74 +8,74 @@ All colors MUST be HSL.
 
 @layer base {
 :root {
-    /* Inception Brand Colors - Navy Blue & Orange */
+    /* Primary Brand Color - #064975 */
     --background: 0 0% 100%;
-    --foreground: 220 85% 15%;
+    --foreground: 204 90% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 85% 15%;
+    --card-foreground: 204 90% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 85% 15%;
+    --popover-foreground: 204 90% 15%;
 
-    /* Navy Blue from Inception Logo */
-    --primary: 220 85% 25%;
+    /* Primary Color - #064975 */
+    --primary: 204 90% 24%;
     --primary-foreground: 0 0% 100%;
 
     /* Light gray secondary */
-    --secondary: 220 15% 96%;
-    --secondary-foreground: 220 85% 15%;
+    --secondary: 204 15% 96%;
+    --secondary-foreground: 204 90% 15%;
 
-    --muted: 220 15% 96%;
-    --muted-foreground: 220 20% 50%;
+    --muted: 204 15% 96%;
+    --muted-foreground: 204 20% 50%;
 
-    /* Orange from Inception Logo */
-    --accent: 15 85% 60%;
+    /* Accent Color */
+    --accent: 204 80% 40%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 90%;
-    --input: 220 15% 95%;
-    --ring: 220 85% 25%;
+    --border: 204 15% 90%;
+    --input: 204 15% 95%;
+    --ring: 204 90% 24%;
 
     --radius: 0.75rem;
 
-    /* Inception-themed sidebar */
-    --sidebar-background: 220 20% 98%;
-    --sidebar-foreground: 220 85% 15%;
-    --sidebar-primary: 220 85% 25%;
+    /* Themed sidebar */
+    --sidebar-background: 204 20% 98%;
+    --sidebar-foreground: 204 90% 15%;
+    --sidebar-primary: 204 90% 24%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 93%;
-    --sidebar-accent-foreground: 220 85% 15%;
-    --sidebar-border: 220 15% 88%;
-    --sidebar-ring: 220 85% 25%;
+    --sidebar-accent: 204 15% 93%;
+    --sidebar-accent-foreground: 204 90% 15%;
+    --sidebar-border: 204 15% 88%;
+    --sidebar-ring: 204 90% 24%;
 
-    /* Inception Chart colors - Navy & Orange palette */
-    --chart-1: 220 85% 25%;
-    --chart-2: 15 85% 60%;
-    --chart-3: 200 70% 45%;
-    --chart-4: 35 80% 55%;
-    --chart-5: 240 60% 50%;
+    /* Chart colors */
+    --chart-1: 204 90% 24%;
+    --chart-2: 204 80% 40%;
+    --chart-3: 204 70% 55%;
+    --chart-4: 204 60% 70%;
+    --chart-5: 204 50% 85%;
 
-    /* Inception AI Theme Colors */
-    --ai-primary: 220 85% 25%;
-    --ai-secondary: 15 85% 60%;
-    --ai-accent: 200 70% 45%;
-    --ai-glow: 220 85% 60%;
+    /* AI Theme Colors */
+    --ai-primary: 204 90% 24%;
+    --ai-secondary: 204 80% 40%;
+    --ai-accent: 204 70% 55%;
+    --ai-glow: 204 90% 60%;
     
-    /* Inception Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(220 85% 25%), hsl(15 85% 60%));
-    --gradient-secondary: linear-gradient(135deg, hsl(220 15% 96%), hsl(220 15% 90%));
-    --gradient-ai: linear-gradient(135deg, hsl(220 85% 25%), hsl(200 70% 45%), hsl(15 85% 60%));
-    --gradient-glow: radial-gradient(circle, hsl(220 85% 60% / 0.3), transparent);
-    --gradient-hero: linear-gradient(135deg, hsl(220 85% 25%), hsl(220 70% 35%), hsl(15 85% 60%));
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(204 90% 24%), hsl(204 80% 40%));
+    --gradient-secondary: linear-gradient(135deg, hsl(204 15% 96%), hsl(204 15% 90%));
+    --gradient-ai: linear-gradient(135deg, hsl(204 90% 24%), hsl(204 70% 55%), hsl(204 80% 40%));
+    --gradient-glow: radial-gradient(circle, hsl(204 90% 60% / 0.3), transparent);
+    --gradient-hero: linear-gradient(135deg, hsl(204 90% 24%), hsl(204 80% 35%), hsl(204 70% 45%));
     
-    /* Inception Shadows */
-    --shadow-ai: 0 10px 40px hsl(220 85% 25% / 0.25);
-    --shadow-glow: 0 0 30px hsl(220 85% 60% / 0.4);
-    --shadow-elegant: 0 20px 60px hsl(220 85% 25% / 0.15);
+    /* Shadows */
+    --shadow-ai: 0 10px 40px hsl(204 90% 24% / 0.25);
+    --shadow-glow: 0 0 30px hsl(204 90% 60% / 0.4);
+    --shadow-elegant: 0 20px 60px hsl(204 90% 24% / 0.15);
     
     /* Animations */
     --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -83,43 +83,43 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Inception Dark Mode - Navy & Orange */
-    --background: 220 50% 8%;
-    --foreground: 220 15% 95%;
+    /* Dark Mode */
+    --background: 204 50% 8%;
+    --foreground: 204 15% 95%;
 
-    --card: 220 45% 10%;
-    --card-foreground: 220 15% 95%;
+    --card: 204 45% 10%;
+    --card-foreground: 204 15% 95%;
 
-    --popover: 220 45% 10%;
-    --popover-foreground: 220 15% 95%;
+    --popover: 204 45% 10%;
+    --popover-foreground: 204 15% 95%;
 
-    --primary: 220 85% 65%;
-    --primary-foreground: 220 50% 8%;
+    --primary: 204 90% 50%;
+    --primary-foreground: 204 50% 8%;
 
-    --secondary: 220 25% 15%;
-    --secondary-foreground: 220 15% 90%;
+    --secondary: 204 25% 15%;
+    --secondary-foreground: 204 15% 90%;
 
-    --muted: 220 25% 15%;
-    --muted-foreground: 220 15% 70%;
+    --muted: 204 25% 15%;
+    --muted-foreground: 204 15% 70%;
 
-    --accent: 15 85% 65%;
-    --accent-foreground: 220 50% 8%;
+    --accent: 204 80% 55%;
+    --accent-foreground: 204 50% 8%;
 
     --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 25% 20%;
-    --input: 220 25% 15%;
-    --ring: 220 85% 65%;
+    --border: 204 25% 20%;
+    --input: 204 25% 15%;
+    --ring: 204 90% 50%;
     
-    --sidebar-background: 220 45% 12%;
-    --sidebar-foreground: 220 15% 90%;
-    --sidebar-primary: 220 85% 65%;
-    --sidebar-primary-foreground: 220 50% 8%;
-    --sidebar-accent: 220 25% 18%;
-    --sidebar-accent-foreground: 220 15% 85%;
-    --sidebar-border: 220 25% 18%;
-    --sidebar-ring: 220 85% 65%;
+    --sidebar-background: 204 45% 12%;
+    --sidebar-foreground: 204 15% 90%;
+    --sidebar-primary: 204 90% 50%;
+    --sidebar-primary-foreground: 204 50% 8%;
+    --sidebar-accent: 204 25% 18%;
+    --sidebar-accent-foreground: 204 15% 85%;
+    --sidebar-border: 204 25% 18%;
+    --sidebar-ring: 204 90% 50%;
   }
 }
 
