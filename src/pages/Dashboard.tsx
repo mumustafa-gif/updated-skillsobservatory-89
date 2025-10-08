@@ -61,7 +61,7 @@ const Dashboard = memo(() => {
           hoverBorderColor: 'hover:border-purple-300',
           iconBg: 'bg-purple-100',
           iconColor: 'text-purple-600',
-          title: 'Strategic Policy Analysis',
+          title: <span className="text-[#064975]">Strategic Policy Analysis</span>,
           subtitle: 'Executive-level workforce insights for national planning',
           description: 'Comprehensive policy analysis with strategic recommendations for UAE workforce development',
           features: [
@@ -78,7 +78,7 @@ const Dashboard = memo(() => {
           hoverBorderColor: 'hover:border-blue-300',
           iconBg: 'bg-blue-100',
           iconColor: 'text-blue-600',
-          title: 'Human Resources Analytics',
+          title: <span className="text-[#064975]">Human Resources Analytics</span>,
           subtitle: 'Data-driven insights for workforce management and talent acquisition',
           description: 'Advanced HR analytics focusing on talent acquisition, retention, and workforce optimization',
           features: [
@@ -95,7 +95,7 @@ const Dashboard = memo(() => {
           hoverBorderColor: 'hover:border-emerald-300',
           iconBg: 'bg-emerald-100',
           iconColor: 'text-emerald-600',
-          title: 'Educational Planning',
+          title: <span className="text-[#064975]">Educational Planning</span>,
           subtitle: 'Skills development insights for curriculum design and educational outcomes',
           description: 'Educational planning focused on skills development, curriculum design, and learning outcomes',
           features: [
