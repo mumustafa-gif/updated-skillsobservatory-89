@@ -55,12 +55,12 @@ const Dashboard = memo(() => {
     switch (persona) {
       case 'minister':
         return {
-          primaryColor: 'from-purple-600 to-indigo-600',
-          accentColor: 'from-purple-500/20 to-indigo-500/20',
-          borderColor: 'border-purple-200',
-          hoverBorderColor: 'hover:border-purple-300',
-          iconBg: 'bg-purple-100',
-          iconColor: 'text-purple-600',
+          primaryColor: 'from-[#064975] to-[#064975]',
+          accentColor: 'from-[#064975]/20 to-[#064975]/20',
+          borderColor: 'border-[#064975]/20',
+          hoverBorderColor: 'hover:border-[#064975]/40',
+          iconBg: 'bg-[#064975]/10',
+          iconColor: 'text-[#064975]',
           title: <span className="text-[#064975]">Strategic Policy Analysis</span>,
           subtitle: 'Executive-level workforce insights for national planning',
           description: 'Comprehensive policy analysis with strategic recommendations for UAE workforce development',
@@ -72,12 +72,12 @@ const Dashboard = memo(() => {
         };
       case 'chro':
         return {
-          primaryColor: 'from-blue-600 to-cyan-600',
-          accentColor: 'from-blue-500/20 to-cyan-500/20',
-          borderColor: 'border-blue-200',
-          hoverBorderColor: 'hover:border-blue-300',
-          iconBg: 'bg-blue-100',
-          iconColor: 'text-blue-600',
+          primaryColor: 'from-[#064975] to-[#064975]',
+          accentColor: 'from-[#064975]/20 to-[#064975]/20',
+          borderColor: 'border-[#064975]/20',
+          hoverBorderColor: 'hover:border-[#064975]/40',
+          iconBg: 'bg-[#064975]/10',
+          iconColor: 'text-[#064975]',
           title: <span className="text-[#064975]">Human Resources Analytics</span>,
           subtitle: 'Data-driven insights for workforce management and talent acquisition',
           description: 'Advanced HR analytics focusing on talent acquisition, retention, and workforce optimization',
@@ -89,12 +89,12 @@ const Dashboard = memo(() => {
         };
       case 'educationist':
         return {
-          primaryColor: 'from-emerald-600 to-teal-600',
-          accentColor: 'from-emerald-500/20 to-teal-500/20',
-          borderColor: 'border-emerald-200',
-          hoverBorderColor: 'hover:border-emerald-300',
-          iconBg: 'bg-emerald-100',
-          iconColor: 'text-emerald-600',
+          primaryColor: 'from-[#064975] to-[#064975]',
+          accentColor: 'from-[#064975]/20 to-[#064975]/20',
+          borderColor: 'border-[#064975]/20',
+          hoverBorderColor: 'hover:border-[#064975]/40',
+          iconBg: 'bg-[#064975]/10',
+          iconColor: 'text-[#064975]',
           title: <span className="text-[#064975]">Educational Planning</span>,
           subtitle: 'Skills development insights for curriculum design and educational outcomes',
           description: 'Educational planning focused on skills development, curriculum design, and learning outcomes',
@@ -474,7 +474,7 @@ const Dashboard = memo(() => {
                           <Switch checked={useKnowledgeBase} onCheckedChange={setUseKnowledgeBase} className="data-[state=checked]:bg-primary" />
                         </div>}
 
-                      <Button onClick={handleGenerate} disabled={generating} size="lg" className={`w-full h-12 text-base font-medium transition-all duration-300 ${useKnowledgeBase && uploadedFiles.length > 0 ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700' : `bg-gradient-to-r ${getPersonaStyles(currentPersona).primaryColor} hover:opacity-90`}`}>
+                      <Button onClick={handleGenerate} disabled={generating} size="lg" className={`w-full h-12 text-base font-medium transition-all duration-300 bg-[#064975] hover:bg-[#064975]/90 text-white`}>
                         {generating ? <>
                             <motion.div animate={{
                         rotate: 360
